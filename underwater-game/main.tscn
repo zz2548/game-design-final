@@ -3,6 +3,8 @@
 [ext_resource type="Script" uid="uid://b2mbcxvmpn3bg" path="res://main.gd" id="1_0xm2m"]
 [ext_resource type="Script" uid="uid://clqmtwvs4a8ib" path="res://player.gd" id="2_h2yge"]
 [ext_resource type="Script" uid="uid://bmqko7aq0b1lj" path="res://interaction_system.gd" id="3_h2yge"]
+[ext_resource type="Script" uid="uid://uh7cq6d0y4um" path="res://pickup_item.gd" id="4_lquwl"]
+[ext_resource type="Resource" uid="uid://xts38j23s6u" path="res://items/test_item.tres" id="5_7mycd"]
 
 [sub_resource type="Gradient" id="Gradient_0xm2m"]
 
@@ -13,6 +15,8 @@ fill_to = Vector2(0.54347825, 0.56956524)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1bvp3"]
 radius = 79.624115
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_272bh"]
 
 [node name="main" type="Node2D" unique_id=542920460]
 script = ExtResource("1_0xm2m")
@@ -37,10 +41,30 @@ scale = Vector2(2.6484373, 3.0234375)
 texture = SubResource("GradientTexture2D_h2yge")
 
 [node name="InteractionZone" type="Area2D" parent="player" unique_id=1596191457]
+collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="player/InteractionZone" unique_id=1526723802]
 position = Vector2(267, 219)
 shape = SubResource("CircleShape2D_1bvp3")
 
-[node name="InteractionSystem" type="Node" parent="player" unique_id=275111721]
+[node name="InteractionSystem" type="Node" parent="player" unique_id=275111721 node_paths=PackedStringArray("interaction_zone")]
 script = ExtResource("3_h2yge")
+interaction_zone = NodePath("../InteractionZone")
+
+[node name="TestItem" type="Area2D" parent="." unique_id=1043242679]
+collision_mask = 0
+script = ExtResource("4_lquwl")
+item = ExtResource("5_7mycd")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TestItem" unique_id=2091941298]
+position = Vector2(447, 339)
+shape = SubResource("RectangleShape2D_272bh")
+
+[node name="Sprite2D" type="Sprite2D" parent="TestItem" unique_id=194979157]
+
+[node name="ColorRect" type="ColorRect" parent="TestItem" unique_id=1348776968]
+offset_left = 436.0
+offset_top = 330.0
+offset_right = 458.0
+offset_bottom = 350.0
+color = Color(1, 0.07058824, 1, 1)

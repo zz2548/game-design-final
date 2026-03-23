@@ -22,3 +22,12 @@ func _physics_process(delta: float) -> void:
 
 	velocity = velocity.limit_length(SWIM_SPEED)  # cap diagonal/buoyancy overshoot
 	move_and_slide()
+
+func _ready() -> void:
+	Inventory.item_added.connect(func(item, qty):
+		print("Picked up: ", item.display_name, " x", qty)
+	)
+
+func _process(_delta: float) -> void:
+	# print("Nearby: ", $InteractionSystem.get_current_interactable())
+	pass
