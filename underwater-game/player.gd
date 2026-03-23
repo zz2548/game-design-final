@@ -2,8 +2,8 @@ extends CharacterBody2D
 
 const SWIM_SPEED = 300.0
 const ACCELERATION = 800.0
-const FRICTION = 400.0
-const BUOYANCY = 30.0  # gentle upward drift when idle
+const FRICTION = 600.0
+const BUOYANCY = 60.0  # upward force when idle (not a velocity target)
 
 func _physics_process(delta: float) -> void:
 	var direction := Vector2(
@@ -12,11 +12,13 @@ func _physics_process(delta: float) -> void:
 	)
 
 	if direction.length() > 0:
-		# Normalize so diagonal isn't faster
 		direction = direction.normalized()
 		velocity = velocity.move_toward(direction * SWIM_SPEED, ACCELERATION * delta)
 	else:
-		# Friction slows you down, buoyancy floats you up
-		velocity = velocity.move_toward(Vector2(0, -BUOYANCY), FRICTION * delta)
+		# Friction brings you to a stop first, then buoyancy lifts you gently
+		velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
+		velocity.y = move_toward(velocity.y, 0.0, FRICTION * delta)
+		velocity.y -= BUOYANCY * delta  # apply as a force, not a velocity target
 
+	velocity = velocity.limit_length(SWIM_SPEED)  # cap diagonal/buoyancy overshoot
 	move_and_slide()
