@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 
 Inventory="*uid://ddti6gxjfa1l6"
 DialogueManager="*uid://be8xecp4l111s"
+SceneManager="*uid://be4dmmqb171wl"
 
 [input]
 
