@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://bmqko7aq0b1lj" path="res://interaction_system.gd" id="3_h2yge"]
 [ext_resource type="Script" uid="uid://uh7cq6d0y4um" path="res://pickup_item.gd" id="4_lquwl"]
 [ext_resource type="Resource" uid="uid://xts38j23s6u" path="res://items/test_item.tres" id="5_7mycd"]
+[ext_resource type="PackedScene" uid="uid://d0wsi4jj2eyp1" path="res://InventoryUI.tscn" id="6_7mycd"]
 
 [sub_resource type="Gradient" id="Gradient_0xm2m"]
 
@@ -68,3 +69,5 @@ offset_top = 330.0
 offset_right = 458.0
 offset_bottom = 350.0
 color = Color(1, 0.07058824, 1, 1)
+
+[node name="InventoryUI" parent="." unique_id=1520385462 instance=ExtResource("6_7mycd")]

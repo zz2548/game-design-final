@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://d0wsi4jj2eyp1"]
+
+[ext_resource type="Script" uid="uid://b2oxifcevi8pn" path="res://inventory_ui.gd" id="1_dsn3v"]
+
+[node name="InventoryUI" type="CanvasLayer" unique_id=1520385462]
+script = ExtResource("1_dsn3v")
+
+[node name="Root" type="Control" parent="." unique_id=169490969]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Backdrop" type="ColorRect" parent="Root" unique_id=1752077263]
+layout_mode = 0
+offset_right = 1151.0
+offset_bottom = 649.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="Panel" type="PanelContainer" parent="Root" unique_id=2067858476]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="VBox" type="VBoxContainer" parent="Root/Panel" unique_id=43785273]
+layout_mode = 2
+
+[node name="Header" type="HBoxContainer" parent="Root/Panel/VBox" unique_id=595349596]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Root/Panel/VBox/Header" unique_id=502162687]
+layout_mode = 2
+text = "INVENTORY"
+
+[node name="Count" type="Label" parent="Root/Panel/VBox/Header" unique_id=941682210]
+layout_mode = 2
+
+[node name="Divider" type="HSeparator" parent="Root/Panel/VBox" unique_id=1695759374]
+layout_mode = 2
+
+[node name="Grid" type="GridContainer" parent="Root/Panel/VBox" unique_id=1110243030]
+layout_mode = 2
+columns = 5
