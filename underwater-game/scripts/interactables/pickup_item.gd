@@ -9,19 +9,20 @@ extends Interactable
 @export var quantity: int = 1
 
 func _ready() -> void:
-	if item:
-		interaction_label = item.display_name
+	print("PickupItem ready: ", item)
+	if not item:
+		push_warning("PickupItem has no item assigned!")
 
 
 func _on_interact(player: Node) -> void:
+	print("_on_interact called, item: ", item)
 	if not item:
-		push_warning("PickupItem has no ItemData assigned!")
+		push_warning("PickupItem has no item assigned!")
 		return
-
 	var success := Inventory.add_item(item, quantity)
 	if success:
-		# Optional: play a pickup sound here
-		queue_free()  # Remove from world
+		queue_free()
 	else:
 		# Inventory full — could trigger a UI message
 		pass
+		

@@ -22,19 +22,25 @@ func _ready() -> void:
 		push_error("InteractionSystem: No interaction_zone assigned!")
 		return
 
-	interaction_zone.body_entered.connect(_on_body_entered)
-	interaction_zone.body_exited.connect(_on_body_exited)
 	interaction_zone.area_entered.connect(_on_area_entered)
 	interaction_zone.area_exited.connect(_on_area_exited)
+	interaction_zone.body_entered.connect(_on_body_entered)
+	interaction_zone.body_exited.connect(_on_body_exited)
+	
+	print("InteractionSystem ready, zone: ", interaction_zone)
+	print("area_entered connected: ", interaction_zone.area_entered.is_connected(_on_area_entered))
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("interact"):
+		print("E pressed, current interactable: ", _current_interactable)
 	if event.is_action_pressed("interact") and _current_interactable:
 		_current_interactable._on_interact(_player)
 
 # ─── Detection ───────────────────────────────────────────────────────────────
 
 func _on_area_entered(area: Area2D) -> void:
+	print("Area entered: ", area, " is Interactable: ", area is Interactable)
 	if area is Interactable:
 		_set_focus(area)
 

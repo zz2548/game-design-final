@@ -1,8 +1,12 @@
 [gd_scene format=3 uid="uid://dys6tb5xur4iu"]
 
-[ext_resource type="PackedScene" uid="uid://c4aq5kby2y074" path="res://shared/player/player.tscn" id="1_player"]
-[ext_resource type="PackedScene" uid="uid://d0wsi4jj2eyp1" path="res://shared/ui/InventoryUI.tscn" id="2_inventoryui"]
+[ext_resource type="PackedScene" uid="uid://dwcfh2wu8phsc" path="res://shared/player/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://shared/ui/InventoryUI.tscn" id="2_inventoryui"]
+[ext_resource type="Resource" uid="uid://cj83rlwclx66t" path="res://shared/items/test_item.tres" id="3_iey7c"]
 [ext_resource type="Script" uid="uid://b45ek5my76at" path="res://scripts/interactables/pickup_item.gd" id="3_pickup"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_iey7c"]
+size = Vector2(38.5, 39.5)
 
 [node name="Level1" type="Node2D" unique_id=1255267063]
 
@@ -20,9 +24,13 @@ position = Vector2(200, 300)
 [node name="Items" type="Node2D" parent="." unique_id=1317189062]
 
 [node name="TestItem" type="Area2D" parent="Items" unique_id=2052106546]
+collision_mask = 0
 script = ExtResource("3_pickup")
+item = ExtResource("3_iey7c")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Items/TestItem" unique_id=173283808]
+position = Vector2(412.75, 298.25)
+shape = SubResource("RectangleShape2D_iey7c")
 
 [node name="ColorRect" type="ColorRect" parent="Items/TestItem" unique_id=820293744]
 offset_left = 394.0
