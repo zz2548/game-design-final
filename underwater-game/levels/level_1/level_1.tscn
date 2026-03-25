@@ -4,9 +4,14 @@
 [ext_resource type="PackedScene" path="res://shared/ui/InventoryUI.tscn" id="2_inventoryui"]
 [ext_resource type="Resource" uid="uid://cj83rlwclx66t" path="res://shared/items/test_item.tres" id="3_iey7c"]
 [ext_resource type="Script" uid="uid://b45ek5my76at" path="res://scripts/interactables/pickup_item.gd" id="3_pickup"]
+[ext_resource type="Script" uid="uid://dgkwj4x1fhpfo" path="res://scripts/interactables/npc_interactable.gd" id="5_5b03i"]
+[ext_resource type="PackedScene" uid="uid://eb3vk6h130ot" path="res://shared/ui/dialogue_ui.tscn" id="5_e6u7d"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_iey7c"]
 size = Vector2(38.5, 39.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_e6u7d"]
+size = Vector2(90, 83)
 
 [node name="Level1" type="Node2D" unique_id=1255267063]
 
@@ -40,3 +45,22 @@ offset_bottom = 319.0
 color = Color(1, 0, 1, 1)
 
 [node name="InventoryUI" parent="." unique_id=2083902792 instance=ExtResource("2_inventoryui")]
+
+[node name="DialogueUI" parent="." unique_id=1340303138 instance=ExtResource("5_e6u7d")]
+
+[node name="RadioTransmission" type="Area2D" parent="." unique_id=941760707]
+position = Vector2(638, 301)
+collision_mask = 0
+script = ExtResource("5_5b03i")
+dialogue_lines = Array[String](["Hello...", "Can you hear me?", "....<static>"])
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RadioTransmission" unique_id=8173448]
+position = Vector2(0, -1)
+shape = SubResource("RectangleShape2D_e6u7d")
+
+[node name="ColorRect" type="ColorRect" parent="RadioTransmission" unique_id=832237283]
+offset_left = -51.0
+offset_top = -40.0
+offset_right = 50.0
+offset_bottom = 45.0
+metadata/_edit_use_anchors_ = true
