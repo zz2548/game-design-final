@@ -1,39 +1,6 @@
 [gd_scene format=3 uid="uid://b2kse4lq50hm1"]
 
-[ext_resource type="Script" uid="uid://b2mbcxvmpn3bg" path="res://main.gd" id="1_0xm2m"]
-[ext_resource type="PackedScene" uid="uid://c4aq5kby2y074" path="res://player.tscn" id="2_lquwl"]
-[ext_resource type="Script" uid="uid://uh7cq6d0y4um" path="res://pickup_item.gd" id="4_lquwl"]
-[ext_resource type="Resource" uid="uid://xts38j23s6u" path="res://items/test_item.tres" id="5_7mycd"]
-[ext_resource type="PackedScene" uid="uid://d0wsi4jj2eyp1" path="res://InventoryUI.tscn" id="6_7mycd"]
+[ext_resource type="Script" uid="uid://cwlxlqd48kwfo" path="res://main.gd" id="1_0xm2m"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_272bh"]
-
-[node name="main" type="Node2D" unique_id=542920460]
+[node name="main" type="Node" unique_id=279150909]
 script = ExtResource("1_0xm2m")
-
-[node name="ColorRect" type="ColorRect" parent="." unique_id=1307949467]
-offset_right = 1153.0
-offset_bottom = 646.0
-color = Color(0.039215688, 0.039215688, 0.101960786, 1)
-
-[node name="player" parent="." unique_id=1228927479 instance=ExtResource("2_lquwl")]
-
-[node name="TestItem" type="Area2D" parent="." unique_id=1043242679]
-collision_mask = 0
-script = ExtResource("4_lquwl")
-item = ExtResource("5_7mycd")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="TestItem" unique_id=2091941298]
-position = Vector2(447, 339)
-shape = SubResource("RectangleShape2D_272bh")
-
-[node name="Sprite2D" type="Sprite2D" parent="TestItem" unique_id=194979157]
-
-[node name="ColorRect" type="ColorRect" parent="TestItem" unique_id=1348776968]
-offset_left = 436.0
-offset_top = 330.0
-offset_right = 458.0
-offset_bottom = 350.0
-color = Color(1, 0.07058824, 1, 1)
-
-[node name="InventoryUI" parent="." unique_id=1520385462 instance=ExtResource("6_7mycd")]

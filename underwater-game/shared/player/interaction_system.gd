@@ -1,7 +1,7 @@
 # interaction_system.gd
-# Attach to the Player node.
-# Requires: a child Area3D named "InteractionZone" with a CollisionShape3D
-#           (set the shape radius to your desired interaction distance, e.g. 1.5m)
+# res://shared/player/interaction_system.gd
+# Attach to the Player node as a child Node.
+# Requires: a child Area2D named "InteractionZone" with a CollisionShape2D
 #
 # In Project > Project Settings > Input Map, add an action called "interact" and bind E to it.
 
