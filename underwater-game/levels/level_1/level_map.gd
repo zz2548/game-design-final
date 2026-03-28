@@ -54,8 +54,11 @@ const CORRIDORS : Array[Dictionary] = [
 	{col_start = 132, col_end = 169},   # Corridor 2
 ]
 
-## Wall tile tint colour (no art yet – solid white texture × modulate).
-const WALL_COLOUR : Color = Color(0.07, 0.12, 0.20)
+## Number of visual variants in the tileset strip (each is 16 px wide).
+const TILE_VARIANTS : int = 8
+
+## Path to the tileset PNG (128×16 px strip of 8 cave-rock variants).
+const TILESET_PATH : String = "res://assets/tiles/tileset.png"
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
@@ -69,14 +72,23 @@ func _ready() -> void:
 func _build_tilemap() -> TileMapLayer:
 	var tilemap := TileMapLayer.new()
 	tilemap.tile_set = _make_tileset()
-	tilemap.modulate  = WALL_COLOUR
+	# No modulate tint — the texture carries its own colour.
 
 	for row in MAP_ROWS:
 		for col in MAP_COLS:
 			if _is_wall(col, row):
-				tilemap.set_cell(Vector2i(col, row), 0, Vector2i(0, 0))
+				# Pick a variant deterministically from the tile position so
+				# the level looks different every tile but is stable across runs.
+				var variant := _tile_variant(col, row)
+				tilemap.set_cell(Vector2i(col, row), 0, Vector2i(variant, 0))
 
 	return tilemap
+
+
+## Cheap position-based hash → variant index in [0, TILE_VARIANTS).
+func _tile_variant(col: int, row: int) -> int:
+	var h : int = (col * 1619 + row * 31337) & 0x7FFFFFFF
+	return h % TILE_VARIANTS
 
 
 func _make_tileset() -> TileSet:
@@ -88,28 +100,30 @@ func _make_tileset() -> TileSet:
 	ts.set_physics_layer_collision_layer(0, 1)  # same layer as CharacterBody2D
 	ts.set_physics_layer_collision_mask(0, 1)
 
-	# Solid 16×16 white texture – tinted at the TileMapLayer level.
-	var img := Image.create(TILE_SIZE, TILE_SIZE, false, Image.FORMAT_RGBA8)
-	img.fill(Color.WHITE)
-	var tex := ImageTexture.create_from_image(img)
+	var tex : Texture2D = load(TILESET_PATH)
 
 	var source := TileSetAtlasSource.new()
 	source.texture             = tex
 	source.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
-	source.create_tile(Vector2i(0, 0))
+
+	# Register all 8 variants; each sits at atlas column x, row 0.
+	for x in TILE_VARIANTS:
+		source.create_tile(Vector2i(x, 0))
 
 	# ⚠️  Source must be registered with the TileSet BEFORE setting collision
 	# data — tile_data validates polygon counts against the TileSet's physics
 	# layers, so the order here matters.
 	ts.add_source(source, 0)
 
-	# Full-tile collision square centred on the tile origin.
-	var tile_data : TileData = source.get_tile_data(Vector2i(0, 0), 0)
-	var h         : float    = TILE_SIZE / 2.0
-	tile_data.set_collision_polygons_count(0, 1)
-	tile_data.set_collision_polygon_points(0, 0, PackedVector2Array([
+	# Apply the same full-tile collision square to every variant.
+	var h : float = TILE_SIZE / 2.0
+	var poly := PackedVector2Array([
 		Vector2(-h, -h), Vector2(h, -h), Vector2(h, h), Vector2(-h, h),
-	]))
+	])
+	for x in TILE_VARIANTS:
+		var tile_data : TileData = source.get_tile_data(Vector2i(x, 0), 0)
+		tile_data.set_collision_polygons_count(0, 1)
+		tile_data.set_collision_polygon_points(0, 0, poly)
 
 	return ts
 
