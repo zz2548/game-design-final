@@ -3,6 +3,9 @@
 [ext_resource type="Script" uid="uid://bgvj2b218065e" path="res://shared/player/player.gd" id="1_onrkg"]
 [ext_resource type="Script" uid="uid://yg3842y7gmtv" path="res://shared/player/interaction_system.gd" id="2_i3pqv"]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(36, 36)
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_1bvp3"]
 radius = 79.624115
 
@@ -26,6 +29,9 @@ fill_to = Vector2(0, 0)
 
 [node name="player" type="CharacterBody2D" unique_id=1228927479]
 script = ExtResource("1_onrkg")
+
+[node name="BodyCollision" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_body")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=2079948880]
 offset_left = -20.0
@@ -55,3 +61,5 @@ energy = 1.5
 texture = SubResource("GradientTexture2D_hqtel")
 offset = Vector2(30, 0)
 texture_scale = 0.8
+
+[node name="Camera2D" type="Camera2D" parent="."]

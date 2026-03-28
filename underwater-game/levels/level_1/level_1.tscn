@@ -6,61 +6,134 @@
 [ext_resource type="Script" uid="uid://b45ek5my76at" path="res://scripts/interactables/pickup_item.gd" id="3_pickup"]
 [ext_resource type="Script" uid="uid://dgkwj4x1fhpfo" path="res://scripts/interactables/npc_interactable.gd" id="5_5b03i"]
 [ext_resource type="PackedScene" uid="uid://eb3vk6h130ot" path="res://shared/ui/dialogue_ui.tscn" id="5_e6u7d"]
+[ext_resource type="Script" path="res://levels/level_1/level_map.gd" id="6_levelmap"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_iey7c"]
-size = Vector2(38.5, 39.5)
+; All collision shapes are tile-aligned to 16 px.
+[sub_resource type="RectangleShape2D" id="shape_submarine"]
+size = Vector2(192, 64)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_e6u7d"]
-size = Vector2(90, 83)
+[sub_resource type="RectangleShape2D" id="shape_hq_radio"]
+size = Vector2(48, 48)
+
+[sub_resource type="RectangleShape2D" id="shape_pickup"]
+size = Vector2(32, 32)
+
+[sub_resource type="RectangleShape2D" id="shape_terminal"]
+size = Vector2(48, 64)
+
+[sub_resource type="RectangleShape2D" id="shape_exit"]
+size = Vector2(32, 96)
+
+; ══════════════════════════════════════════════════════════════════════════════
+; LEVEL 1 — SCENE TREE
+;
+;   LevelMap   →  generates TileMapLayer walls at runtime (level_map.gd)
+;   Objects    →  hand-placed NPCs and pickups (positions snapped to 16 px)
+;   player     →  spawns in Docking Bay
+; ══════════════════════════════════════════════════════════════════════════════
 
 [node name="Level1" type="Node2D" unique_id=1255267063]
 
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1930376493]
+visible = false
 color = Color(0, 0, 0, 1)
 
 [node name="Background" type="ColorRect" parent="." unique_id=472897320]
-offset_right = 1153.0
-offset_bottom = 646.0
+offset_right = 3552.0
+offset_bottom = 640.0
 color = Color(0.039215688, 0.039215688, 0.101960786, 1)
 
-[node name="player" parent="." unique_id=1560876372 instance=ExtResource("1_player")]
-position = Vector2(200, 300)
+; ── Tilemap generator ─────────────────────────────────────────────────────────
+; Builds all wall geometry + collision via level_map.gd.
+; To change the layout, edit the ROOMS / CORRIDORS / PASSAGE constants there.
+[node name="LevelMap" type="Node2D" parent="."]
+script = ExtResource("6_levelmap")
 
-[node name="Items" type="Node2D" parent="." unique_id=1317189062]
+; ── Objects ───────────────────────────────────────────────────────────────────
+[node name="Objects" type="Node2D" parent="."]
 
-[node name="TestItem" type="Area2D" parent="Items" unique_id=2052106546]
+; Submarine docked in the back-right corner of the Docking Bay.
+; 192×64 px  (12×4 tiles), centred at tile (39, 24) → pixel (632, 392)
+[node name="Submarine" type="StaticBody2D" parent="Objects"]
+position = Vector2(632, 392)
+[node name="Shape" type="CollisionShape2D" parent="Objects/Submarine"]
+shape = SubResource("shape_submarine")
+[node name="Visual" type="ColorRect" parent="Objects/Submarine"]
+offset_left = -96.0
+offset_top = -32.0
+offset_right = 96.0
+offset_bottom = 32.0
+color = Color(0.12, 0.16, 0.24, 1)
+
+; HQ Radio — mid-Corridor 1, tile (68, 19) → pixel (1096, 312)
+; First story beat: mission briefing from the AI.
+[node name="HQRadio" type="Area2D" parent="Objects"]
+position = Vector2(1096, 312)
+collision_mask = 0
+script = ExtResource("5_5b03i")
+speaker_name = "HQ AI"
+dialogue_lines = Array[String](["TECHNICIAN. This is HQ Automated Response System.", "We have lost contact with Facility Europa-7.", "You have been dispatched to investigate and restore communications.", "Proceed through the facility. Exercise caution.", "...Something is not right down here."])
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/HQRadio"]
+shape = SubResource("shape_hq_radio")
+[node name="Visual" type="ColorRect" parent="Objects/HQRadio"]
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+color = Color(0.20, 0.80, 0.90, 1)
+
+; Supply Kit — Central Hub entrance, tile (95, 18) → pixel (1528, 296)
+[node name="SupplyKit" type="Area2D" parent="Objects"]
+position = Vector2(1528, 296)
 collision_mask = 0
 script = ExtResource("3_pickup")
 item = ExtResource("3_iey7c")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/SupplyKit"]
+shape = SubResource("shape_pickup")
+[node name="Visual" type="ColorRect" parent="Objects/SupplyKit"]
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+color = Color(1.0, 0.80, 0.20, 1)
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Items/TestItem" unique_id=173283808]
-position = Vector2(412.75, 298.25)
-shape = SubResource("RectangleShape2D_iey7c")
+; Research Terminal — Central Hub far wall, tile (122, 26) → pixel (1960, 424)
+[node name="ResearchTerminal" type="Area2D" parent="Objects"]
+position = Vector2(1960, 424)
+collision_mask = 0
+script = ExtResource("5_5b03i")
+speaker_name = "FACILITY LOG"
+dialogue_lines = Array[String](["FACILITY LOG — DAY 47", "All research staff ordered to emergency evacuation protocol.", "...nobody came.", "Primary communications array: OFFLINE. Cause: unknown."])
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/ResearchTerminal"]
+shape = SubResource("shape_terminal")
+[node name="Visual" type="ColorRect" parent="Objects/ResearchTerminal"]
+offset_left = -24.0
+offset_top = -32.0
+offset_right = 24.0
+offset_bottom = 32.0
+color = Color(0.25, 0.40, 0.60, 1)
 
-[node name="ColorRect" type="ColorRect" parent="Items/TestItem" unique_id=820293744]
-offset_left = 394.0
-offset_top = 279.0
-offset_right = 434.0
-offset_bottom = 319.0
-color = Color(1, 0, 1, 1)
+; Exit Airlock — Research Lab far wall, tile (216, 20) → pixel (3464, 328)
+[node name="ExitAirlock" type="Area2D" parent="Objects"]
+position = Vector2(3464, 328)
+collision_mask = 0
+script = ExtResource("5_5b03i")
+speaker_name = "AIRLOCK B"
+dialogue_lines = Array[String](["AIRLOCK B — SECTOR 2 ACCESS", "Restore power to the communications array to proceed.", "[Sector 2 ahead]"])
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/ExitAirlock"]
+shape = SubResource("shape_exit")
+[node name="Visual" type="ColorRect" parent="Objects/ExitAirlock"]
+offset_left = -16.0
+offset_top = -48.0
+offset_right = 16.0
+offset_bottom = 48.0
+color = Color(0.20, 1.00, 0.50, 1)
+
+; ── Player & UI ───────────────────────────────────────────────────────────────
+; Player spawns at tile (18, 20) → pixel (296, 328) — Docking Bay interior.
+[node name="player" parent="." unique_id=1560876372 instance=ExtResource("1_player")]
+position = Vector2(296, 328)
 
 [node name="InventoryUI" parent="." unique_id=2083902792 instance=ExtResource("2_inventoryui")]
 
 [node name="DialogueUI" parent="." unique_id=1340303138 instance=ExtResource("5_e6u7d")]
-
-[node name="RadioTransmission" type="Area2D" parent="." unique_id=941760707]
-position = Vector2(638, 301)
-collision_mask = 0
-script = ExtResource("5_5b03i")
-dialogue_lines = Array[String](["Hello...", "Can you hear me?", "....<static>"])
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="RadioTransmission" unique_id=8173448]
-position = Vector2(0, -1)
-shape = SubResource("RectangleShape2D_e6u7d")
-
-[node name="ColorRect" type="ColorRect" parent="RadioTransmission" unique_id=832237283]
-offset_left = -51.0
-offset_top = -40.0
-offset_right = 50.0
-offset_bottom = 45.0
-metadata/_edit_use_anchors_ = true
