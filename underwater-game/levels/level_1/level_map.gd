@@ -1,64 +1,73 @@
 # level_map.gd
-# Attach to a Node2D called "LevelMap" inside a level scene.
-# Builds a TileMapLayer (walls + collision) at runtime from the room/corridor
-# definitions below — no StaticBody2D rectangles needed.
+# Generates the Level 1 wall geometry at runtime via a TileMapLayer.
 #
-# ── Map grid ─────────────────────────────────────────────────────────────────
-#   222 columns × 40 rows  →  3552 × 640 px  (each tile = 16 × 16 px)
+# Layout — reading left to right:
 #
-# ── Column zones ─────────────────────────────────────────────────────────────
-#   Docking Bay   cols   0 –  49
-#   Corridor 1    cols  50 –  87
-#   Central Hub   cols  88 – 131
-#   Corridor 2    cols 132 – 169
-#   Research Lab  cols 170 – 221
+#   ┌──────────────────────────────────────────────────────────────────────┐
+#   │  WIDE OPEN CAVE                                                      │
+#   │  cols 2–96, rows 2–61  (1504 × 960 px)                              │
+#   │                                                        ┌──────────┐  │
+#   │  Player spawns here.                           ════════╡ NARROW   │  │
+#   │  Submarine docked near the right wall.         (rows   │ CORRIDOR │  │
+#   │                                                27–32)  │ 97–116   │  │
+#   └──────────────────────────────────────────────────────────────────────┘
+#                                                            └──────────┘
+#                                                                 ║ (rows 27–32)
+#                                                    ┌────────────╨──────────────────────────┐
+#                                                    │  AIRLOCK ANTECHAMBER  cols 117–142     │
+#                                                    │  rows 20–43  (opens wider on arrival)  │
+#                                                    └───────────────────────────────────────┘
+#                                                                ║ (rows 20–43, full width)
+#                                   ┌────────────────────────────╨──────────────────────────────┐
+#                                   │  MAIN RESEARCH LAB   cols 143–192,  rows 15–48             │
+#                                   │                                                             │
+#                                   └─────────────────────────────┬─────────────────────────────┘
+#                                                                  │ vertical shaft cols 162–169
+#                                                     ┌────────────┴──────────────────┐
+#                                                     │  SERVER / EQUIPMENT ROOM      │
+#                                                     │  cols 152–186,  rows 54–62    │
+#                                                     └───────────────────────────────┘
 #
-# ── Row zones ────────────────────────────────────────────────────────────────
-#   0 – 1   outer top wall
-#   2 – 3   room top wall
-#   4 – 35  room / corridor interior
-#  36 – 37  room bottom wall
-#  38 – 39  outer bottom wall
+# Map: 200 cols × 64 rows  →  3200 × 1024 px  (16 px / tile)
 #
-#   Corridor passage (open water): rows 14 – 25  (12 tiles = 192 px)
+# Rule: a cell is open water iff it falls inside at least one OPEN_ZONE rectangle.
+#       Every other cell is solid rock wall.
 
 extends Node2D
 
-# ── Constants ─────────────────────────────────────────────────────────────────
+const TILE_SIZE     : int    = 16
+const MAP_COLS      : int    = 200
+const MAP_ROWS      : int    = 64
+const TILE_VARIANTS : int    = 8
+const TILESET_PATH  : String = "res://assets/tiles/tileset.png"
 
-const TILE_SIZE : int = 16
-const MAP_COLS  : int = 222
-const MAP_ROWS  : int = 40
+# ── Open-water zones (all coordinates inclusive) ──────────────────────────────
+# Zones that share a boundary row/column automatically form a doorway at
+# the overlapping rows — no extra passage logic needed.
 
-## Thickness (in tiles) of every wall border.
-const WALL : int = 2
+const OPEN_ZONES : Array[Dictionary] = [
+	# Wide open cave — very tall, very wide; gives a sense of scale and dread.
+	{x1 =   2, x2 =  96, y1 =  2, y2 = 61},
 
-## First and last open row inside the room interior.
-const INTERIOR_ROW_FIRST : int = WALL * 2      # = 4  (outer + room top wall)
-const INTERIOR_ROW_LAST  : int = MAP_ROWS - WALL * 2 - 1  # = 35
+	# Narrow corridor — only 6 tiles (96 px) tall; tight bottleneck.
+	# Shares col 97 boundary with cave: opening is restricted to rows 27–32.
+	{x1 =  97, x2 = 116, y1 = 27, y2 = 32},
 
-## Vertical range of the corridor passage (inclusive).
-const PASSAGE_FIRST : int = 14
-const PASSAGE_LAST  : int = 25
+	# Airlock antechamber — taller than the corridor (rows 20–43).
+	# Space visibly expands as the player exits the tight passage.
+	{x1 = 117, x2 = 142, y1 = 20, y2 = 43},
 
-## Room definitions – col_start / col_end are the outermost wall columns.
-const ROOMS : Array[Dictionary] = [
-	{col_start =   0, col_end =  49},   # Docking Bay
-	{col_start =  88, col_end = 131},   # Central Hub
-	{col_start = 170, col_end = 221},   # Research Lab
+	# Main research lab — wide, tall, the heart of the facility.
+	# Left wall opens fully onto the airlock (rows 20–43 are shared).
+	{x1 = 143, x2 = 192, y1 = 15, y2 = 48},
+
+	# Vertical shaft — punches down from the lab floor.
+	# Cols 162–169 at rows 49–53 are the only way into the server room.
+	{x1 = 162, x2 = 169, y1 = 49, y2 = 53},
+
+	# Server / equipment room — accessible only through the shaft above.
+	{x1 = 152, x2 = 186, y1 = 54, y2 = 62},
 ]
-
-## Corridor definitions – every cell here is wall except passage rows.
-const CORRIDORS : Array[Dictionary] = [
-	{col_start =  50, col_end =  87},   # Corridor 1
-	{col_start = 132, col_end = 169},   # Corridor 2
-]
-
-## Number of visual variants in the tileset strip (each is 16 px wide).
-const TILE_VARIANTS : int = 8
-
-## Path to the tileset PNG (128×16 px strip of 8 cave-rock variants).
-const TILESET_PATH : String = "res://assets/tiles/tileset.png"
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
@@ -72,112 +81,63 @@ func _ready() -> void:
 func _build_tilemap() -> TileMapLayer:
 	var tilemap := TileMapLayer.new()
 	tilemap.tile_set = _make_tileset()
-	# No modulate tint — the texture carries its own colour.
 
 	for row in MAP_ROWS:
 		for col in MAP_COLS:
 			if _is_wall(col, row):
-				# Pick a variant deterministically from the tile position so
-				# the level looks different every tile but is stable across runs.
-				var variant := _tile_variant(col, row)
-				tilemap.set_cell(Vector2i(col, row), 0, Vector2i(variant, 0))
+				tilemap.set_cell(
+					Vector2i(col, row), 0,
+					Vector2i(_tile_variant(col, row), 0)
+				)
 
 	return tilemap
-
-
-## Cheap position-based hash → variant index in [0, TILE_VARIANTS).
-func _tile_variant(col: int, row: int) -> int:
-	var h : int = (col * 1619 + row * 31337) & 0x7FFFFFFF
-	return h % TILE_VARIANTS
 
 
 func _make_tileset() -> TileSet:
 	var ts := TileSet.new()
 	ts.tile_size = Vector2i(TILE_SIZE, TILE_SIZE)
 
-	# Physics layer — must be added before tile data references it.
+	# Physics layer — added BEFORE tile data so tile_data can reference it.
 	ts.add_physics_layer(0)
-	ts.set_physics_layer_collision_layer(0, 1)  # same layer as CharacterBody2D
+	ts.set_physics_layer_collision_layer(0, 1)
 	ts.set_physics_layer_collision_mask(0, 1)
 
-	var tex : Texture2D = load(TILESET_PATH)
-
-	var source := TileSetAtlasSource.new()
+	var tex    : Texture2D           = load(TILESET_PATH)
+	var source : TileSetAtlasSource  = TileSetAtlasSource.new()
 	source.texture             = tex
 	source.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
 
-	# Register all 8 variants; each sits at atlas column x, row 0.
 	for x in TILE_VARIANTS:
 		source.create_tile(Vector2i(x, 0))
 
-	# ⚠️  Source must be registered with the TileSet BEFORE setting collision
-	# data — tile_data validates polygon counts against the TileSet's physics
-	# layers, so the order here matters.
+	# Source registered with TileSet BEFORE setting per-tile collision data.
 	ts.add_source(source, 0)
 
-	# Apply the same full-tile collision square to every variant.
-	var h : float = TILE_SIZE / 2.0
-	var poly := PackedVector2Array([
+	var h    : float             = TILE_SIZE / 2.0
+	var poly : PackedVector2Array = PackedVector2Array([
 		Vector2(-h, -h), Vector2(h, -h), Vector2(h, h), Vector2(-h, h),
 	])
 	for x in TILE_VARIANTS:
-		var tile_data : TileData = source.get_tile_data(Vector2i(x, 0), 0)
-		tile_data.set_collision_polygons_count(0, 1)
-		tile_data.set_collision_polygon_points(0, 0, poly)
+		var td : TileData = source.get_tile_data(Vector2i(x, 0), 0)
+		td.set_collision_polygons_count(0, 1)
+		td.set_collision_polygon_points(0, 0, poly)
 
 	return ts
 
 
 # ── Wall logic ────────────────────────────────────────────────────────────────
 
+## Returns true when (col, row) is solid rock — i.e. it falls outside every
+## open-water zone.
 func _is_wall(col: int, row: int) -> bool:
-	return not _is_open(col, row)
-
-
-## Returns true when the cell at (col, row) should be open water.
-func _is_open(col: int, row: int) -> bool:
-	# Outer top / bottom border → always solid.
-	if row < WALL or row >= MAP_ROWS - WALL:
-		return false
-
-	# Corridor zone: open only within the passage rows.
-	for corridor in CORRIDORS:
-		if col >= corridor.col_start and col <= corridor.col_end:
-			return row >= PASSAGE_FIRST and row <= PASSAGE_LAST
-
-	# Room zone.
-	for room in ROOMS:
-		if col >= room.col_start and col <= room.col_end:
-			return _room_cell_is_open(col, row, room)
-
-	# Falls outside every defined zone → solid.
-	return false
-
-
-## Determines whether a cell that lies inside a room boundary is open water.
-func _room_cell_is_open(col: int, row: int, room: Dictionary) -> bool:
-	# Room top / bottom walls.
-	if row < INTERIOR_ROW_FIRST or row > INTERIOR_ROW_LAST:
-		return false
-
-	# Left side wall – open only if a corridor is immediately to the left
-	# AND the row falls within the passage band.
-	if col < room.col_start + WALL:
-		return _corridor_at(room.col_start - 1) \
-			and row >= PASSAGE_FIRST and row <= PASSAGE_LAST
-
-	# Right side wall – same logic for a corridor to the right.
-	if col > room.col_end - WALL:
-		return _corridor_at(room.col_end + 1) \
-			and row >= PASSAGE_FIRST and row <= PASSAGE_LAST
-
-	# Interior cell.
+	for zone in OPEN_ZONES:
+		if col >= zone.x1 and col <= zone.x2 \
+				and row >= zone.y1 and row <= zone.y2:
+			return false
 	return true
 
 
-## Returns true when the given column belongs to a corridor zone.
-func _corridor_at(col: int) -> bool:
-	for corridor in CORRIDORS:
-		if col >= corridor.col_start and col <= corridor.col_end:
-			return true
-	return false
+## Deterministic position hash → tile variant index in [0, TILE_VARIANTS).
+## Same position always maps to the same variant; adjacent tiles differ.
+func _tile_variant(col: int, row: int) -> int:
+	return ((col * 1619 + row * 31337) & 0x7FFFFFFF) % TILE_VARIANTS
