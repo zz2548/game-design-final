@@ -46,6 +46,7 @@ interaction_zone = NodePath("../InteractionZone")
 
 [node name="AmbientLight" type="PointLight2D" parent="." unique_id=1775349992]
 scale = Vector2(1.5, 1.5)
+energy = 0.26
 texture = SubResource("GradientTexture2D_i3pqv")
 
 [node name="ConeLight" type="PointLight2D" parent="." unique_id=477901931]
