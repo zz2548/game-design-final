@@ -4,7 +4,6 @@
 # First interact → tells the player what parts are missing.
 # All 3 parts in inventory → consumes them, repairs, then transitions to next level
 # after the repair dialogue closes.
-
 class_name SubmarineInteractable
 extends Interactable
 
@@ -16,10 +15,8 @@ const PARTS : Dictionary = {
 
 var _repaired : bool = false
 
-
 func _ready() -> void:
 	interaction_label = "Inspect Submarine"
-
 
 func _on_interact(_player: Node) -> void:
 	if _repaired:
@@ -49,11 +46,11 @@ func _on_interact(_player: Node) -> void:
 			],
 		})
 
-
 func _repair() -> void:
 	for part_id : String in PARTS:
 		Inventory.remove_item(part_id, 1)
 	_repaired = true
+	GameState.submarine_fixed = true
 	interaction_label = "Board Submarine"
 	DialogueManager.start_dialogue({
 		"speaker": "SUBMARINE",
@@ -62,9 +59,9 @@ func _repair() -> void:
 			"Hull integrity: RESTORED.",
 			"Navigation: ONLINE.",
 			"Submarine ready for departure.",
+			"Creatures can now be engaged safely.",
 		],
 	})
-
 
 func _depart() -> void:
 	SceneManager.next_level()

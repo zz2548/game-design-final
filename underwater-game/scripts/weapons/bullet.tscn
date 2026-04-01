@@ -1,21 +1,30 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bc8ns80f5bwfx"]
 
-[ext_resource type="Script" path="res://scripts/weapons/bullet.gd" id="1_bullet"]
+[ext_resource type="Script" uid="uid://81ftbl5uivu0" path="res://scripts/weapons/bullet.gd" id="1_bullet"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_bullet"]
 size = Vector2(5, 2)
 
-[node name="Bullet" type="CharacterBody2D"]
+[sub_resource type="CircleShape2D" id="CircleShape2D_5sjkt"]
+radius = 4.0
+
+[node name="Bullet" type="CharacterBody2D" unique_id=1163055313]
 collision_layer = 4
-collision_mask = 1
 script = ExtResource("1_bullet")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1402663823]
 shape = SubResource("RectangleShape2D_bullet")
 
-[node name="Visual" type="ColorRect" parent="."]
+[node name="Visual" type="ColorRect" parent="." unique_id=1664770653]
 offset_left = -3.0
 offset_top = -1.0
 offset_right = 3.0
 offset_bottom = 1.0
-color = Color(1.0, 0.88, 0.3, 1.0)
+color = Color(1, 0.88, 0.3, 1)
+
+[node name="BulletArea" type="Area2D" parent="." unique_id=867542078]
+collision_layer = 4
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BulletArea" unique_id=941475697]
+shape = SubResource("CircleShape2D_5sjkt")

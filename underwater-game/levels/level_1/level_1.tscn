@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://iwtv1ak671c" path="res://assets/player/sub.png" id="8_j48du"]
 [ext_resource type="Resource" path="res://shared/items/hull_plating.tres" id="9_hull"]
 [ext_resource type="Resource" path="res://shared/items/navigation_module.tres" id="10_nav"]
+[ext_resource type="PackedScene" uid="uid://cdxseykgech3" path="res://shared/Enemies/enemy.tscn" id="11_qbdb0"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8jbay"]
 texture = ExtResource("1_j48du")
@@ -305,3 +306,9 @@ visible = false
 
 [node name="DialogueUI" parent="." unique_id=1340303138 instance=ExtResource("5_e6u7d")]
 visible = false
+
+[node name="Enemy" parent="." unique_id=581764293 instance=ExtResource("11_qbdb0")]
+position = Vector2(1003, 528)
+
+[node name="Enemy2" parent="." unique_id=1290169317 instance=ExtResource("11_qbdb0")]
+position = Vector2(789, 64)

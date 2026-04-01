@@ -165,8 +165,8 @@ Node: Area2D
   speaker_name: "Research Log #4"
   dialogue_lines:
     [0] "Day 14. The borehole breach is getting worse."
-    [1] "Dr. Chen hasn't responded since yesterday."
-    [2] "I think we're alone down here."
+	[1] "Dr. Chen hasn't responded since yesterday."
+	[2] "I think we're alone down here."
   └─ CollisionShape2D  (RectangleShape2D 48×48)
   └─ ColorRect         (visual placeholder, 32×32, green)
 ```

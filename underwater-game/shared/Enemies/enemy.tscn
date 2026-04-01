@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://cdxseykgech3"]
+
+[ext_resource type="Script" uid="uid://dnjemd8lyodrx" path="res://shared/Enemies/enemy.gd" id="1_epbig"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_epbig"]
+radius = 8.0
+height = 20.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_4x6ml"]
+radius = 120.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_v300b"]
+radius = 20.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_2enl3"]
+radius = 12.0
+
+[node name="Enemy" type="CharacterBody2D" unique_id=581764293 groups=["enemies"]]
+collision_layer = 2
+script = ExtResource("1_epbig")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=574711302]
+shape = SubResource("CapsuleShape2D_epbig")
+
+[node name="Sprite" type="ColorRect" parent="." unique_id=303590823]
+offset_left = -8.0
+offset_top = -10.0
+offset_right = 8.0
+offset_bottom = 10.0
+color = Color(1, 0.1, 0.1, 1)
+
+[node name="AlertLabel" type="Label" parent="." unique_id=118354886]
+modulate = Color(1, 0.9, 0, 1)
+offset_left = -4.0
+offset_top = -36.0
+offset_right = 36.0
+offset_bottom = -13.0
+text = "!"
+horizontal_alignment = 1
+
+[node name="DetectionZone" type="Area2D" parent="." unique_id=155792756]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionZone" unique_id=1892422719]
+shape = SubResource("CircleShape2D_4x6ml")
+
+[node name="HitZone" type="Area2D" parent="." unique_id=1253235713]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitZone" unique_id=1187525994]
+shape = SubResource("CircleShape2D_v300b")
+
+[node name="BulletHitZone" type="Area2D" parent="." unique_id=872398384]
+collision_layer = 4
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BulletHitZone" unique_id=558001580]
+shape = SubResource("CircleShape2D_2enl3")
