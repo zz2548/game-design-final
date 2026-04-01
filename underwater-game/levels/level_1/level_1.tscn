@@ -3,11 +3,13 @@
 [ext_resource type="Texture2D" uid="uid://cgj6tvvwefovh" path="res://assets/tiles/1_Mine_Tileset_1.png" id="1_j48du"]
 [ext_resource type="PackedScene" uid="uid://dwcfh2wu8phsc" path="res://shared/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" path="res://shared/ui/InventoryUI.tscn" id="2_inventoryui"]
-[ext_resource type="Resource" uid="uid://cj83rlwclx66t" path="res://shared/items/test_item.tres" id="3_iey7c"]
 [ext_resource type="Script" uid="uid://b45ek5my76at" path="res://scripts/interactables/pickup_item.gd" id="3_pickup"]
-[ext_resource type="Script" uid="uid://dgkwj4x1fhpfo" path="res://scripts/interactables/npc_interactable.gd" id="5_5b03i"]
 [ext_resource type="PackedScene" uid="uid://eb3vk6h130ot" path="res://shared/ui/dialogue_ui.tscn" id="5_e6u7d"]
 [ext_resource type="Texture2D" uid="uid://iwtv1ak671c" path="res://assets/player/sub.png" id="8_j48du"]
+[ext_resource type="Script" path="res://scripts/interactables/submarine_interactable.gd" id="7_submarine"]
+[ext_resource type="Resource" path="res://shared/items/engine_component.tres" id="8_engine"]
+[ext_resource type="Resource" path="res://shared/items/hull_plating.tres" id="9_hull"]
+[ext_resource type="Resource" path="res://shared/items/navigation_module.tres" id="10_nav"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8jbay"]
 texture = ExtResource("1_j48du")
@@ -211,17 +213,8 @@ sources/0 = SubResource("TileSetAtlasSource_8jbay")
 [sub_resource type="RectangleShape2D" id="shape_submarine"]
 size = Vector2(192, 64)
 
-[sub_resource type="RectangleShape2D" id="shape_hq_radio"]
-size = Vector2(48, 48)
-
-[sub_resource type="RectangleShape2D" id="shape_pickup"]
-size = Vector2(32, 32)
-
-[sub_resource type="RectangleShape2D" id="shape_terminal"]
-size = Vector2(48, 64)
-
-[sub_resource type="RectangleShape2D" id="shape_exit"]
-size = Vector2(32, 96)
+[sub_resource type="RectangleShape2D" id="shape_part"]
+size = Vector2(24, 24)
 
 [node name="Level1" type="Node2D" unique_id=1255267063]
 
@@ -242,10 +235,11 @@ tile_map_data = PackedByteArray("AAAAAAAAAAABAAUAAAAAAAEAAAABAAMAAAAAAAIAAAABAAQ
 tile_set = SubResource("TileSet_la5aw")
 
 [node name="Objects" type="Node2D" parent="." unique_id=1871704538]
-visible = false
 
-[node name="Submarine" type="StaticBody2D" parent="Objects" unique_id=722097056]
-position = Vector2(632, 392)
+[node name="Submarine" type="Area2D" parent="Objects" unique_id=722097056]
+position = Vector2(296, 392)
+collision_mask = 0
+script = ExtResource("7_submarine")
 
 [node name="Shape" type="CollisionShape2D" parent="Objects/Submarine" unique_id=1310266936]
 shape = SubResource("shape_submarine")
@@ -257,83 +251,61 @@ offset_right = 96.0
 offset_bottom = 32.0
 color = Color(0.12, 0.16, 0.24, 1)
 
-[node name="HQRadio" type="Area2D" parent="Objects" unique_id=759707145]
-position = Vector2(1096, 312)
-collision_mask = 0
-script = ExtResource("5_5b03i")
-speaker_name = "HQ AI"
-dialogue_lines = Array[String](["TECHNICIAN. This is HQ Automated Response System.", "We have lost contact with Facility Europa-7.", "You have been dispatched to investigate and restore communications.", "Proceed through the facility. Exercise caution.", "...Something is not right down here."])
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/HQRadio" unique_id=1287894769]
-shape = SubResource("shape_hq_radio")
-
-[node name="Visual" type="ColorRect" parent="Objects/HQRadio" unique_id=1511647634]
-offset_left = -24.0
-offset_top = -24.0
-offset_right = 24.0
-offset_bottom = 24.0
-color = Color(0.2, 0.8, 0.9, 1)
-
-[node name="SupplyKit" type="Area2D" parent="Objects" unique_id=1977881346]
-position = Vector2(1528, 296)
+[node name="EnginePart" type="Area2D" parent="Objects" unique_id=200100001]
+position = Vector2(640, 480)
 collision_mask = 0
 script = ExtResource("3_pickup")
-item = ExtResource("3_iey7c")
+item = ExtResource("8_engine")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/SupplyKit" unique_id=1649980783]
-shape = SubResource("shape_pickup")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/EnginePart" unique_id=200100002]
+shape = SubResource("shape_part")
 
-[node name="Visual" type="ColorRect" parent="Objects/SupplyKit" unique_id=895206646]
-offset_left = -16.0
-offset_top = -16.0
-offset_right = 16.0
-offset_bottom = 16.0
-color = Color(1, 0.8, 0.2, 1)
+[node name="Visual" type="ColorRect" parent="Objects/EnginePart" unique_id=200100003]
+offset_left = -12.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = 12.0
+color = Color(1.0, 0.5, 0.1, 1)
 
-[node name="ResearchTerminal" type="Area2D" parent="Objects" unique_id=2017797456]
-position = Vector2(1960, 424)
+[node name="HullPart" type="Area2D" parent="Objects" unique_id=200200001]
+position = Vector2(1120, 320)
 collision_mask = 0
-script = ExtResource("5_5b03i")
-speaker_name = "FACILITY LOG"
-dialogue_lines = Array[String](["FACILITY LOG — DAY 47", "All research staff ordered to emergency evacuation protocol.", "...nobody came.", "Primary communications array: OFFLINE. Cause: unknown."])
+script = ExtResource("3_pickup")
+item = ExtResource("9_hull")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/ResearchTerminal" unique_id=2072481852]
-shape = SubResource("shape_terminal")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/HullPart" unique_id=200200002]
+shape = SubResource("shape_part")
 
-[node name="Visual" type="ColorRect" parent="Objects/ResearchTerminal" unique_id=439311668]
-offset_left = -24.0
-offset_top = -32.0
-offset_right = 24.0
-offset_bottom = 32.0
-color = Color(0.25, 0.4, 0.6, 1)
+[node name="Visual" type="ColorRect" parent="Objects/HullPart" unique_id=200200003]
+offset_left = -12.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = 12.0
+color = Color(0.3, 0.6, 1.0, 1)
 
-[node name="ExitAirlock" type="Area2D" parent="Objects" unique_id=1435779904]
-position = Vector2(3464, 328)
+[node name="NavPart" type="Area2D" parent="Objects" unique_id=200300001]
+position = Vector2(2048, 512)
 collision_mask = 0
-script = ExtResource("5_5b03i")
-speaker_name = "AIRLOCK B"
-dialogue_lines = Array[String](["AIRLOCK B — SECTOR 2 ACCESS", "Restore power to the communications array to proceed.", "[Sector 2 ahead]"])
+script = ExtResource("3_pickup")
+item = ExtResource("10_nav")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/ExitAirlock" unique_id=969800703]
-shape = SubResource("shape_exit")
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/NavPart" unique_id=200300002]
+shape = SubResource("shape_part")
 
-[node name="Visual" type="ColorRect" parent="Objects/ExitAirlock" unique_id=746094082]
-offset_left = -16.0
-offset_top = -48.0
-offset_right = 16.0
-offset_bottom = 48.0
-color = Color(0.2, 1, 0.5, 1)
+[node name="Visual" type="ColorRect" parent="Objects/NavPart" unique_id=200300003]
+offset_left = -12.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = 12.0
+color = Color(0.2, 1.0, 0.4, 1)
+
+[node name="Sub" type="Sprite2D" parent="Objects" unique_id=1508147977]
+position = Vector2(296, 392)
+texture = ExtResource("8_j48du")
 
 [node name="player" parent="." unique_id=1560876372 instance=ExtResource("1_player")]
-visible = false
-position = Vector2(102, 376)
+position = Vector2(296, 328)
 
 [node name="InventoryUI" parent="." unique_id=2083902792 instance=ExtResource("2_inventoryui")]
-visible = false
 
 [node name="DialogueUI" parent="." unique_id=1340303138 instance=ExtResource("5_e6u7d")]
-visible = false
-
-[node name="Sub" type="Sprite2D" parent="." unique_id=1508147977]
-position = Vector2(102, 430)
-texture = ExtResource("8_j48du")
