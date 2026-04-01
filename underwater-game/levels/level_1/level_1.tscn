@@ -5,9 +5,9 @@
 [ext_resource type="PackedScene" path="res://shared/ui/InventoryUI.tscn" id="2_inventoryui"]
 [ext_resource type="Script" uid="uid://b45ek5my76at" path="res://scripts/interactables/pickup_item.gd" id="3_pickup"]
 [ext_resource type="PackedScene" uid="uid://eb3vk6h130ot" path="res://shared/ui/dialogue_ui.tscn" id="5_e6u7d"]
-[ext_resource type="Texture2D" uid="uid://iwtv1ak671c" path="res://assets/player/sub.png" id="8_j48du"]
-[ext_resource type="Script" path="res://scripts/interactables/submarine_interactable.gd" id="7_submarine"]
+[ext_resource type="Script" uid="uid://5cwj8fgo5bwt" path="res://scripts/interactables/submarine_interactable.gd" id="7_submarine"]
 [ext_resource type="Resource" path="res://shared/items/engine_component.tres" id="8_engine"]
+[ext_resource type="Texture2D" uid="uid://iwtv1ak671c" path="res://assets/player/sub.png" id="8_j48du"]
 [ext_resource type="Resource" path="res://shared/items/hull_plating.tres" id="9_hull"]
 [ext_resource type="Resource" path="res://shared/items/navigation_module.tres" id="10_nav"]
 
@@ -219,7 +219,6 @@ size = Vector2(24, 24)
 [node name="Level1" type="Node2D" unique_id=1255267063]
 
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1930376493]
-visible = false
 color = Color(0, 0, 0, 1)
 
 [node name="Background" type="ColorRect" parent="." unique_id=472897320]
@@ -237,22 +236,18 @@ tile_set = SubResource("TileSet_la5aw")
 [node name="Objects" type="Node2D" parent="." unique_id=1871704538]
 
 [node name="Submarine" type="Area2D" parent="Objects" unique_id=722097056]
-position = Vector2(296, 392)
+position = Vector2(104, 427)
 collision_mask = 0
 script = ExtResource("7_submarine")
 
 [node name="Shape" type="CollisionShape2D" parent="Objects/Submarine" unique_id=1310266936]
 shape = SubResource("shape_submarine")
 
-[node name="Visual" type="ColorRect" parent="Objects/Submarine" unique_id=1453696265]
-offset_left = -96.0
-offset_top = -32.0
-offset_right = 96.0
-offset_bottom = 32.0
-color = Color(0.12, 0.16, 0.24, 1)
+[node name="Sub" type="Sprite2D" parent="Objects/Submarine" unique_id=1508147977]
+texture = ExtResource("8_j48du")
 
 [node name="EnginePart" type="Area2D" parent="Objects" unique_id=200100001]
-position = Vector2(640, 480)
+position = Vector2(333, 468)
 collision_mask = 0
 script = ExtResource("3_pickup")
 item = ExtResource("8_engine")
@@ -265,10 +260,11 @@ offset_left = -12.0
 offset_top = -12.0
 offset_right = 12.0
 offset_bottom = 12.0
-color = Color(1.0, 0.5, 0.1, 1)
+color = Color(1, 0.5, 0.1, 1)
+metadata/_edit_use_anchors_ = true
 
 [node name="HullPart" type="Area2D" parent="Objects" unique_id=200200001]
-position = Vector2(1120, 320)
+position = Vector2(394, 130)
 collision_mask = 0
 script = ExtResource("3_pickup")
 item = ExtResource("9_hull")
@@ -281,10 +277,11 @@ offset_left = -12.0
 offset_top = -12.0
 offset_right = 12.0
 offset_bottom = 12.0
-color = Color(0.3, 0.6, 1.0, 1)
+color = Color(0.3, 0.6, 1, 1)
+metadata/_edit_use_anchors_ = true
 
 [node name="NavPart" type="Area2D" parent="Objects" unique_id=200300001]
-position = Vector2(2048, 512)
+position = Vector2(788, 589)
 collision_mask = 0
 script = ExtResource("3_pickup")
 item = ExtResource("10_nav")
@@ -297,15 +294,14 @@ offset_left = -12.0
 offset_top = -12.0
 offset_right = 12.0
 offset_bottom = 12.0
-color = Color(0.2, 1.0, 0.4, 1)
-
-[node name="Sub" type="Sprite2D" parent="Objects" unique_id=1508147977]
-position = Vector2(296, 392)
-texture = ExtResource("8_j48du")
+color = Color(0.2, 1, 0.4, 1)
+metadata/_edit_use_anchors_ = true
 
 [node name="player" parent="." unique_id=1560876372 instance=ExtResource("1_player")]
-position = Vector2(296, 328)
+position = Vector2(37, 333)
 
 [node name="InventoryUI" parent="." unique_id=2083902792 instance=ExtResource("2_inventoryui")]
+visible = false
 
 [node name="DialogueUI" parent="." unique_id=1340303138 instance=ExtResource("5_e6u7d")]
+visible = false
