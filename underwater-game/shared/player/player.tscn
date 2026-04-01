@@ -54,3 +54,4 @@ texture = ExtResource("3_cone_tex")
 texture_scale = 22.73
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1370074111]
+zoom = Vector2(1.5, 1.5)

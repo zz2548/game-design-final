@@ -302,10 +302,8 @@ metadata/_edit_use_anchors_ = true
 position = Vector2(37, 333)
 
 [node name="InventoryUI" parent="." unique_id=2083902792 instance=ExtResource("2_inventoryui")]
-visible = false
 
 [node name="DialogueUI" parent="." unique_id=1340303138 instance=ExtResource("5_e6u7d")]
-visible = false
 
 [node name="Enemy" parent="." unique_id=581764293 instance=ExtResource("11_qbdb0")]
 position = Vector2(1003, 528)

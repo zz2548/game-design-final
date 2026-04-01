@@ -22,6 +22,11 @@ Inventory="*uid://duspgigoh3ag0"
 SceneManager="*uid://b1nnjoi6yci5d"
 GameState="*uid://c0cnnuynh7c34"
 
+[display]
+
+window/size/mode=3
+window/stretch/mode="canvas_items"
+
 [input]
 
 move_left={
