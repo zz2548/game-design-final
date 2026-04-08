@@ -21,6 +21,7 @@ DialogueManager="*uid://cvhxt4n02g4s7"
 Inventory="*uid://duspgigoh3ag0"
 SceneManager="*uid://b1nnjoi6yci5d"
 GameState="*uid://c0cnnuynh7c34"
+ObjectiveManager="*res://autoloads/objective_manager.gd"
 
 [display]
 

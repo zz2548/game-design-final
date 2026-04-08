@@ -6,6 +6,13 @@ const ACCELERATION : float = 800.0
 const FRICTION     : float = 600.0
 const BUOYANCY     : float = 60.0   # passive upward drift when not moving
 
+# ── Submarine driving ─────────────────────────────────────────────────────────
+const SUB_SPEED    : float = 180.0  # slower, heavier feel
+const SUB_ACCEL    : float = 300.0
+const SUB_FRICTION : float = 150.0  # drifts longer than swimming
+
+var submarine_mode : bool = false
+
 # ── Weapon ────────────────────────────────────────────────────────────────────
 const BULLET_SCENE  : PackedScene = preload("res://scripts/weapons/bullet.tscn")
 const BULLET_OFFSET : float = 12.0  # px ahead of centre to spawn bullet
@@ -19,7 +26,8 @@ var current_ammo : int = MAX_AMMO
 signal ammo_changed(current: int, maximum: int)
 
 # ── Internal ──────────────────────────────────────────────────────────────────
-@onready var cone_light : PointLight2D = $ConeLight
+@onready var cone_light  : PointLight2D = $ConeLight
+@onready var _body_rect  : ColorRect    = $ColorRect
 
 var _fire_timer : float = 0.0
 
@@ -32,6 +40,15 @@ func _ready() -> void:
 	)
 
 
+# ── Submarine mode ────────────────────────────────────────────────────────────
+
+## Called by the level once the player boards the submarine.
+func enter_submarine_mode() -> void:
+	submarine_mode = true
+	_body_rect.hide()
+	$InteractionZone.monitoring = false   # no interactions while piloting
+
+
 # ── Physics (movement) ────────────────────────────────────────────────────────
 
 func _physics_process(delta: float) -> void:
@@ -40,15 +57,26 @@ func _physics_process(delta: float) -> void:
 		Input.get_axis("move_up", "move_down")
 	)
 
-	if input_dir.length() > 0.0:
-		input_dir = input_dir.normalized()
-		velocity = velocity.move_toward(input_dir * SWIM_SPEED, ACCELERATION * delta)
+	if submarine_mode:
+		# Heavier, no buoyancy — feels like piloting a vessel
+		if input_dir.length() > 0.0:
+			velocity = velocity.move_toward(
+				input_dir.normalized() * SUB_SPEED, SUB_ACCEL * delta
+			)
+		else:
+			velocity.x = move_toward(velocity.x, 0.0, SUB_FRICTION * delta)
+			velocity.y = move_toward(velocity.y, 0.0, SUB_FRICTION * delta)
+		velocity = velocity.limit_length(SUB_SPEED)
 	else:
-		velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
-		velocity.y = move_toward(velocity.y, 0.0, FRICTION * delta)
-		velocity.y -= BUOYANCY * delta  # passive upward drift
+		if input_dir.length() > 0.0:
+			input_dir = input_dir.normalized()
+			velocity = velocity.move_toward(input_dir * SWIM_SPEED, ACCELERATION * delta)
+		else:
+			velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
+			velocity.y = move_toward(velocity.y, 0.0, FRICTION * delta)
+			velocity.y -= BUOYANCY * delta  # passive upward drift
+		velocity = velocity.limit_length(SWIM_SPEED)
 
-	velocity = velocity.limit_length(SWIM_SPEED)
 	move_and_slide()
 
 	# Aim the cone light at the mouse cursor every frame
@@ -73,8 +101,8 @@ func _unhandled_input(event: InputEvent) -> void:
 # ── Weapon logic ──────────────────────────────────────────────────────────────
 
 func _fire() -> void:
-	# Block fire during active dialogue
-	if DialogueManager.is_active:
+	# Block fire during active dialogue or while piloting the submarine
+	if DialogueManager.is_active or submarine_mode:
 		return
 	if current_ammo <= 0:
 		# TODO: play a "dry fire" / click sound

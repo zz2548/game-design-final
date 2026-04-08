@@ -7,23 +7,30 @@
 class_name SubmarineInteractable
 extends Interactable
 
+## Emitted after the repair dialogue closes and the player confirms departure.
+## The level scene listens to this to start the driving sequence.
+signal boarded(player: Node)
+
 const PARTS : Dictionary = {
-	"engine_component":  "Engine Component",
-	"hull_plating":      "Hull Plating",
-	"navigation_module": "Navigation Module",
+	"engine_component":  "drive coupling",
+	"hull_plating":      "pressure seal",
+	"navigation_module": "nav core",
 }
 
 var _repaired : bool = false
+var _boarding_player : Node = null
 
 func _ready() -> void:
-	interaction_label = "Inspect Submarine"
+	interaction_label = "Inspect Tethys-7"
 
-func _on_interact(_player: Node) -> void:
+
+func _on_interact(player: Node) -> void:
+	_boarding_player = player
 	if _repaired:
-		# Already repaired — board and depart
+		# Already repaired — confirm boarding, then hand off to level
 		DialogueManager.start_dialogue({
-			"speaker": "SUBMARINE",
-			"lines": ["Engines online. Departing now."],
+			"speaker": "ORCA",
+			"lines": ["Systems nominal. Take the helm."],
 		})
 		DialogueManager.dialogue_ended.connect(_depart, CONNECT_ONE_SHOT)
 		return
@@ -38,11 +45,11 @@ func _on_interact(_player: Node) -> void:
 		_repair()
 	else:
 		DialogueManager.start_dialogue({
-			"speaker": "SUBMARINE",
+			"speaker": "ORCA",
 			"lines": [
-				"WARNING: Critical systems offline.",
-				"Missing: " + ", ".join(missing) + ".",
-				"Find all components to restore functionality.",
+				"Tethys-7 systems check: critical failures detected.",
+				"Missing components: " + ", ".join(missing) + ".",
+				"Departure is not possible in current state.",
 			],
 		})
 
@@ -51,17 +58,18 @@ func _repair() -> void:
 		Inventory.remove_item(part_id, 1)
 	_repaired = true
 	GameState.submarine_fixed = true
-	interaction_label = "Board Submarine"
+	interaction_label = "Board Tethys-7"
 	DialogueManager.start_dialogue({
-		"speaker": "SUBMARINE",
+		"speaker": "ORCA",
 		"lines": [
-			"All components installed.",
-			"Hull integrity: RESTORED.",
-			"Navigation: ONLINE.",
-			"Submarine ready for departure.",
+			"Drive coupling installed.",
+			"Pressure seal nominal.",
+			"Nav core online.",
+			"Tethys-7 is operational.",
 			"Creatures can now be engaged safely.",
 		],
 	})
 
 func _depart() -> void:
-	SceneManager.next_level()
+	monitoring = false   # prevent further interactions
+	emit_signal("boarded", _boarding_player)
