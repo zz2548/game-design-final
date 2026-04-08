@@ -131,16 +131,15 @@ func _on_detection_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
 	if not GameState.submarine_fixed:
+		# Warn the player once — then the creature still gives chase
 		if not DialogueManager.is_active:
 			DialogueManager.start_dialogue({
-				"speaker": "WARNING",
+				"speaker": "ORCA",
 				"lines": [
-					"A creature is nearby.",
-					"You won't survive a fight with a broken submarine.",
-					"Fix the submarine before engaging.",
+					"Creature detected. Threat classification: unknown biological.",
+					"Tethys-7 is not operational. Do not engage.",
 				],
 			})
-		return
 	if _state == State.IDLE:
 		_player_ref = body
 		_enter_state(State.ALERT)
@@ -152,10 +151,15 @@ func _on_detection_body_exited(body: Node2D) -> void:
 
 
 func _on_hit_zone_body_entered(body: Node2D) -> void:
-	if body.is_in_group("player"):
-		_player_ref = body
-		if _state != State.ATTACK:
-			_enter_state(State.ATTACK)
+	if not body.is_in_group("player"):
+		return
+	_player_ref = body
+	if not GameState.submarine_fixed:
+		# Tethys-7 not operational — one-hit kill
+		body.die()
+		return
+	if _state != State.ATTACK:
+		_enter_state(State.ATTACK)
 
 
 func _on_hit_zone_body_exited(body: Node2D) -> void:

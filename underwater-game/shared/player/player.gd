@@ -129,5 +129,19 @@ func add_ammo(amount: int) -> void:
 	emit_signal("ammo_changed", current_ammo, MAX_AMMO)
 
 
+## Called by an enemy when the player is killed.
+## Plays a brief ORCA death line then reloads the level.
+func die() -> void:
+	set_physics_process(false)
+	set_process_unhandled_input(false)
+	DialogueManager.start_dialogue({
+		"speaker": "ORCA",
+		"lines": ["Pilot down. Reinitialising from last checkpoint."],
+	})
+	DialogueManager.dialogue_ended.connect(
+		func(): get_tree().reload_current_scene(), CONNECT_ONE_SHOT
+	)
+
+
 func _process(_delta: float) -> void:
 	pass
