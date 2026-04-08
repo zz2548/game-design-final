@@ -10,10 +10,12 @@
 [ext_resource type="Texture2D" uid="uid://iwtv1ak671c" path="res://assets/player/sub.png" id="8_j48du"]
 [ext_resource type="Resource" path="res://shared/items/hull_plating.tres" id="9_hull"]
 [ext_resource type="Resource" path="res://shared/items/navigation_module.tres" id="10_nav"]
-[ext_resource type="PackedScene" uid="uid://cdxseykgech3" path="res://shared/Enemies/enemy.tscn" id="11_qbdb0"]
 [ext_resource type="PackedScene" path="res://shared/ui/HintsUI.tscn" id="11_hints"]
+[ext_resource type="PackedScene" uid="uid://cdxseykgech3" path="res://shared/Enemies/enemy.tscn" id="11_qbdb0"]
+[ext_resource type="Script" uid="uid://385wyroimuhd" path="res://levels/level_1/level_1.gd" id="12_level"]
 [ext_resource type="PackedScene" path="res://shared/ui/WeaponHUD.tscn" id="13_weaponhud"]
-[ext_resource type="Script" uid="uid://bsbvqm0jvki2a" path="res://levels/level_1/level_1.gd" id="12_level"]
+[ext_resource type="Script" uid="uid://cyoql4kks8dxn" path="res://scripts/interactables/pickup_weapon.gd" id="14_pickupwpn"]
+[ext_resource type="Resource" path="res://shared/weapons/shotgun.tres" id="15_shotgun"]
 
 [sub_resource type="OccluderPolygon2D" id="occ_full_tile"]
 polygon = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
@@ -334,8 +336,8 @@ offset_left = -487.0
 offset_top = -391.0
 offset_right = 1974.0
 offset_bottom = 1254.0
-color = Color(0.039215688, 0.039215688, 0.101960786, 1)
 mouse_filter = 2
+color = Color(0.039215688, 0.039215688, 0.101960786, 1)
 
 [node name="Foreground Tilelayer" type="TileMapLayer" parent="." unique_id=1540089337]
 use_parent_material = true
@@ -427,5 +429,23 @@ collision_layer = 0
 shape = SubResource("shape_exit")
 
 [node name="HintsUI" parent="." unique_id=-2144967295 instance=ExtResource("11_hints")]
+
+[node name="ShotgunPickup" type="Area2D" parent="." unique_id=-2144967293]
+position = Vector2(469, 385)
+collision_mask = 0
+script = ExtResource("14_pickupwpn")
+weapon = ExtResource("15_shotgun")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ShotgunPickup" unique_id=-2144967292]
+shape = SubResource("shape_part")
+
+[node name="Visual" type="ColorRect" parent="ShotgunPickup" unique_id=-2144967291]
+offset_left = -12.0
+offset_top = -12.0
+offset_right = 12.0
+offset_bottom = 12.0
+mouse_filter = 2
+color = Color(0.9, 0.5, 0.1, 1)
+metadata/_edit_use_anchors_ = true
 
 [node name="WeaponHUD" parent="." unique_id=-2144967294 instance=ExtResource("13_weaponhud")]
