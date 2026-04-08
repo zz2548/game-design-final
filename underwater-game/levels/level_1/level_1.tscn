@@ -12,6 +12,7 @@
 [ext_resource type="Resource" path="res://shared/items/navigation_module.tres" id="10_nav"]
 [ext_resource type="PackedScene" uid="uid://cdxseykgech3" path="res://shared/Enemies/enemy.tscn" id="11_qbdb0"]
 [ext_resource type="PackedScene" path="res://shared/ui/HintsUI.tscn" id="11_hints"]
+[ext_resource type="PackedScene" path="res://shared/ui/WeaponHUD.tscn" id="13_weaponhud"]
 [ext_resource type="Script" uid="uid://bsbvqm0jvki2a" path="res://levels/level_1/level_1.gd" id="12_level"]
 
 [sub_resource type="OccluderPolygon2D" id="occ_full_tile"]
@@ -334,6 +335,7 @@ offset_top = -391.0
 offset_right = 1974.0
 offset_bottom = 1254.0
 color = Color(0.039215688, 0.039215688, 0.101960786, 1)
+mouse_filter = 2
 
 [node name="Foreground Tilelayer" type="TileMapLayer" parent="." unique_id=1540089337]
 use_parent_material = true
@@ -425,3 +427,5 @@ collision_layer = 0
 shape = SubResource("shape_exit")
 
 [node name="HintsUI" parent="." unique_id=-2144967295 instance=ExtResource("11_hints")]
+
+[node name="WeaponHUD" parent="." unique_id=-2144967294 instance=ExtResource("13_weaponhud")]

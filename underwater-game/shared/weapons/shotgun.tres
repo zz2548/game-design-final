@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://shared/weapons/weapon_data.gd" id="1_wpndata"]
+[ext_resource type="PackedScene" uid="uid://bc8ns80f5bwfx" path="res://scripts/weapons/bullet.tscn" id="2_bullet"]
+
+[resource]
+script = ExtResource("1_wpndata")
+id = "shotgun"
+display_name = "Scatter Cannon"
+bullet_scene = ExtResource("2_bullet")
+bullet_count = 4
+spread_angle = 25.0
+fire_cooldown = 0.65
+max_ammo = 16
+bullet_offset = 12.0

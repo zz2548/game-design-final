@@ -1,0 +1,40 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://shared/ui/weapon_hud.gd" id="1_weaponhud"]
+
+[node name="WeaponHUD" type="CanvasLayer"]
+script = ExtResource("1_weaponhud")
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -160.0
+offset_top = -56.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="WeaponLabel" type="Label" parent="Panel/Margin/VBox"]
+layout_mode = 2
+text = "Harpoon Pistol"
+
+[node name="Divider" type="HSeparator" parent="Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="AmmoLabel" type="Label" parent="Panel/Margin/VBox"]
+layout_mode = 2
+text = "30 / 30"

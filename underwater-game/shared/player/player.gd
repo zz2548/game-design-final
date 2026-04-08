@@ -14,16 +14,13 @@ const SUB_FRICTION : float = 150.0  # drifts longer than swimming
 var submarine_mode : bool = false
 
 # ── Weapon ────────────────────────────────────────────────────────────────────
-const BULLET_SCENE  : PackedScene = preload("res://scripts/weapons/bullet.tscn")
-const BULLET_OFFSET : float = 12.0  # px ahead of centre to spawn bullet
-const FIRE_COOLDOWN : float = 0.20  # seconds between shots
+const DEFAULT_WEAPON : WeaponData = preload("res://shared/weapons/pistol.tres")
 
-# ── Ammo ──────────────────────────────────────────────────────────────────────
-const MAX_AMMO : int = 30
-var current_ammo : int = MAX_AMMO
+var current_weapon : WeaponData = null
+var _ammo          : Dictionary = {}   # weapon_id → current ammo (int)
 
-## Emitted whenever ammo changes so a HUD Label can update.
-signal ammo_changed(current: int, maximum: int)
+## Emitted whenever the equipped weapon or ammo count changes.
+signal ammo_changed(weapon_name: String, current: int, maximum: int)
 
 # ── Internal ──────────────────────────────────────────────────────────────────
 @onready var cone_light  : PointLight2D = $ConeLight
@@ -38,6 +35,7 @@ func _ready() -> void:
 	Inventory.item_added.connect(func(item, qty):
 		print("Picked up: ", item.display_name, " x", qty)
 	)
+	equip_weapon(DEFAULT_WEAPON)
 
 
 # ── Submarine mode ────────────────────────────────────────────────────────────
@@ -100,33 +98,54 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # ── Weapon logic ──────────────────────────────────────────────────────────────
 
+## Equip a weapon. First-time equip gives a full ammo pool; switching back
+## to a previously held weapon restores its last ammo count.
+func equip_weapon(weapon: WeaponData) -> void:
+	current_weapon = weapon
+	if not _ammo.has(weapon.id):
+		_ammo[weapon.id] = weapon.max_ammo
+	emit_signal("ammo_changed", weapon.display_name, _ammo[weapon.id], weapon.max_ammo)
+
+
 func _fire() -> void:
 	# Block fire during active dialogue or while piloting the submarine
-	if DialogueManager.is_active or submarine_mode:
+	if DialogueManager.is_active or submarine_mode or current_weapon == null:
 		return
-	if current_ammo <= 0:
+	if _ammo.get(current_weapon.id, 0) <= 0:
 		# TODO: play a "dry fire" / click sound
 		return
 	if _fire_timer > 0.0:
 		return
 
-	var aim_dir := (get_global_mouse_position() - global_position).normalized()
+	var aim_dir    := (get_global_mouse_position() - global_position).normalized()
+	var base_angle := aim_dir.angle()
+	var count      := current_weapon.bullet_count
+	# For count=1, step=0 so start=base_angle and only one bullet fires dead-centre
+	var step       : float = deg_to_rad(current_weapon.spread_angle) / max(count - 1, 1)
+	var start      := base_angle - step * (count - 1) / 2.0
 
-	var bullet : CharacterBody2D = BULLET_SCENE.instantiate()
-	bullet.global_position = global_position + aim_dir * BULLET_OFFSET
-	bullet.rotation       = aim_dir.angle()   # so the 5×2 rect faces the right way
-	bullet.direction      = aim_dir
-	get_parent().add_child(bullet)
+	for i in count:
+		var angle  := start + step * i
+		var dir    := Vector2.from_angle(angle)
+		var bullet := current_weapon.bullet_scene.instantiate()
+		bullet.global_position = global_position + dir * current_weapon.bullet_offset
+		bullet.rotation        = angle
+		bullet.direction       = dir
+		get_parent().add_child(bullet)
 
-	current_ammo -= 1
-	_fire_timer   = FIRE_COOLDOWN
-	emit_signal("ammo_changed", current_ammo, MAX_AMMO)
+	_ammo[current_weapon.id] -= 1
+	_fire_timer = current_weapon.fire_cooldown
+	emit_signal("ammo_changed", current_weapon.display_name,
+			_ammo[current_weapon.id], current_weapon.max_ammo)
 
 
-## Call this from an ammo-pickup interactable to refill ammo.
+## Call this from an ammo-pickup interactable to refill the current weapon's ammo.
 func add_ammo(amount: int) -> void:
-	current_ammo = mini(current_ammo + amount, MAX_AMMO)
-	emit_signal("ammo_changed", current_ammo, MAX_AMMO)
+	if current_weapon == null:
+		return
+	var id := current_weapon.id
+	_ammo[id] = mini(_ammo.get(id, 0) + amount, current_weapon.max_ammo)
+	emit_signal("ammo_changed", current_weapon.display_name, _ammo[id], current_weapon.max_ammo)
 
 
 ## Called by an enemy when the player is killed.
