@@ -1,0 +1,40 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://shared/ui/hints_ui.gd" id="1_hints"]
+
+[node name="HintsUI" type="CanvasLayer"]
+script = ExtResource("1_hints")
+
+[node name="Panel" type="PanelContainer" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_top = 0.0
+anchor_bottom = 0.0
+offset_left = -210.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 10.0
+grow_horizontal = 0
+grow_vertical = 1
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="Panel/Margin/VBox"]
+layout_mode = 2
+text = "OBJECTIVES"
+
+[node name="Divider" type="HSeparator" parent="Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="List" type="VBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 2

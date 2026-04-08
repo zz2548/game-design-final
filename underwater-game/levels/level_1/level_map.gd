@@ -102,6 +102,10 @@ func _make_tileset() -> TileSet:
 	ts.set_physics_layer_collision_layer(0, 1)
 	ts.set_physics_layer_collision_mask(0, 1)
 
+	# Occlusion layer — wall tiles block the player's PointLight2D so the
+	# solid rock outside the playable zones stays completely dark.
+	ts.add_occlusion_layer(0)
+
 	var tex    : Texture2D           = load(TILESET_PATH)
 	var source : TileSetAtlasSource  = TileSetAtlasSource.new()
 	source.texture             = tex
@@ -110,17 +114,23 @@ func _make_tileset() -> TileSet:
 	for x in TILE_VARIANTS:
 		source.create_tile(Vector2i(x, 0))
 
-	# Source registered with TileSet BEFORE setting per-tile collision data.
+	# Source registered with TileSet BEFORE setting per-tile data.
 	ts.add_source(source, 0)
 
-	var h    : float             = TILE_SIZE / 2.0
-	var poly : PackedVector2Array = PackedVector2Array([
+	var h        : float             = TILE_SIZE / 2.0
+	var poly     : PackedVector2Array = PackedVector2Array([
 		Vector2(-h, -h), Vector2(h, -h), Vector2(h, h), Vector2(-h, h),
 	])
+	var occluder : OccluderPolygon2D = OccluderPolygon2D.new()
+	occluder.polygon = poly
+
 	for x in TILE_VARIANTS:
 		var td : TileData = source.get_tile_data(Vector2i(x, 0), 0)
+		# Collision
 		td.set_collision_polygons_count(0, 1)
 		td.set_collision_polygon_points(0, 0, poly)
+		# Occlusion — same full-tile square blocks light completely
+		td.set_occluder(0, occluder)
 
 	return ts
 
