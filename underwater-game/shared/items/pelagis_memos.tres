@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cb70iqjvak715"]
+
+[ext_resource type="Script" uid="uid://dvprcm3vnjs1s" path="res://shared/items/item_data.gd" id="1_j6h3p"]
+
+[resource]
+script = ExtResource("1_j6h3p")
+id = "pelagis_memos"
+display_name = "Pelagis Internal Correspondence"
+description = "Sealed internal memos. Pelagis Corp."
+is_key_item = true
