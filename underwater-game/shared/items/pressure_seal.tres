@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" uid="uid://dvprcm3vnjs1s" path="res://shared/items/item_data.gd" id="1_j6h3p"]
+[ext_resource type="Texture2D" path="res://assets/items/pressure_seal.png" id="2_icon"]
+
+[resource]
+script = ExtResource("1_j6h3p")
+id = "pressure_seal"
+display_name = "Pressure Seal"
+description = "A ruptured bulkhead gasket. Without it, the hull won't hold at depth."
+icon = ExtResource("2_icon")
+max_stack = 1
+is_key_item = true

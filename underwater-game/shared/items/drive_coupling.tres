@@ -1,12 +1,13 @@
-[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cwwirst8trbw4"]
+[gd_resource type="Resource" script_class="ItemData" format=3]
 
 [ext_resource type="Script" uid="uid://dvprcm3vnjs1s" path="res://shared/items/item_data.gd" id="1_j6h3p"]
-[ext_resource type="Texture2D" uid="uid://g1d8hqs15ute" path="res://assets/items/drive_coupling.png" id="2_icon"]
+[ext_resource type="Texture2D" path="res://assets/items/drive_coupling.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_j6h3p")
-id = "engine_component"
+id = "drive_coupling"
 display_name = "Drive Coupling"
 description = "The propulsion linkage for Tethys-7. Snapped clean off on impact."
 icon = ExtResource("2_icon")
+max_stack = 1
 is_key_item = true

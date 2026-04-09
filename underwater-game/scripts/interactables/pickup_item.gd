@@ -12,6 +12,8 @@ func _ready() -> void:
 	print("PickupItem ready: ", item)
 	if not item:
 		push_warning("PickupItem has no item assigned!")
+		return
+	interaction_label = item.display_name
 
 
 func _on_interact(player: Node) -> void:

@@ -1,15 +1,18 @@
 extends CharacterBody2D
 
 # ── Movement ──────────────────────────────────────────────────────────────────
-const SWIM_SPEED   : float = 300.0
-const ACCELERATION : float = 800.0
-const FRICTION     : float = 600.0
-const BUOYANCY     : float = 60.0   # passive upward drift when not moving
+const SWIM_SPEED   : float = 200.0
+const ACCELERATION : float = 340.0
+# Water drag coefficients (exponential decay): velocity *= exp(-coeff * delta)
+const WATER_RESIST : float = 1.0    # resistance applied while actively swimming
+const SWIM_DRAG    : float = 3.2    # stronger drag when coasting (no input)
 
 # ── Submarine driving ─────────────────────────────────────────────────────────
-const SUB_SPEED    : float = 180.0  # slower, heavier feel
-const SUB_ACCEL    : float = 300.0
-const SUB_FRICTION : float = 150.0  # drifts longer than swimming
+const SUB_SPEED    : float = 140.0  # heavier, slower
+const SUB_ACCEL    : float = 105.0  # sluggish build-up
+# Exponential drag for submarine (drifts much longer than free-swimming)
+const SUB_RESIST   : float = 0.18   # light resistance while thrusting
+const SUB_DRAG     : float = 1.1    # coasting drag — vessel drifts noticeably
 
 var submarine_mode : bool = false
 
@@ -23,8 +26,9 @@ var _ammo          : Dictionary = {}   # weapon_id → current ammo (int)
 signal ammo_changed(weapon_name: String, current: int, maximum: int)
 
 # ── Internal ──────────────────────────────────────────────────────────────────
-@onready var cone_light  : PointLight2D = $ConeLight
-@onready var _body_rect  : ColorRect    = $ColorRect
+@onready var cone_light        : PointLight2D    = $ConeLight
+@onready var _sprite           : AnimatedSprite2D = $Sprite
+@onready var _interaction_prompt : Label          = $InteractionPromptLayer/PromptLabel
 
 var _fire_timer : float = 0.0
 
@@ -36,6 +40,63 @@ func _ready() -> void:
 		print("Picked up: ", item.display_name, " x", qty)
 	)
 	equip_weapon(DEFAULT_WEAPON)
+	_setup_sprite()
+	_setup_interaction_prompt()
+
+
+func _setup_sprite() -> void:
+	var frames := SpriteFrames.new()
+
+	var idle_tex : Texture2D = preload("res://assets/player/player-idle.png")
+	var swim_tex : Texture2D = preload("res://assets/player/player-swiming.png")
+	var hurt_tex : Texture2D = preload("res://assets/player/player-hurt.png")
+
+	_build_anim(frames, "idle", idle_tex, 6,  8.0, true)
+	_build_anim(frames, "swim", swim_tex, 7, 10.0, true)
+	_build_anim(frames, "hurt", hurt_tex, 5, 12.0, false)
+
+	_sprite.sprite_frames = frames
+	_sprite.play("idle")
+
+
+func _setup_interaction_prompt() -> void:
+	var font := SystemFont.new()
+	font.font_names = PackedStringArray(["Consolas", "Courier New", "monospace"])
+	_interaction_prompt.add_theme_font_override("font", font)
+	_interaction_prompt.add_theme_font_size_override("font_size", 14)
+	_interaction_prompt.add_theme_color_override("font_color", Color(0.28, 0.82, 1.0, 1.0))
+
+	var isys := $InteractionSystem as InteractionSystem
+	isys.interactable_focused.connect(_on_interactable_focused)
+	isys.interactable_unfocused.connect(_on_interactable_unfocused)
+
+	DialogueManager.dialogue_started.connect(func(): _interaction_prompt.hide())
+	DialogueManager.dialogue_ended.connect(func():
+		if $InteractionSystem.get_current_interactable() != null:
+			_interaction_prompt.show()
+	)
+
+
+func _on_interactable_focused(interactable: Interactable) -> void:
+	_interaction_prompt.text = "[%s]  %s" % [interactable.interaction_key, interactable.interaction_label]
+	if not DialogueManager.is_active:
+		_interaction_prompt.show()
+
+
+func _on_interactable_unfocused() -> void:
+	_interaction_prompt.hide()
+
+
+func _build_anim(frames: SpriteFrames, anim: String, sheet: Texture2D,
+		count: int, fps: float, loop: bool) -> void:
+	frames.add_animation(anim)
+	frames.set_animation_loop(anim, loop)
+	frames.set_animation_speed(anim, fps)
+	for i in count:
+		var atlas := AtlasTexture.new()
+		atlas.atlas  = sheet
+		atlas.region = Rect2(i * 80, 0, 80, 80)
+		frames.add_frame(anim, atlas)
 
 
 # ── Submarine mode ────────────────────────────────────────────────────────────
@@ -43,7 +104,7 @@ func _ready() -> void:
 ## Called by the level once the player boards the submarine.
 func enter_submarine_mode() -> void:
 	submarine_mode = true
-	_body_rect.hide()
+	_sprite.hide()
 	$InteractionZone.monitoring = false   # no interactions while piloting
 
 
@@ -56,31 +117,60 @@ func _physics_process(delta: float) -> void:
 	)
 
 	if submarine_mode:
-		# Heavier, no buoyancy — feels like piloting a vessel
+		# Heavy vessel: slow thrust build-up, long glide after engines cut
 		if input_dir.length() > 0.0:
 			velocity = velocity.move_toward(
 				input_dir.normalized() * SUB_SPEED, SUB_ACCEL * delta
 			)
+			velocity *= exp(-SUB_RESIST * delta)  # water pushes back while thrusting
 		else:
-			velocity.x = move_toward(velocity.x, 0.0, SUB_FRICTION * delta)
-			velocity.y = move_toward(velocity.y, 0.0, SUB_FRICTION * delta)
+			velocity *= exp(-SUB_DRAG * delta)    # smooth exponential coast-to-stop
 		velocity = velocity.limit_length(SUB_SPEED)
 	else:
 		if input_dir.length() > 0.0:
 			input_dir = input_dir.normalized()
 			velocity = velocity.move_toward(input_dir * SWIM_SPEED, ACCELERATION * delta)
+			velocity *= exp(-WATER_RESIST * delta) # water resistance while swimming
 		else:
-			velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
-			velocity.y = move_toward(velocity.y, 0.0, FRICTION * delta)
-			velocity.y -= BUOYANCY * delta  # passive upward drift
+			velocity *= exp(-SWIM_DRAG * delta)    # glide to a stop, not a snap
 		velocity = velocity.limit_length(SWIM_SPEED)
 
 	move_and_slide()
 
-	# Aim the cone light at the mouse cursor every frame
+	# Aim the cone light at the mouse cursor every frame.
+	# Offset the origin a few pixels toward the mouse so it always
+	# appears to emit from the same point regardless of cursor direction.
 	var to_mouse := get_global_mouse_position() - global_position
 	if to_mouse.length() > 1.0:
+		var dir := to_mouse.normalized()
 		cone_light.rotation = to_mouse.angle()
+		cone_light.position = dir * 5.0
+
+	# Drive sprite animation and facing (only in free-swim)
+	if not submarine_mode:
+		var is_moving := velocity.length() > 8.0
+		var target_anim := "swim" if is_moving else "idle"
+		if _sprite.animation != "hurt" and _sprite.animation != target_anim:
+			_sprite.play(target_anim)
+		# Rotate sprite to match velocity direction.
+		# When moving leftward we flip_h and mirror the angle so the sprite
+		# never appears upside-down.
+		if is_moving:
+			var angle := velocity.angle()
+			if cos(angle) >= 0.0:
+				# Rightward half: rotate directly.
+				_sprite.flip_h = false
+				_sprite.rotation = angle
+			else:
+				# Leftward half: flip, then negate the mirrored angle.
+				# flip_h reverses the visual rotation direction, so without the
+				# negation up-left and down-left appear swapped.
+				_sprite.flip_h = true
+				var mirrored := (PI - angle) if angle > 0.0 else (-PI - angle)
+				_sprite.rotation = -mirrored
+		else:
+			_sprite.rotation = 0.0
+			_sprite.flip_h = false
 
 	# Count down fire cooldown
 	if _fire_timer > 0.0:

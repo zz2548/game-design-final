@@ -6,16 +6,19 @@
 [ext_resource type="Script" uid="uid://b45ek5my76at" path="res://scripts/interactables/pickup_item.gd" id="3_pickup"]
 [ext_resource type="PackedScene" uid="uid://eb3vk6h130ot" path="res://shared/ui/dialogue_ui.tscn" id="5_e6u7d"]
 [ext_resource type="Script" uid="uid://5cwj8fgo5bwt" path="res://scripts/interactables/submarine_interactable.gd" id="7_submarine"]
-[ext_resource type="Resource" path="res://shared/items/engine_component.tres" id="8_engine"]
+[ext_resource type="Resource" path="res://shared/items/drive_coupling.tres" id="8_engine"]
 [ext_resource type="Texture2D" uid="uid://iwtv1ak671c" path="res://assets/player/sub.png" id="8_j48du"]
-[ext_resource type="Resource" path="res://shared/items/hull_plating.tres" id="9_hull"]
-[ext_resource type="Resource" path="res://shared/items/navigation_module.tres" id="10_nav"]
+[ext_resource type="Resource" path="res://shared/items/pressure_seal.tres" id="9_hull"]
+[ext_resource type="Resource" path="res://shared/items/nav_core.tres" id="10_nav"]
 [ext_resource type="PackedScene" path="res://shared/ui/HintsUI.tscn" id="11_hints"]
 [ext_resource type="PackedScene" uid="uid://cdxseykgech3" path="res://shared/Enemies/enemy.tscn" id="11_qbdb0"]
 [ext_resource type="Script" uid="uid://385wyroimuhd" path="res://levels/level_1/level_1.gd" id="12_level"]
 [ext_resource type="PackedScene" path="res://shared/ui/WeaponHUD.tscn" id="13_weaponhud"]
 [ext_resource type="Script" uid="uid://cyoql4kks8dxn" path="res://scripts/interactables/pickup_weapon.gd" id="14_pickupwpn"]
 [ext_resource type="Resource" path="res://shared/weapons/shotgun.tres" id="15_shotgun"]
+[ext_resource type="Texture2D" path="res://assets/items/drive_coupling.png" id="16_drive"]
+[ext_resource type="Texture2D" path="res://assets/items/pressure_seal.png" id="17_seal"]
+[ext_resource type="Texture2D" path="res://assets/items/nav_core.png" id="18_nav"]
 
 [sub_resource type="OccluderPolygon2D" id="occ_full_tile"]
 polygon = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
@@ -354,8 +357,7 @@ script = ExtResource("7_submarine")
 [node name="Shape" type="CollisionShape2D" parent="Objects/Submarine" unique_id=1310266936]
 shape = SubResource("shape_submarine")
 
-[node name="Sub" type="Sprite2D" parent="Objects/Submarine" unique_id=1508147977]
-texture = ExtResource("8_j48du")
+[node name="Sub" type="AnimatedSprite2D" parent="Objects/Submarine" unique_id=1508147977]
 
 [node name="EnginePart" type="Area2D" parent="Objects" unique_id=200100001]
 position = Vector2(333, 468)
@@ -366,13 +368,9 @@ item = ExtResource("8_engine")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/EnginePart" unique_id=200100002]
 shape = SubResource("shape_part")
 
-[node name="Visual" type="ColorRect" parent="Objects/EnginePart" unique_id=200100003]
-offset_left = -12.0
-offset_top = -12.0
-offset_right = 12.0
-offset_bottom = 12.0
-color = Color(1, 0.5, 0.1, 1)
-metadata/_edit_use_anchors_ = true
+[node name="Visual" type="Sprite2D" parent="Objects/EnginePart" unique_id=200100003]
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("16_drive")
 
 [node name="HullPart" type="Area2D" parent="Objects" unique_id=200200001]
 position = Vector2(394, 130)
@@ -383,13 +381,9 @@ item = ExtResource("9_hull")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/HullPart" unique_id=200200002]
 shape = SubResource("shape_part")
 
-[node name="Visual" type="ColorRect" parent="Objects/HullPart" unique_id=200200003]
-offset_left = -12.0
-offset_top = -12.0
-offset_right = 12.0
-offset_bottom = 12.0
-color = Color(0.3, 0.6, 1, 1)
-metadata/_edit_use_anchors_ = true
+[node name="Visual" type="Sprite2D" parent="Objects/HullPart" unique_id=200200003]
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("17_seal")
 
 [node name="NavPart" type="Area2D" parent="Objects" unique_id=200300001]
 position = Vector2(788, 589)
@@ -400,13 +394,10 @@ item = ExtResource("10_nav")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/NavPart" unique_id=200300002]
 shape = SubResource("shape_part")
 
-[node name="Visual" type="ColorRect" parent="Objects/NavPart" unique_id=200300003]
-offset_left = -12.0
-offset_top = -12.0
-offset_right = 12.0
-offset_bottom = 12.0
-color = Color(0.2, 1, 0.4, 1)
-metadata/_edit_use_anchors_ = true
+[node name="Visual" type="Sprite2D" parent="Objects/NavPart" unique_id=200300003]
+position = Vector2(0, 6)
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("18_nav")
 
 [node name="player" parent="." unique_id=1560876372 instance=ExtResource("1_player")]
 position = Vector2(37, 333)

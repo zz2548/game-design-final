@@ -1,11 +1,13 @@
 [gd_resource type="Resource" script_class="ItemData" format=3]
 
 [ext_resource type="Script" uid="uid://dvprcm3vnjs1s" path="res://shared/items/item_data.gd" id="1_j6h3p"]
+[ext_resource type="Texture2D" path="res://assets/items/nav_core.png" id="2_icon"]
 
 [resource]
 script = ExtResource("1_j6h3p")
-id = "hull_plating"
-display_name = "Hull Plating"
-description = "A reinforced titanium panel. Still intact despite the pressure."
+id = "nav_core"
+display_name = "Nav Core"
+description = "Tethys-7's positioning unit. Cracked casing, but the chip survived."
+icon = ExtResource("2_icon")
 max_stack = 1
 is_key_item = true

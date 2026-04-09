@@ -27,11 +27,8 @@ script = ExtResource("1_onrkg")
 [node name="BodyCollision" type="CollisionShape2D" parent="." unique_id=1125311957]
 shape = SubResource("RectangleShape2D_body")
 
-[node name="ColorRect" type="ColorRect" parent="." unique_id=2079948880]
-offset_left = -8.0
-offset_top = -8.0
-offset_right = 8.0
-offset_bottom = 8.0
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=2079948880]
+scale = Vector2(0.6, 0.6)
 
 [node name="InteractionZone" type="Area2D" parent="." unique_id=2033417086]
 collision_layer = 0
@@ -50,8 +47,24 @@ texture = SubResource("GradientTexture2D_i3pqv")
 [node name="ConeLight" type="PointLight2D" parent="." unique_id=477901931]
 color = Color(0.85, 0.93, 1, 1)
 energy = 6.68
+shadow_enabled = true
 texture = ExtResource("3_cone_tex")
 texture_scale = 22.73
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1370074111]
 zoom = Vector2(1.5, 1.5)
+
+[node name="InteractionPromptLayer" type="CanvasLayer" parent="." unique_id=1987654321]
+
+[node name="PromptLabel" type="Label" parent="InteractionPromptLayer" unique_id=1987654322]
+visible = false
+layout_mode = 3
+anchors_preset = 7
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -80.0
+offset_bottom = -48.0
+grow_vertical = 0
+horizontal_alignment = 1

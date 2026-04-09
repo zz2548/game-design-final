@@ -14,29 +14,26 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Backdrop" type="ColorRect" parent="Root" unique_id=2132540130]
-visible = false
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-rotation = 0.0014168618
-
 [node name="Panel" type="PanelContainer" parent="Root" unique_id=312257740]
 layout_mode = 1
-anchors_preset = 12
+anchor_left = 0.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -188.0
-offset_bottom = -8.0
+offset_left = 72.0
+offset_top = -210.0
+offset_right = -72.0
+offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 0
 
 [node name="VBox" type="VBoxContainer" parent="Root/Panel" unique_id=1821829578]
 layout_mode = 2
+theme_override_constants/separation = 8
 
 [node name="Header" type="HBoxContainer" parent="Root/Panel/VBox" unique_id=557597345]
 layout_mode = 2
+theme_override_constants/separation = 10
 
 [node name="PortraitTexture" type="TextureRect" parent="Root/Panel/VBox/Header" unique_id=904354015]
 layout_mode = 2
@@ -44,11 +41,18 @@ layout_mode = 2
 [node name="SpeakerLabel" type="Label" parent="Root/Panel/VBox/Header" unique_id=1143804061]
 layout_mode = 2
 
+[node name="Divider" type="HSeparator" parent="Root/Panel/VBox" unique_id=2244000001]
+layout_mode = 2
+
 [node name="DialogueText" type="RichTextLabel" parent="Root/Panel/VBox" unique_id=2057721441]
-custom_minimum_size = Vector2(20, 20)
+custom_minimum_size = Vector2(20, 80)
 layout_mode = 2
 bbcode_enabled = true
+fit_content = false
+scroll_active = false
+autowrap_mode = 3
 
 [node name="PromptLabel" type="Label" parent="Root/Panel/VBox" unique_id=63203898]
 layout_mode = 2
 text = "[E] Continue"
+horizontal_alignment = 2

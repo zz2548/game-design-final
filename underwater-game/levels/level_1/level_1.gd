@@ -5,7 +5,7 @@
 
 extends Node2D
 
-const PART_IDS := ["engine_component", "hull_plating", "navigation_module"]
+const PART_IDS := ["drive_coupling", "pressure_seal", "nav_core"]
 
 # ── Objective indices ─────────────────────────────────────────────────────────
 var _obj_engine: int
@@ -16,7 +16,7 @@ var _obj_escape: int
 
 # ── Scene refs ────────────────────────────────────────────────────────────────
 @onready var _submarine       : SubmarineInteractable = $Objects/Submarine
-@onready var _submarine_sprite: Sprite2D              = $Objects/Submarine/Sub
+@onready var _submarine_sprite: AnimatedSprite2D       = $Objects/Submarine/Sub
 @onready var _exit_trigger    : Area2D                = $ExitTrigger
 
 var _level_ended: bool = false
@@ -25,9 +25,9 @@ var _level_ended: bool = false
 func _ready() -> void:
 	# ── Objectives ────────────────────────────────────────────────────────────
 	ObjectiveManager.clear_objectives()
-	_obj_engine = ObjectiveManager.add_objective("Recover the drive coupling")
-	_obj_hull   = ObjectiveManager.add_objective("Recover the pressure seal")
-	_obj_nav    = ObjectiveManager.add_objective("Recover the nav core")
+	_obj_engine = ObjectiveManager.add_objective("Recover the Drive Coupling")
+	_obj_hull   = ObjectiveManager.add_objective("Recover the Pressure Seal")
+	_obj_nav    = ObjectiveManager.add_objective("Recover the Nav Core")
 	_obj_repair = ObjectiveManager.add_objective("Restore the Tethys-7")
 	_obj_escape = ObjectiveManager.add_objective("Breach into open ocean")
 
@@ -41,16 +41,35 @@ func _ready() -> void:
 	# ── Exit trigger ──────────────────────────────────────────────────────────
 	_exit_trigger.body_entered.connect(_on_exit_reached)
 
+	# ── Submarine sprite ──────────────────────────────────────────────────────
+	_setup_sub_sprite()
+
+
+func _setup_sub_sprite() -> void:
+	var sheet: Texture2D = load("res://assets/player/sub_upgraded.png")
+	var frames := SpriteFrames.new()
+	frames.add_animation("idle")
+	frames.set_animation_loop("idle", true)
+	frames.set_animation_speed("idle", 2.0)
+	for i in 5:
+		var atlas := AtlasTexture.new()
+		atlas.atlas  = sheet
+		atlas.region = Rect2(i * 126, 0, 126, 112)
+		frames.add_frame("idle", atlas)
+	_submarine_sprite.sprite_frames = frames
+	_submarine_sprite.scale = Vector2(0.5, 0.5)
+	_submarine_sprite.play("idle")
+
 
 # ── Objective helpers ─────────────────────────────────────────────────────────
 
 func _on_item_added(item: ItemData, _qty: int) -> void:
 	match item.id:
-		"engine_component":
+		"drive_coupling":
 			ObjectiveManager.complete_objective(_obj_engine)
-		"hull_plating":
+		"pressure_seal":
 			ObjectiveManager.complete_objective(_obj_hull)
-		"navigation_module":
+		"nav_core":
 			ObjectiveManager.complete_objective(_obj_nav)
 
 

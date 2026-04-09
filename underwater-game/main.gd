@@ -2,4 +2,4 @@
 extends Node
 
 func _ready() -> void:
-	SceneManager.go_to_level(1)
+	get_tree().change_scene_to_file.call_deferred("res://cutscene/cutscene.tscn")

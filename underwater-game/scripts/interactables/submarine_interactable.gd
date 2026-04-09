@@ -12,9 +12,9 @@ extends Interactable
 signal boarded(player: Node)
 
 const PARTS : Dictionary = {
-	"engine_component":  "drive coupling",
-	"hull_plating":      "pressure seal",
-	"navigation_module": "nav core",
+	"drive_coupling": "Drive Coupling",
+	"pressure_seal":  "Pressure Seal",
+	"nav_core":       "Nav Core",
 }
 
 var _repaired : bool = false
