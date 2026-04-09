@@ -19,6 +19,9 @@ var submarine_mode : bool = false
 # ── Weapon ────────────────────────────────────────────────────────────────────
 const DEFAULT_WEAPON : WeaponData = preload("res://shared/weapons/pistol.tres")
 
+## Set false in levels where the player should start unarmed.
+@export var start_armed : bool = true
+
 var current_weapon : WeaponData = null
 var _ammo          : Dictionary = {}   # weapon_id → current ammo (int)
 
@@ -30,7 +33,8 @@ signal ammo_changed(weapon_name: String, current: int, maximum: int)
 @onready var _sprite           : AnimatedSprite2D = $Sprite
 @onready var _interaction_prompt : Label          = $InteractionPromptLayer/PromptLabel
 
-var _fire_timer : float = 0.0
+var _fire_timer        : float  = 0.0
+var _pre_dialogue_pos  : Vector2
 
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
@@ -39,9 +43,25 @@ func _ready() -> void:
 	Inventory.item_added.connect(func(item, qty):
 		print("Picked up: ", item.display_name, " x", qty)
 	)
-	equip_weapon(DEFAULT_WEAPON)
+	if start_armed:
+		equip_weapon(DEFAULT_WEAPON)
 	_setup_sprite()
 	_setup_interaction_prompt()
+	DialogueManager.dialogue_started.connect(_on_dialogue_started)
+	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
+
+
+func _on_dialogue_started() -> void:
+	_pre_dialogue_pos = global_position
+	velocity = Vector2.ZERO
+	set_physics_process(false)
+	set_process_unhandled_input(false)
+
+
+func _on_dialogue_ended() -> void:
+	global_position = _pre_dialogue_pos
+	set_physics_process(true)
+	set_process_unhandled_input(true)
 
 
 func _setup_sprite() -> void:

@@ -8,6 +8,7 @@ class_name Enemy
 extends CharacterBody2D
 
 # ── Stats ─────────────────────────────────────────────────────────────────────
+@export var ai_enabled      : bool  = true
 @export var chase_speed     : float = 220.0
 @export var attack_damage   : int   = 1
 @export var attack_cooldown : float = 0.8
@@ -51,6 +52,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if not ai_enabled:
+		return
 	match _state:
 		State.IDLE:    _tick_idle(delta)
 		State.ALERT:   _tick_alert(delta)
@@ -130,8 +133,25 @@ func _enter_state(new_state: State) -> void:
 func _on_detection_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
+	if not ai_enabled:
+		if not GameState.submarine_fixed and not DialogueManager.is_active:
+			# After the warning dialogue closes, give the player a velocity
+			# kick away from this enemy instead of teleporting — avoids
+			# clipping into walls.
+			var push_from := global_position
+			DialogueManager.dialogue_ended.connect(func():
+				if is_instance_valid(body):
+					body.velocity = (body.global_position - push_from).normalized() * 500.0
+			, CONNECT_ONE_SHOT)
+			DialogueManager.start_dialogue({
+				"speaker": "ORCA",
+				"lines": [
+					"Creature detected. Threat classification: unknown biological.",
+					"Tethys-7 is not operational. Do not engage.",
+				],
+			})
+		return
 	if not GameState.submarine_fixed:
-		# Warn the player once — then the creature still gives chase
 		if not DialogueManager.is_active:
 			DialogueManager.start_dialogue({
 				"speaker": "ORCA",

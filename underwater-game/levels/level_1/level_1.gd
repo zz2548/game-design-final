@@ -15,9 +15,10 @@ var _obj_repair: int
 var _obj_escape: int
 
 # ── Scene refs ────────────────────────────────────────────────────────────────
-@onready var _submarine       : SubmarineInteractable = $Objects/Submarine
-@onready var _submarine_sprite: AnimatedSprite2D       = $Objects/Submarine/Sub
-@onready var _exit_trigger    : Area2D                = $ExitTrigger
+@onready var _submarine        : SubmarineInteractable = $Objects/Submarine
+@onready var _submarine_sprite : AnimatedSprite2D      = $Objects/Submarine/Sub
+@onready var _exit_trigger     : Area2D               = $ExitTrigger
+@onready var _corridor_trigger : Area2D               = $CorridorTrigger
 
 var _level_ended: bool = false
 
@@ -40,6 +41,9 @@ func _ready() -> void:
 
 	# ── Exit trigger ──────────────────────────────────────────────────────────
 	_exit_trigger.body_entered.connect(_on_exit_reached)
+
+	# ── Corridor boundary (block until sub is repaired) ───────────────────────
+	_corridor_trigger.body_entered.connect(_on_corridor_entered)
 
 	# ── Submarine sprite ──────────────────────────────────────────────────────
 	_setup_sub_sprite()
@@ -103,6 +107,23 @@ func _on_submarine_boarded(player: Node) -> void:
 	_submarine_sprite.position = Vector2.ZERO
 
 	player.enter_submarine_mode()
+
+
+func _on_corridor_entered(body: Node) -> void:
+	if not body.is_in_group("player") or GameState.submarine_fixed:
+		return
+	# Push the player back into the cave before dialogue fires so that
+	# the position-restore on dialogue_ended lands them safely here.
+	body.global_position = Vector2(1530.0, 480.0)
+	body.velocity        = Vector2.ZERO
+	if not DialogueManager.is_active:
+		DialogueManager.start_dialogue({
+			"speaker": "ORCA",
+			"lines": [
+				"Tethys-7 is non-operational. The corridor ahead leads to open ocean.",
+				"Without propulsion, that is unsurvivable. Repair the submarine first.",
+			],
+		})
 
 
 func _on_exit_reached(body: Node) -> void:
