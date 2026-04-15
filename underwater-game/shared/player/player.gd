@@ -61,6 +61,8 @@ signal ammo_changed(weapon_name: String, current: int, maximum: int)
 # ── Internal ──────────────────────────────────────────────────────────────────
 @onready var cone_light        : PointLight2D    = $ConeLight
 @onready var _sprite           : AnimatedSprite2D = $Sprite
+@onready var _swim_trail       : CPUParticles2D   = $SwimTrail
+@onready var _sub_trail        : CPUParticles2D   = $SubTrail
 @onready var _interaction_prompt : Label          = $InteractionPromptLayer/PromptLabel
 
 var _fire_timer        : float  = 0.0
@@ -190,6 +192,7 @@ func _physics_process(delta: float) -> void:
 		velocity = velocity.limit_length(SWIM_SPEED)
 
 	move_and_slide()
+	_update_trails()
 
 	# Aim the cone light at the mouse cursor every frame.
 	# Offset the origin a few pixels toward the mouse so it always
@@ -368,6 +371,20 @@ func die() -> void:
 	set_process_unhandled_input(false)
 	GameState.death_return_scene = get_tree().current_scene.scene_file_path
 	get_tree().change_scene_to_file("res://cutscene/death_screen.tscn")
+
+
+func _update_trails() -> void:
+	var moving := velocity.length() > 8.0
+	if submarine_mode:
+		_swim_trail.emitting = false
+		_sub_trail.emitting  = moving
+		if moving:
+			_sub_trail.rotation = velocity.angle() + PI
+	else:
+		_sub_trail.emitting  = false
+		_swim_trail.emitting = moving
+		if moving:
+			_swim_trail.rotation = velocity.angle() + PI
 
 
 ## Recharge the flashlight battery by `amount` units (capped at MAX_BATTERY).
