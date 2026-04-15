@@ -64,6 +64,7 @@ signal ammo_changed(weapon_name: String, current: int, maximum: int)
 @onready var _interaction_prompt : Label          = $InteractionPromptLayer/PromptLabel
 
 var _fire_timer        : float  = 0.0
+var _hurt_timer        : float  = 0.0   # counts down while hurt animation plays
 var _pre_dialogue_pos  : Vector2
 
 
@@ -203,7 +204,9 @@ func _physics_process(delta: float) -> void:
 	if not submarine_mode:
 		var is_moving := velocity.length() > 8.0
 		var target_anim := "swim" if is_moving else "idle"
-		if _sprite.animation != "hurt" and _sprite.animation != target_anim:
+		if _hurt_timer > 0.0:
+			_hurt_timer -= delta   # let hurt animation finish before switching
+		elif _sprite.animation != target_anim:
 			_sprite.play(target_anim)
 		# Rotate sprite to match velocity direction.
 		# When moving leftward we flip_h and mirror the angle so the sprite
@@ -348,6 +351,15 @@ func _die_oxygen() -> void:
 	set_process_unhandled_input(false)
 	GameState.death_return_scene = get_tree().current_scene.scene_file_path
 	get_tree().change_scene_to_file("res://cutscene/death_screen.tscn")
+
+
+## Called by an enemy hit. Plays the hurt flash; supply a health system later.
+func take_damage(_amount: int) -> void:
+	if _hurt_timer > 0.0:
+		return   # already in hit-stun, don't re-trigger
+	_sprite.play("hurt")
+	# hurt sheet: 5 frames @ 12 fps ≈ 0.42 s
+	_hurt_timer = 5.0 / 12.0
 
 
 ## Called by an enemy when the player is killed.
