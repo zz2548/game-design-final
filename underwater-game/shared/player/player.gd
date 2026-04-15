@@ -81,6 +81,7 @@ func _ready() -> void:
 	emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
 	emit_signal("battery_changed", battery, MAX_BATTERY)
 	_setup_sprite()
+	_setup_particle_trails()
 	_setup_interaction_prompt()
 	DialogueManager.dialogue_started.connect(_on_dialogue_started)
 	DialogueManager.dialogue_ended.connect(_on_dialogue_ended)
@@ -112,6 +113,20 @@ func _setup_sprite() -> void:
 
 	_sprite.sprite_frames = frames
 	_sprite.play("idle")
+
+
+func _setup_particle_trails() -> void:
+	# No texture is defined in the scene, so particles render as invisible 1×1 squares.
+	# Build an 8×8 soft-circle texture at runtime so the bubbles are actually visible.
+	var img := Image.create(8, 8, false, Image.FORMAT_RGBA8)
+	for y in 8:
+		for x in 8:
+			var d := Vector2(x + 0.5, y + 0.5).distance_to(Vector2(4.0, 4.0))
+			var a := clampf(1.0 - d / 4.0, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, a * a))
+	var tex := ImageTexture.create_from_image(img)
+	_swim_trail.texture = tex
+	_sub_trail.texture  = tex
 
 
 func _setup_interaction_prompt() -> void:

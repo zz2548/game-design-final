@@ -36,6 +36,7 @@ script = ExtResource("1_onrkg")
 shape = SubResource("RectangleShape2D_body")
 
 [node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=2079948880]
+z_index = 1
 scale = Vector2(0.6, 0.6)
 
 [node name="InteractionZone" type="Area2D" parent="." unique_id=2033417086]
@@ -62,7 +63,7 @@ texture_scale = 22.73
 zoom = Vector2(1.5, 1.5)
 
 [node name="SwimTrail" type="CPUParticles2D" parent="."]
-z_index = -1
+z_index = 0
 emitting = false
 amount = 12
 lifetime = 0.65
@@ -72,12 +73,12 @@ spread = 25.0
 gravity = Vector2(0, -18)
 initial_velocity_min = 22.0
 initial_velocity_max = 55.0
-scale_amount_min = 1.5
-scale_amount_max = 3.5
+scale_amount_min = 0.5
+scale_amount_max = 1.25
 color_ramp = SubResource("Gradient_swim_trail")
 
 [node name="SubTrail" type="CPUParticles2D" parent="."]
-z_index = -1
+z_index = 0
 emitting = false
 amount = 24
 lifetime = 1.1
@@ -89,8 +90,8 @@ initial_velocity_min = 65.0
 initial_velocity_max = 125.0
 emission_shape = 1
 emission_sphere_radius = 7.0
-scale_amount_min = 4.0
-scale_amount_max = 9.0
+scale_amount_min = 1.0
+scale_amount_max = 2.5
 color_ramp = SubResource("Gradient_sub_trail")
 
 [node name="InteractionPromptLayer" type="CanvasLayer" parent="." unique_id=1987654321]

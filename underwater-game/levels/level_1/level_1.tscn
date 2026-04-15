@@ -7,17 +7,16 @@
 [ext_resource type="PackedScene" uid="uid://eb3vk6h130ot" path="res://shared/ui/dialogue_ui.tscn" id="5_e6u7d"]
 [ext_resource type="Script" uid="uid://5cwj8fgo5bwt" path="res://scripts/interactables/submarine_interactable.gd" id="7_submarine"]
 [ext_resource type="Resource" path="res://shared/items/drive_coupling.tres" id="8_engine"]
-[ext_resource type="Texture2D" uid="uid://iwtv1ak671c" path="res://assets/player/sub.png" id="8_j48du"]
 [ext_resource type="Resource" path="res://shared/items/pressure_seal.tres" id="9_hull"]
 [ext_resource type="Resource" path="res://shared/items/nav_core.tres" id="10_nav"]
 [ext_resource type="PackedScene" path="res://shared/ui/HintsUI.tscn" id="11_hints"]
-[ext_resource type="PackedScene" path="res://shared/ui/OxygenHUD.tscn" id="99_oxyhud"]
-[ext_resource type="PackedScene" path="res://shared/ui/BatteryHUD.tscn" id="98_bathud"]
 [ext_resource type="PackedScene" uid="uid://cdxseykgech3" path="res://shared/Enemies/enemy.tscn" id="11_qbdb0"]
 [ext_resource type="Script" uid="uid://385wyroimuhd" path="res://levels/level_1/level_1.gd" id="12_level"]
-[ext_resource type="Texture2D" path="res://assets/items/drive_coupling.png" id="16_drive"]
-[ext_resource type="Texture2D" path="res://assets/items/pressure_seal.png" id="17_seal"]
-[ext_resource type="Texture2D" path="res://assets/items/nav_core.png" id="18_nav"]
+[ext_resource type="Texture2D" uid="uid://g1d8hqs15ute" path="res://assets/items/drive_coupling.png" id="16_drive"]
+[ext_resource type="Texture2D" uid="uid://bhmnmmajmtji6" path="res://assets/items/pressure_seal.png" id="17_seal"]
+[ext_resource type="Texture2D" uid="uid://bqnuxlpdcxuwm" path="res://assets/items/nav_core.png" id="18_nav"]
+[ext_resource type="PackedScene" path="res://shared/ui/BatteryHUD.tscn" id="98_bathud"]
+[ext_resource type="PackedScene" path="res://shared/ui/OxygenHUD.tscn" id="99_oxyhud"]
 
 [sub_resource type="OccluderPolygon2D" id="occ_full_tile"]
 polygon = PackedVector2Array(-8, -8, 8, -8, 8, 8, -8, 8)
@@ -334,6 +333,7 @@ size = Vector2(48, 128)
 script = ExtResource("12_level")
 
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1930376493]
+visible = false
 color = Color(0, 0, 0, 1)
 
 [node name="Background" type="ColorRect" parent="." unique_id=472897320]
