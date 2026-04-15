@@ -17,7 +17,7 @@ var submarine_mode : bool = false
 var _swim_dir      : Vector2 = Vector2.ZERO  # smoothed input direction for curved turns
 
 # ── Health ────────────────────────────────────────────────────────────────────
-const MAX_HEALTH : int = 3
+const MAX_HEALTH : int = 2
 
 var health : int = MAX_HEALTH
 
