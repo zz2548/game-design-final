@@ -50,3 +50,6 @@ func _refresh() -> void:
 		row.add_theme_font_size_override("font_size", 10)
 		row.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		list.add_child(row)
+
+	# Hide the whole panel when there is nothing to show
+	panel.visible = ObjectiveManager.objectives.size() > 0
