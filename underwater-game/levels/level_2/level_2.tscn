@@ -14,6 +14,7 @@
 [ext_resource type="PackedScene" path="res://shared/ui/HintsUI.tscn" id="9_hintsui"]
 [ext_resource type="Script" uid="uid://ccwdgjwkt53xd" path="res://levels/level_2/level_2.gd" id="11_level2"]
 [ext_resource type="PackedScene" path="res://shared/ui/WeaponHUD.tscn" id="12_weaponhud"]
+[ext_resource type="PackedScene" path="res://shared/ui/OxygenHUD.tscn" id="99_oxyhud"]
 [ext_resource type="Script" uid="uid://dtwu4bfo0l08u" path="res://levels/level_2/sub_bay_door.gd" id="14_aq41y"]
 
 [sub_resource type="OccluderPolygon2D" id="occ_full_tile"]
@@ -439,7 +440,7 @@ size = Vector2(160, 240)
 size = Vector2(32, 224)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_yiikh"]
-size = Vector2(80, 64)
+size = Vector2(153, 68)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fq0us"]
 size = Vector2(16, 144)
@@ -448,7 +449,6 @@ size = Vector2(16, 144)
 script = ExtResource("11_level2")
 
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=11]
-visible = false
 color = Color(0, 0, 0, 1)
 
 [node name="Background" type="ColorRect" parent="." unique_id=12]
@@ -464,6 +464,7 @@ tile_map_data = PackedByteArray("AAAAAAAAAQAAAAAAAAABAAAAAQADAAAAAAACAAAAAQAFAAA
 tile_set = SubResource("TileSet_kappa")
 
 [node name="Objects" type="Node2D" parent="." unique_id=20]
+visible = false
 
 [node name="FadelArchive" type="Area2D" parent="Objects" unique_id=21]
 position = Vector2(1248, 320)
@@ -499,7 +500,7 @@ color = Color(0.2, 0.8, 0.6, 1)
 metadata/_edit_use_anchors_ = true
 
 [node name="FadelBody" type="Area2D" parent="Objects" unique_id=141696726]
-position = Vector2(608, 224)
+position = Vector2(374, -136)
 script = ExtResource("6_2smvo")
 speaker_name = "FADEL — log"
 dialogue_lines = Array[String](["Suit is intact.", "No water in the lungs.", "Something opened her from the inside."])
@@ -509,7 +510,7 @@ metadata/_custom_type_script = "uid://dgkwj4x1fhpfo"
 shape = SubResource("CircleShape2D_5ts7o")
 
 [node name="BoschBody" type="Area2D" parent="Objects" unique_id=228740244]
-position = Vector2(640, 224)
+position = Vector2(406, -136)
 script = ExtResource("6_2smvo")
 speaker_name = "BOSCH — log"
 metadata/_custom_type_script = "uid://dgkwj4x1fhpfo"
@@ -527,6 +528,7 @@ metadata/_custom_type_script = "uid://b45ek5my76at"
 shape = SubResource("RectangleShape2D_1vf62")
 
 [node name="ResearchWingTrigger" type="Area2D" parent="." unique_id=30]
+visible = false
 position = Vector2(1320, 336)
 collision_layer = 0
 
@@ -534,6 +536,7 @@ collision_layer = 0
 shape = SubResource("shape_research_trigger")
 
 [node name="AntennaRoomTrigger" type="Area2D" parent="." unique_id=32]
+visible = false
 position = Vector2(1440, 880)
 collision_layer = 0
 
@@ -541,23 +544,40 @@ collision_layer = 0
 shape = SubResource("shape_bore_trigger")
 
 [node name="ExitTrigger" type="Area2D" parent="." unique_id=34]
+visible = false
 position = Vector2(2512, 640)
 collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ExitTrigger" unique_id=35]
 shape = SubResource("shape_exit")
 
+[node name="CommsRoomTrigger" type="Area2D" parent="." unique_id=1810711806]
+visible = false
+position = Vector2(-382, -136)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CommsRoomTrigger" unique_id=1007110762]
+position = Vector2(815, 14)
+shape = SubResource("RectangleShape2D_yiikh")
+
+[node name="SubBayDoor" type="AnimatableBody2D" parent="." unique_id=1136688000]
+visible = false
+script = ExtResource("14_aq41y")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SubBayDoor" unique_id=216215446]
+position = Vector2(1120, 736)
+shape = SubResource("RectangleShape2D_fq0us")
+
 [node name="Enemy" parent="." unique_id=40 instance=ExtResource("8_enemy")]
-position = Vector2(480, 640)
+position = Vector2(1162, -219)
 
 [node name="Enemy2" parent="." unique_id=41 instance=ExtResource("8_enemy")]
-position = Vector2(1152, 640)
+position = Vector2(558, -199)
 
 [node name="Enemy3" parent="." unique_id=42 instance=ExtResource("8_enemy")]
-position = Vector2(1312, 288)
+position = Vector2(482, 1811)
 
 [node name="Enemy4" parent="." unique_id=43 instance=ExtResource("8_enemy")]
-position = Vector2(1520, 1120)
+position = Vector2(1135, -40)
 
 [node name="player" parent="." unique_id=50 instance=ExtResource("1_player")]
 position = Vector2(-532, -26)
@@ -570,17 +590,6 @@ position = Vector2(-532, -26)
 
 [node name="WeaponHUD" parent="." unique_id=54 instance=ExtResource("12_weaponhud")]
 
-[node name="CommsRoomTrigger" type="Area2D" parent="." unique_id=1810711806]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CommsRoomTrigger" unique_id=1007110762]
-position = Vector2(640, 192)
-shape = SubResource("RectangleShape2D_yiikh")
-
-[node name="SubBayDoor" type="AnimatableBody2D" parent="." unique_id=1136688000]
-script = ExtResource("14_aq41y")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="SubBayDoor" unique_id=216215446]
-position = Vector2(1120, 736)
-shape = SubResource("RectangleShape2D_fq0us")
+[node name="OxygenHUD" parent="." unique_id=1999000002 instance=ExtResource("99_oxyhud")]
 
 [node name="LevelMap" type="Node2D" parent="." unique_id=889340398]
