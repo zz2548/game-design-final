@@ -11,6 +11,9 @@ var _is_typing: bool = false
 @export var typewriter_speed: float = 0.033
 
 func _ready() -> void:
+	# Must keep processing while the tree is paused so the typewriter
+	# tween and input handling still work during dialogue.
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	panel.hide()
 	_apply_theme()
 	DialogueManager.dialogue_started.connect(_on_dialogue_started)
