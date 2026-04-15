@@ -16,6 +16,20 @@ const SUB_DRAG     : float = 1.1    # coasting drag — vessel drifts noticeably
 var submarine_mode : bool = false
 var _swim_dir      : Vector2 = Vector2.ZERO  # smoothed input direction for curved turns
 
+# ── Oxygen ────────────────────────────────────────────────────────────────────
+const MAX_OXYGEN        : float = 90.0  # seconds of air at a full tank
+const OXYGEN_DRAIN_RATE : float = 1.0   # units drained per second while free-swimming
+const OXYGEN_WARN_LOW   : float = 22.5  # 25% — first ORCA warning
+const OXYGEN_WARN_CRIT  : float = 9.0   # 10% — critical ORCA warning
+
+var oxygen : float = MAX_OXYGEN
+
+## Emitted whenever the oxygen level changes (also fires once on _ready).
+signal oxygen_changed(current: float, maximum: float)
+
+var _oxygen_warned_low  : bool = false
+var _oxygen_warned_crit : bool = false
+
 # ── Weapon ────────────────────────────────────────────────────────────────────
 const DEFAULT_WEAPON : WeaponData = preload("res://shared/weapons/pistol.tres")
 
@@ -45,6 +59,7 @@ func _ready() -> void:
 	)
 	if start_armed:
 		equip_weapon(DEFAULT_WEAPON)
+	emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
 	_setup_sprite()
 	_setup_interaction_prompt()
 	DialogueManager.dialogue_started.connect(_on_dialogue_started)
@@ -193,6 +208,15 @@ func _physics_process(delta: float) -> void:
 			_sprite.rotation = 0.0
 			_sprite.flip_h = false
 
+	# Drain oxygen while free-swimming (sub is pressurised; dialogue pauses drain)
+	if not submarine_mode:
+		oxygen = maxf(0.0, oxygen - OXYGEN_DRAIN_RATE * delta)
+		emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
+		_check_oxygen_warnings()
+		if oxygen <= 0.0:
+			_die_oxygen()
+			return
+
 	# Count down fire cooldown
 	if _fire_timer > 0.0:
 		_fire_timer -= delta
@@ -259,18 +283,45 @@ func add_ammo(amount: int) -> void:
 	emit_signal("ammo_changed", current_weapon.display_name, _ammo[id], current_weapon.max_ammo)
 
 
+## Refill oxygen by `amount` units (capped at MAX_OXYGEN).
+## Call this from oxygen-station interactables.
+func refill_oxygen(amount: float) -> void:
+	oxygen = minf(MAX_OXYGEN, oxygen + amount)
+	_oxygen_warned_low  = false
+	_oxygen_warned_crit = false
+	emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
+
+
+func _check_oxygen_warnings() -> void:
+	if DialogueManager.is_active:
+		return
+	if not _oxygen_warned_low and oxygen <= OXYGEN_WARN_LOW:
+		_oxygen_warned_low = true
+		DialogueManager.start_dialogue({
+			"speaker": "ORCA",
+			"lines": ["Oxygen at twenty-five percent.", "Locate a refill station."],
+		})
+	elif not _oxygen_warned_crit and oxygen <= OXYGEN_WARN_CRIT:
+		_oxygen_warned_crit = true
+		DialogueManager.start_dialogue({
+			"speaker": "ORCA",
+			"lines": ["Oxygen critical."],
+		})
+
+
+func _die_oxygen() -> void:
+	set_physics_process(false)
+	set_process_unhandled_input(false)
+	GameState.death_return_scene = get_tree().current_scene.scene_file_path
+	get_tree().change_scene_to_file("res://cutscene/death_screen.tscn")
+
+
 ## Called by an enemy when the player is killed.
-## Plays a brief ORCA death line then reloads the level.
 func die() -> void:
 	set_physics_process(false)
 	set_process_unhandled_input(false)
-	DialogueManager.start_dialogue({
-		"speaker": "ORCA",
-		"lines": ["Pilot down. Reinitialising from last checkpoint."],
-	})
-	DialogueManager.dialogue_ended.connect(
-		func(): get_tree().reload_current_scene(), CONNECT_ONE_SHOT
-	)
+	GameState.death_return_scene = get_tree().current_scene.scene_file_path
+	get_tree().change_scene_to_file("res://cutscene/death_screen.tscn")
 
 
 func _process(_delta: float) -> void:
