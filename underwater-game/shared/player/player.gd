@@ -2,10 +2,9 @@ extends CharacterBody2D
 
 # ── Movement ──────────────────────────────────────────────────────────────────
 const SWIM_SPEED   : float = 200.0
-const ACCELERATION : float = 340.0
+const ACCELERATION : float = 480.0
 # Water drag coefficients (exponential decay): velocity *= exp(-coeff * delta)
-const WATER_RESIST : float = 1.0    # resistance applied while actively swimming
-const SWIM_DRAG    : float = 3.2    # stronger drag when coasting (no input)
+const SWIM_DRAG    : float = 3.8    # drag when coasting (no input)
 
 # ── Submarine driving ─────────────────────────────────────────────────────────
 const SUB_SPEED    : float = 140.0  # heavier, slower
@@ -15,6 +14,7 @@ const SUB_RESIST   : float = 0.18   # light resistance while thrusting
 const SUB_DRAG     : float = 1.1    # coasting drag — vessel drifts noticeably
 
 var submarine_mode : bool = false
+var _swim_dir      : Vector2 = Vector2.ZERO  # smoothed input direction for curved turns
 
 # ── Weapon ────────────────────────────────────────────────────────────────────
 const DEFAULT_WEAPON : WeaponData = preload("res://shared/weapons/pistol.tres")
@@ -148,10 +148,11 @@ func _physics_process(delta: float) -> void:
 		velocity = velocity.limit_length(SUB_SPEED)
 	else:
 		if input_dir.length() > 0.0:
-			input_dir = input_dir.normalized()
-			velocity = velocity.move_toward(input_dir * SWIM_SPEED, ACCELERATION * delta)
-			velocity *= exp(-WATER_RESIST * delta) # water resistance while swimming
+			# Blend toward the new input direction so sharp pivots curve naturally
+			_swim_dir = _swim_dir.lerp(input_dir.normalized(), 12.0 * delta)
+			velocity = velocity.move_toward(_swim_dir * SWIM_SPEED, ACCELERATION * delta)
 		else:
+			_swim_dir = Vector2.ZERO
 			velocity *= exp(-SWIM_DRAG * delta)    # glide to a stop, not a snap
 		velocity = velocity.limit_length(SWIM_SPEED)
 

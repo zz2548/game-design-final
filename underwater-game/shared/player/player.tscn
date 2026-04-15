@@ -47,7 +47,6 @@ texture = SubResource("GradientTexture2D_i3pqv")
 [node name="ConeLight" type="PointLight2D" parent="." unique_id=477901931]
 color = Color(0.85, 0.93, 1, 1)
 energy = 6.68
-shadow_enabled = true
 texture = ExtResource("3_cone_tex")
 texture_scale = 22.73
 
