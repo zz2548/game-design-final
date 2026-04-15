@@ -16,6 +16,14 @@ const SUB_DRAG     : float = 1.1    # coasting drag — vessel drifts noticeably
 var submarine_mode : bool = false
 var _swim_dir      : Vector2 = Vector2.ZERO  # smoothed input direction for curved turns
 
+# ── Health ────────────────────────────────────────────────────────────────────
+const MAX_HEALTH : int = 3
+
+var health : int = MAX_HEALTH
+
+## Emitted whenever health changes.
+signal health_changed(current: int, maximum: int)
+
 # ── Oxygen ────────────────────────────────────────────────────────────────────
 const MAX_OXYGEN        : float = 90.0  # seconds of air at a full tank
 const OXYGEN_DRAIN_RATE : float = 1.0   # units drained per second while free-swimming
@@ -80,6 +88,7 @@ func _ready() -> void:
 		equip_weapon(DEFAULT_WEAPON)
 	emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
 	emit_signal("battery_changed", battery, MAX_BATTERY)
+	emit_signal("health_changed", health, MAX_HEALTH)
 	_setup_sprite()
 	_setup_interaction_prompt()
 	DialogueManager.dialogue_started.connect(_on_dialogue_started)
@@ -209,27 +218,30 @@ func _physics_process(delta: float) -> void:
 		var target_anim := "swim" if is_moving else "idle"
 		if _hurt_timer > 0.0:
 			_hurt_timer -= delta   # let hurt animation finish before switching
-		elif _sprite.animation != target_anim:
-			_sprite.play(target_anim)
+		else:
+			if _sprite.animation != target_anim:
+				_sprite.play(target_anim)
 		# Rotate sprite to match velocity direction.
+		# Frozen during hurt so the enemy push can't spin the sprite mid-animation.
 		# When moving leftward we flip_h and mirror the angle so the sprite
 		# never appears upside-down.
-		if is_moving:
-			var angle := velocity.angle()
-			if cos(angle) >= 0.0:
-				# Rightward half: rotate directly.
-				_sprite.flip_h = false
-				_sprite.rotation = angle
+		if _hurt_timer <= 0.0:
+			if is_moving:
+				var angle := velocity.angle()
+				if cos(angle) >= 0.0:
+					# Rightward half: rotate directly.
+					_sprite.flip_h = false
+					_sprite.rotation = angle
+				else:
+					# Leftward half: flip, then negate the mirrored angle.
+					# flip_h reverses the visual rotation direction, so without the
+					# negation up-left and down-left appear swapped.
+					_sprite.flip_h = true
+					var mirrored := (PI - angle) if angle > 0.0 else (-PI - angle)
+					_sprite.rotation = -mirrored
 			else:
-				# Leftward half: flip, then negate the mirrored angle.
-				# flip_h reverses the visual rotation direction, so without the
-				# negation up-left and down-left appear swapped.
-				_sprite.flip_h = true
-				var mirrored := (PI - angle) if angle > 0.0 else (-PI - angle)
-				_sprite.rotation = -mirrored
-		else:
-			_sprite.rotation = 0.0
-			_sprite.flip_h = false
+				_sprite.rotation = 0.0
+				_sprite.flip_h = false
 
 	# Drain oxygen while free-swimming (sub is pressurised; dialogue pauses drain)
 	if not submarine_mode:
@@ -356,13 +368,29 @@ func _die_oxygen() -> void:
 	get_tree().change_scene_to_file("res://cutscene/death_screen.tscn")
 
 
-## Called by an enemy hit. Plays the hurt flash; supply a health system later.
-func take_damage(_amount: int) -> void:
+## Called by an enemy hit. Reduces health and kills the player at zero.
+func take_damage(amount: int) -> void:
 	if _hurt_timer > 0.0:
 		return   # already in hit-stun, don't re-trigger
+
+	health -= amount
+	health = maxi(health, 0)
+	emit_signal("health_changed", health, MAX_HEALTH)
+
+	if health <= 0:
+		die()
+		return
+
 	_sprite.play("hurt")
 	# hurt sheet: 5 frames @ 12 fps ≈ 0.42 s
 	_hurt_timer = 5.0 / 12.0
+
+	# ORCA low-health warning at 1 HP
+	if health == 1 and not DialogueManager.is_active:
+		DialogueManager.start_dialogue({
+			"speaker": "ORCA",
+			"lines": ["Suit integrity critical."],
+		})
 
 
 ## Called by an enemy when the player is killed.
