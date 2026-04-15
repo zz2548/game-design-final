@@ -28,6 +28,7 @@ const FADE_DURATION    : float = 0.55
 
 var _card_index     : int   = 0
 var _is_typing      : bool  = false
+var _advancing      : bool  = false   # true while cross-fade await is running
 var _typewriter_tween : Tween = null
 var _auto_timer     : SceneTreeTimer = null
 
@@ -93,20 +94,26 @@ func _on_typewriter_done() -> void:
 
 
 func _advance() -> void:
+	if _advancing:
+		return
+
 	# Disconnect auto-timer if it's still pending
 	if _auto_timer and _auto_timer.timeout.is_connected(_advance):
 		_auto_timer.timeout.disconnect(_advance)
 
+	_advancing = true
 	_card_index += 1
+
 	if _card_index >= CARDS.size():
 		_end_cutscene()
-		return
+		return   # leave _advancing = true — no more input after final card
 
 	# Cross-fade to next card
 	_fade_overlay(1.0, FADE_DURATION / 2.0)
 	await get_tree().create_timer(FADE_DURATION / 2.0).timeout
 	_show_card(_card_index)
 	_fade_overlay(0.0, FADE_DURATION / 2.0)
+	_advancing = false
 
 
 func _end_cutscene() -> void:

@@ -2,10 +2,9 @@ extends CharacterBody2D
 
 # ── Movement ──────────────────────────────────────────────────────────────────
 const SWIM_SPEED   : float = 200.0
-const ACCELERATION : float = 340.0
+const ACCELERATION : float = 480.0
 # Water drag coefficients (exponential decay): velocity *= exp(-coeff * delta)
-const WATER_RESIST : float = 1.0    # resistance applied while actively swimming
-const SWIM_DRAG    : float = 3.2    # stronger drag when coasting (no input)
+const SWIM_DRAG    : float = 3.8    # drag when coasting (no input)
 
 # ── Submarine driving ─────────────────────────────────────────────────────────
 const SUB_SPEED    : float = 140.0  # heavier, slower
@@ -15,6 +14,37 @@ const SUB_RESIST   : float = 0.18   # light resistance while thrusting
 const SUB_DRAG     : float = 1.1    # coasting drag — vessel drifts noticeably
 
 var submarine_mode : bool = false
+var _swim_dir      : Vector2 = Vector2.ZERO  # smoothed input direction for curved turns
+
+# ── Oxygen ────────────────────────────────────────────────────────────────────
+const MAX_OXYGEN        : float = 90.0  # seconds of air at a full tank
+const OXYGEN_DRAIN_RATE : float = 1.0   # units drained per second while free-swimming
+const OXYGEN_WARN_LOW   : float = 22.5  # 25% — first ORCA warning
+const OXYGEN_WARN_CRIT  : float = 9.0   # 10% — critical ORCA warning
+
+var oxygen : float = MAX_OXYGEN
+
+## Emitted whenever the oxygen level changes (also fires once on _ready).
+signal oxygen_changed(current: float, maximum: float)
+
+var _oxygen_warned_low  : bool = false
+var _oxygen_warned_crit : bool = false
+
+# ── Battery / Flashlight ──────────────────────────────────────────────────────
+const MAX_BATTERY        : float = 120.0  # seconds at full charge
+const BATTERY_DRAIN_RATE : float = 1.0    # units per second while light is on
+const BATTERY_WARN_LOW   : float = 30.0   # 25 % — first ORCA warning
+const BATTERY_WARN_CRIT  : float = 12.0   # 10 % — critical ORCA warning
+
+var battery       : float = MAX_BATTERY
+var _light_on     : bool  = true
+var _flicker_timer: float = 0.0
+
+## Emitted whenever the battery level changes (also fires once on _ready).
+signal battery_changed(current: float, maximum: float)
+
+var _battery_warned_low  : bool = false
+var _battery_warned_crit : bool = false
 
 # ── Weapon ────────────────────────────────────────────────────────────────────
 const DEFAULT_WEAPON : WeaponData = preload("res://shared/weapons/pistol.tres")
@@ -31,9 +61,12 @@ signal ammo_changed(weapon_name: String, current: int, maximum: int)
 # ── Internal ──────────────────────────────────────────────────────────────────
 @onready var cone_light        : PointLight2D    = $ConeLight
 @onready var _sprite           : AnimatedSprite2D = $Sprite
+@onready var _swim_trail       : CPUParticles2D   = $SwimTrail
+@onready var _sub_trail        : CPUParticles2D   = $SubTrail
 @onready var _interaction_prompt : Label          = $InteractionPromptLayer/PromptLabel
 
 var _fire_timer        : float  = 0.0
+var _hurt_timer        : float  = 0.0   # counts down while hurt animation plays
 var _pre_dialogue_pos  : Vector2
 
 
@@ -45,6 +78,8 @@ func _ready() -> void:
 	)
 	if start_armed:
 		equip_weapon(DEFAULT_WEAPON)
+	emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
+	emit_signal("battery_changed", battery, MAX_BATTERY)
 	_setup_sprite()
 	_setup_interaction_prompt()
 	DialogueManager.dialogue_started.connect(_on_dialogue_started)
@@ -148,14 +183,16 @@ func _physics_process(delta: float) -> void:
 		velocity = velocity.limit_length(SUB_SPEED)
 	else:
 		if input_dir.length() > 0.0:
-			input_dir = input_dir.normalized()
-			velocity = velocity.move_toward(input_dir * SWIM_SPEED, ACCELERATION * delta)
-			velocity *= exp(-WATER_RESIST * delta) # water resistance while swimming
+			# Blend toward the new input direction so sharp pivots curve naturally
+			_swim_dir = _swim_dir.lerp(input_dir.normalized(), 12.0 * delta)
+			velocity = velocity.move_toward(_swim_dir * SWIM_SPEED, ACCELERATION * delta)
 		else:
+			_swim_dir = Vector2.ZERO
 			velocity *= exp(-SWIM_DRAG * delta)    # glide to a stop, not a snap
 		velocity = velocity.limit_length(SWIM_SPEED)
 
 	move_and_slide()
+	_update_trails()
 
 	# Aim the cone light at the mouse cursor every frame.
 	# Offset the origin a few pixels toward the mouse so it always
@@ -170,7 +207,9 @@ func _physics_process(delta: float) -> void:
 	if not submarine_mode:
 		var is_moving := velocity.length() > 8.0
 		var target_anim := "swim" if is_moving else "idle"
-		if _sprite.animation != "hurt" and _sprite.animation != target_anim:
+		if _hurt_timer > 0.0:
+			_hurt_timer -= delta   # let hurt animation finish before switching
+		elif _sprite.animation != target_anim:
 			_sprite.play(target_anim)
 		# Rotate sprite to match velocity direction.
 		# When moving leftward we flip_h and mirror the angle so the sprite
@@ -192,6 +231,26 @@ func _physics_process(delta: float) -> void:
 			_sprite.rotation = 0.0
 			_sprite.flip_h = false
 
+	# Drain oxygen while free-swimming (sub is pressurised; dialogue pauses drain)
+	if not submarine_mode:
+		oxygen = maxf(0.0, oxygen - OXYGEN_DRAIN_RATE * delta)
+		emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
+		_check_oxygen_warnings()
+		if oxygen <= 0.0:
+			_die_oxygen()
+			return
+
+	# Drain flashlight battery while free-swimming with light on
+	# (submarine has its own power supply)
+	if not submarine_mode and _light_on:
+		battery = maxf(0.0, battery - BATTERY_DRAIN_RATE * delta)
+		emit_signal("battery_changed", battery, MAX_BATTERY)
+		_check_battery_warnings()
+		_update_cone_light(delta)
+		if battery <= 0.0:
+			_light_on = false
+			cone_light.visible = false
+
 	# Count down fire cooldown
 	if _fire_timer > 0.0:
 		_fire_timer -= delta
@@ -204,6 +263,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			and event.button_index == MOUSE_BUTTON_LEFT \
 			and event.pressed:
 		_fire()
+
+	# Toggle flashlight on/off (conserve battery in safe areas)
+	if event.is_action_pressed("toggle_light"):
+		if battery > 0.0:
+			_light_on = not _light_on
+			cone_light.visible = _light_on
 
 
 # ── Weapon logic ──────────────────────────────────────────────────────────────
@@ -258,18 +323,116 @@ func add_ammo(amount: int) -> void:
 	emit_signal("ammo_changed", current_weapon.display_name, _ammo[id], current_weapon.max_ammo)
 
 
+## Refill oxygen by `amount` units (capped at MAX_OXYGEN).
+## Call this from oxygen-station interactables.
+func refill_oxygen(amount: float) -> void:
+	oxygen = minf(MAX_OXYGEN, oxygen + amount)
+	_oxygen_warned_low  = false
+	_oxygen_warned_crit = false
+	emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
+
+
+func _check_oxygen_warnings() -> void:
+	if DialogueManager.is_active:
+		return
+	if not _oxygen_warned_low and oxygen <= OXYGEN_WARN_LOW:
+		_oxygen_warned_low = true
+		DialogueManager.start_dialogue({
+			"speaker": "ORCA",
+			"lines": ["Oxygen at twenty-five percent.", "Locate a refill station."],
+		})
+	elif not _oxygen_warned_crit and oxygen <= OXYGEN_WARN_CRIT:
+		_oxygen_warned_crit = true
+		DialogueManager.start_dialogue({
+			"speaker": "ORCA",
+			"lines": ["Oxygen critical."],
+		})
+
+
+func _die_oxygen() -> void:
+	set_physics_process(false)
+	set_process_unhandled_input(false)
+	GameState.death_return_scene = get_tree().current_scene.scene_file_path
+	get_tree().change_scene_to_file("res://cutscene/death_screen.tscn")
+
+
+## Called by an enemy hit. Plays the hurt flash; supply a health system later.
+func take_damage(_amount: int) -> void:
+	if _hurt_timer > 0.0:
+		return   # already in hit-stun, don't re-trigger
+	_sprite.play("hurt")
+	# hurt sheet: 5 frames @ 12 fps ≈ 0.42 s
+	_hurt_timer = 5.0 / 12.0
+
+
 ## Called by an enemy when the player is killed.
-## Plays a brief ORCA death line then reloads the level.
 func die() -> void:
 	set_physics_process(false)
 	set_process_unhandled_input(false)
-	DialogueManager.start_dialogue({
-		"speaker": "ORCA",
-		"lines": ["Pilot down. Reinitialising from last checkpoint."],
-	})
-	DialogueManager.dialogue_ended.connect(
-		func(): get_tree().reload_current_scene(), CONNECT_ONE_SHOT
-	)
+	GameState.death_return_scene = get_tree().current_scene.scene_file_path
+	get_tree().change_scene_to_file("res://cutscene/death_screen.tscn")
+
+
+func _update_trails() -> void:
+	var moving := velocity.length() > 8.0
+	if submarine_mode:
+		_swim_trail.emitting = false
+		_sub_trail.emitting  = moving
+		if moving:
+			_sub_trail.rotation = velocity.angle() + PI
+	else:
+		_sub_trail.emitting  = false
+		_swim_trail.emitting = moving
+		if moving:
+			_swim_trail.rotation = velocity.angle() + PI
+
+
+## Recharge the flashlight battery by `amount` units (capped at MAX_BATTERY).
+## Call this from PowerCell pickups.
+func add_battery(amount: float) -> void:
+	battery = minf(MAX_BATTERY, battery + amount)
+	_battery_warned_low  = false
+	_battery_warned_crit = false
+	# Auto-switch light back on if it died
+	if battery > 0.0 and not _light_on:
+		_light_on = true
+	emit_signal("battery_changed", battery, MAX_BATTERY)
+	_update_cone_light(0.0)
+
+
+func _update_cone_light(delta: float) -> void:
+	var ratio := battery / MAX_BATTERY
+	if ratio <= 0.0:
+		cone_light.visible = false
+		return
+	if ratio < 0.1:
+		# Flicker — random visibility and energy jitter near death
+		_flicker_timer -= delta
+		if _flicker_timer <= 0.0:
+			_flicker_timer = randf_range(0.04, 0.22)
+			cone_light.visible = randf() > 0.35
+			cone_light.energy  = lerpf(0.15, 0.5, ratio / 0.1) * randf_range(0.6, 1.3)
+	else:
+		cone_light.visible = _light_on
+		# Full brightness above 50 %; dims linearly down to 35 % at 10 % battery
+		cone_light.energy = lerpf(0.35, 1.0, clampf(ratio / 0.5, 0.0, 1.0))
+
+
+func _check_battery_warnings() -> void:
+	if DialogueManager.is_active:
+		return
+	if not _battery_warned_low and battery <= BATTERY_WARN_LOW:
+		_battery_warned_low = true
+		DialogueManager.start_dialogue({
+			"speaker": "ORCA",
+			"lines": ["Torch battery at twenty-five percent.", "Find a power cell."],
+		})
+	elif not _battery_warned_crit and battery <= BATTERY_WARN_CRIT:
+		_battery_warned_crit = true
+		DialogueManager.start_dialogue({
+			"speaker": "ORCA",
+			"lines": ["Torch battery critical."],
+		})
 
 
 func _process(_delta: float) -> void:

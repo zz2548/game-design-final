@@ -99,6 +99,8 @@ func _tick_attack(delta: float) -> void:
 	if _attack_timer <= 0.0:
 		_attack_timer = attack_cooldown
 		emit_signal("player_damaged", attack_damage)
+		if is_instance_valid(_player_ref) and _player_ref.has_method("take_damage"):
+			_player_ref.take_damage(attack_damage)
 
 
 func _tick_stunned(delta: float) -> void:

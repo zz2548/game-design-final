@@ -16,6 +16,11 @@
 
 extends Node
 
+# Keep processing even while the scene tree is paused so dialogue can drive
+# input and advance lines.
+func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
 signal dialogue_started
 signal line_advanced(speaker: String, text: String, portrait: Texture2D)
 signal dialogue_ended
@@ -44,6 +49,7 @@ func start_dialogue(dialogue: Dictionary) -> void:
 	_current_portrait = dialogue.get("portrait", null)
 	_current_index = 0
 	is_active = true
+	get_tree().paused = true
 
 	emit_signal("dialogue_started")
 	_show_current_line()
@@ -71,4 +77,5 @@ func _end_dialogue() -> void:
 	is_active = false
 	_lines = []
 	_current_index = 0
+	get_tree().paused = false
 	emit_signal("dialogue_ended")
