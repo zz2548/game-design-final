@@ -15,6 +15,7 @@
 [ext_resource type="Script" uid="uid://ccwdgjwkt53xd" path="res://levels/level_2/level_2.gd" id="11_level2"]
 [ext_resource type="PackedScene" path="res://shared/ui/WeaponHUD.tscn" id="12_weaponhud"]
 [ext_resource type="PackedScene" path="res://shared/ui/OxygenHUD.tscn" id="99_oxyhud"]
+[ext_resource type="PackedScene" path="res://shared/ui/BatteryHUD.tscn" id="98_bathud"]
 [ext_resource type="Script" uid="uid://dtwu4bfo0l08u" path="res://levels/level_2/sub_bay_door.gd" id="14_aq41y"]
 
 [sub_resource type="OccluderPolygon2D" id="occ_full_tile"]
@@ -591,5 +592,7 @@ position = Vector2(-532, -26)
 [node name="WeaponHUD" parent="." unique_id=54 instance=ExtResource("12_weaponhud")]
 
 [node name="OxygenHUD" parent="." unique_id=1999000002 instance=ExtResource("99_oxyhud")]
+
+[node name="BatteryHUD" parent="." unique_id=1999000004 instance=ExtResource("98_bathud")]
 
 [node name="LevelMap" type="Node2D" parent="." unique_id=889340398]

@@ -12,6 +12,7 @@
 [ext_resource type="Resource" path="res://shared/items/nav_core.tres" id="10_nav"]
 [ext_resource type="PackedScene" path="res://shared/ui/HintsUI.tscn" id="11_hints"]
 [ext_resource type="PackedScene" path="res://shared/ui/OxygenHUD.tscn" id="99_oxyhud"]
+[ext_resource type="PackedScene" path="res://shared/ui/BatteryHUD.tscn" id="98_bathud"]
 [ext_resource type="PackedScene" uid="uid://cdxseykgech3" path="res://shared/Enemies/enemy.tscn" id="11_qbdb0"]
 [ext_resource type="Script" uid="uid://385wyroimuhd" path="res://levels/level_1/level_1.gd" id="12_level"]
 [ext_resource type="Texture2D" path="res://assets/items/drive_coupling.png" id="16_drive"]
@@ -425,6 +426,8 @@ shape = SubResource("shape_exit")
 [node name="HintsUI" parent="." unique_id=-2144967295 instance=ExtResource("11_hints")]
 
 [node name="OxygenHUD" parent="." unique_id=1999000001 instance=ExtResource("99_oxyhud")]
+
+[node name="BatteryHUD" parent="." unique_id=1999000003 instance=ExtResource("98_bathud")]
 
 [node name="CorridorTrigger" type="Area2D" parent="." unique_id=1111111111]
 position = Vector2(1576, 480)

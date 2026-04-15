@@ -30,6 +30,22 @@ signal oxygen_changed(current: float, maximum: float)
 var _oxygen_warned_low  : bool = false
 var _oxygen_warned_crit : bool = false
 
+# ── Battery / Flashlight ──────────────────────────────────────────────────────
+const MAX_BATTERY        : float = 120.0  # seconds at full charge
+const BATTERY_DRAIN_RATE : float = 1.0    # units per second while light is on
+const BATTERY_WARN_LOW   : float = 30.0   # 25 % — first ORCA warning
+const BATTERY_WARN_CRIT  : float = 12.0   # 10 % — critical ORCA warning
+
+var battery       : float = MAX_BATTERY
+var _light_on     : bool  = true
+var _flicker_timer: float = 0.0
+
+## Emitted whenever the battery level changes (also fires once on _ready).
+signal battery_changed(current: float, maximum: float)
+
+var _battery_warned_low  : bool = false
+var _battery_warned_crit : bool = false
+
 # ── Weapon ────────────────────────────────────────────────────────────────────
 const DEFAULT_WEAPON : WeaponData = preload("res://shared/weapons/pistol.tres")
 
@@ -60,6 +76,7 @@ func _ready() -> void:
 	if start_armed:
 		equip_weapon(DEFAULT_WEAPON)
 	emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
+	emit_signal("battery_changed", battery, MAX_BATTERY)
 	_setup_sprite()
 	_setup_interaction_prompt()
 	DialogueManager.dialogue_started.connect(_on_dialogue_started)
@@ -217,6 +234,17 @@ func _physics_process(delta: float) -> void:
 			_die_oxygen()
 			return
 
+	# Drain flashlight battery while free-swimming with light on
+	# (submarine has its own power supply)
+	if not submarine_mode and _light_on:
+		battery = maxf(0.0, battery - BATTERY_DRAIN_RATE * delta)
+		emit_signal("battery_changed", battery, MAX_BATTERY)
+		_check_battery_warnings()
+		_update_cone_light(delta)
+		if battery <= 0.0:
+			_light_on = false
+			cone_light.visible = false
+
 	# Count down fire cooldown
 	if _fire_timer > 0.0:
 		_fire_timer -= delta
@@ -229,6 +257,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			and event.button_index == MOUSE_BUTTON_LEFT \
 			and event.pressed:
 		_fire()
+
+	# Toggle flashlight on/off (conserve battery in safe areas)
+	if event.is_action_pressed("toggle_light"):
+		if battery > 0.0:
+			_light_on = not _light_on
+			cone_light.visible = _light_on
 
 
 # ── Weapon logic ──────────────────────────────────────────────────────────────
@@ -322,6 +356,54 @@ func die() -> void:
 	set_process_unhandled_input(false)
 	GameState.death_return_scene = get_tree().current_scene.scene_file_path
 	get_tree().change_scene_to_file("res://cutscene/death_screen.tscn")
+
+
+## Recharge the flashlight battery by `amount` units (capped at MAX_BATTERY).
+## Call this from PowerCell pickups.
+func add_battery(amount: float) -> void:
+	battery = minf(MAX_BATTERY, battery + amount)
+	_battery_warned_low  = false
+	_battery_warned_crit = false
+	# Auto-switch light back on if it died
+	if battery > 0.0 and not _light_on:
+		_light_on = true
+	emit_signal("battery_changed", battery, MAX_BATTERY)
+	_update_cone_light(0.0)
+
+
+func _update_cone_light(delta: float) -> void:
+	var ratio := battery / MAX_BATTERY
+	if ratio <= 0.0:
+		cone_light.visible = false
+		return
+	if ratio < 0.1:
+		# Flicker — random visibility and energy jitter near death
+		_flicker_timer -= delta
+		if _flicker_timer <= 0.0:
+			_flicker_timer = randf_range(0.04, 0.22)
+			cone_light.visible = randf() > 0.35
+			cone_light.energy  = lerpf(0.15, 0.5, ratio / 0.1) * randf_range(0.6, 1.3)
+	else:
+		cone_light.visible = _light_on
+		# Full brightness above 50 %; dims linearly down to 35 % at 10 % battery
+		cone_light.energy = lerpf(0.35, 1.0, clampf(ratio / 0.5, 0.0, 1.0))
+
+
+func _check_battery_warnings() -> void:
+	if DialogueManager.is_active:
+		return
+	if not _battery_warned_low and battery <= BATTERY_WARN_LOW:
+		_battery_warned_low = true
+		DialogueManager.start_dialogue({
+			"speaker": "ORCA",
+			"lines": ["Torch battery at twenty-five percent.", "Find a power cell."],
+		})
+	elif not _battery_warned_crit and battery <= BATTERY_WARN_CRIT:
+		_battery_warned_crit = true
+		DialogueManager.start_dialogue({
+			"speaker": "ORCA",
+			"lines": ["Torch battery critical."],
+		})
 
 
 func _process(_delta: float) -> void:
