@@ -15,6 +15,7 @@
 [ext_resource type="Texture2D" uid="uid://g1d8hqs15ute" path="res://assets/items/drive_coupling.png" id="16_drive"]
 [ext_resource type="Texture2D" uid="uid://bhmnmmajmtji6" path="res://assets/items/pressure_seal.png" id="17_seal"]
 [ext_resource type="Texture2D" uid="uid://bqnuxlpdcxuwm" path="res://assets/items/nav_core.png" id="18_nav"]
+[ext_resource type="Script" path="res://scripts/interactables/component_slot_interactable.gd" id="20_slot"]
 [ext_resource type="PackedScene" path="res://shared/ui/BatteryHUD.tscn" id="98_bathud"]
 [ext_resource type="PackedScene" path="res://shared/ui/OxygenHUD.tscn" id="99_oxyhud"]
 
@@ -399,6 +400,39 @@ shape = SubResource("shape_part")
 position = Vector2(0, 6)
 scale = Vector2(0.6, 0.6)
 texture = ExtResource("18_nav")
+
+[node name="SlotEngine" type="Area2D" parent="Objects" unique_id=300100001]
+position = Vector2(60, 447)
+collision_mask = 0
+script = ExtResource("20_slot")
+required_item_id = "drive_coupling"
+component_display_name = "Drive Coupling"
+item_icon = ExtResource("16_drive")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/SlotEngine" unique_id=300100002]
+shape = SubResource("shape_part")
+
+[node name="SlotHull" type="Area2D" parent="Objects" unique_id=300200001]
+position = Vector2(104, 403)
+collision_mask = 0
+script = ExtResource("20_slot")
+required_item_id = "pressure_seal"
+component_display_name = "Pressure Seal"
+item_icon = ExtResource("17_seal")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/SlotHull" unique_id=300200002]
+shape = SubResource("shape_part")
+
+[node name="SlotNav" type="Area2D" parent="Objects" unique_id=300300001]
+position = Vector2(150, 447)
+collision_mask = 0
+script = ExtResource("20_slot")
+required_item_id = "nav_core"
+component_display_name = "Nav Core"
+item_icon = ExtResource("18_nav")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Objects/SlotNav" unique_id=300300002]
+shape = SubResource("shape_part")
 
 [node name="player" parent="." unique_id=1560876372 instance=ExtResource("1_player")]
 position = Vector2(37, 333)

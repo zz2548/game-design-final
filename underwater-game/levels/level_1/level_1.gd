@@ -5,8 +5,6 @@
 
 extends Node2D
 
-const PART_IDS := ["drive_coupling", "pressure_seal", "nav_core"]
-
 # ── Objective indices ─────────────────────────────────────────────────────────
 var _obj_engine: int
 var _obj_hull: int
@@ -15,10 +13,14 @@ var _obj_repair: int
 var _obj_escape: int
 
 # ── Scene refs ────────────────────────────────────────────────────────────────
-@onready var _submarine        : SubmarineInteractable = $Objects/Submarine
-@onready var _submarine_sprite : AnimatedSprite2D      = $Objects/Submarine/Sub
-@onready var _exit_trigger     : Area2D               = $ExitTrigger
-@onready var _corridor_trigger : Area2D               = $CorridorTrigger
+@onready var _submarine        : SubmarineInteractable    = $Objects/Submarine
+@onready var _submarine_sprite : AnimatedSprite2D         = $Objects/Submarine/Sub
+@onready var _exit_trigger     : Area2D                   = $ExitTrigger
+@onready var _corridor_trigger : Area2D                   = $CorridorTrigger
+
+@onready var _slot_engine : ComponentSlotInteractable = $Objects/SlotEngine
+@onready var _slot_hull   : ComponentSlotInteractable = $Objects/SlotHull
+@onready var _slot_nav    : ComponentSlotInteractable = $Objects/SlotNav
 
 var _level_ended: bool = false
 
@@ -32,9 +34,13 @@ func _ready() -> void:
 	_obj_repair = ObjectiveManager.add_objective("Restore the Tethys-7")
 	_obj_escape = ObjectiveManager.add_objective("Breach into open ocean")
 
-	# ── Inventory signals ─────────────────────────────────────────────────────
+	# ── Inventory signals (mark collect objectives) ───────────────────────────
 	Inventory.item_added.connect(_on_item_added)
-	Inventory.inventory_changed.connect(_on_inventory_changed)
+
+	# ── Component slot signals ────────────────────────────────────────────────
+	_slot_engine.slot_filled.connect(_on_slot_filled)
+	_slot_hull.slot_filled.connect(_on_slot_filled)
+	_slot_nav.slot_filled.connect(_on_slot_filled)
 
 	# ── Submarine boarding ────────────────────────────────────────────────────
 	_submarine.boarded.connect(_on_submarine_boarded)
@@ -77,43 +83,39 @@ func _on_item_added(item: ItemData, _qty: int) -> void:
 			ObjectiveManager.complete_objective(_obj_nav)
 
 
-func _on_inventory_changed() -> void:
-	# Repair objective: all 3 parts collected but now gone = submarine was repaired.
-	# (inventory.gd emits item_removed with null after clearing the slot, so we
-	#  use inventory_changed + a state check instead of the item_removed signal.)
-	var all_collected: bool = (
-		ObjectiveManager.objectives[_obj_engine]["completed"] and
-		ObjectiveManager.objectives[_obj_hull]["completed"] and
-		ObjectiveManager.objectives[_obj_nav]["completed"]
-	)
-	if not all_collected:
+func _on_slot_filled() -> void:
+	if not (_slot_engine.is_filled and _slot_hull.is_filled and _slot_nav.is_filled):
 		return
-	for part_id: String in PART_IDS:
-		if Inventory.has_item(part_id):
-			return
+	GameState.submarine_fixed = true
+	# Disable slot detection so only the submarine interactable is focusable.
+	_slot_engine.monitoring = false
+	_slot_hull.monitoring   = false
+	_slot_nav.monitoring    = false
 	ObjectiveManager.complete_objective(_obj_repair)
+	DialogueManager.start_dialogue({
+		"speaker": "ORCA",
+		"lines": [
+			"Drive coupling installed.",
+			"Pressure seal nominal.",
+			"Nav core online.",
+			"Tethys-7 is operational.",
+			"Approach the helm to depart.",
+		],
+	})
 
 
 # ── Submarine driving sequence ────────────────────────────────────────────────
 
 func _on_submarine_boarded(player: Node) -> void:
-	# Snap player to submarine, swap visuals, hand off controls
 	player.global_position = _submarine.global_position
-
-	# Reparent the submarine sprite onto the player so it moves with them.
-	# reparent() preserves global_transform by default, so the local offset
-	# becomes (0, 0) since both nodes share the same global position.
 	_submarine_sprite.reparent(player)
 	_submarine_sprite.position = Vector2.ZERO
-
 	player.enter_submarine_mode()
 
 
 func _on_corridor_entered(body: Node) -> void:
 	if not body.is_in_group("player") or GameState.submarine_fixed:
 		return
-	# Push the player back into the cave before dialogue fires so that
-	# the position-restore on dialogue_ended lands them safely here.
 	body.global_position = Vector2(1530.0, 480.0)
 	body.velocity        = Vector2.ZERO
 	if not DialogueManager.is_active:
@@ -121,7 +123,7 @@ func _on_corridor_entered(body: Node) -> void:
 			"speaker": "ORCA",
 			"lines": [
 				"Tethys-7 is non-operational. The corridor ahead leads to open ocean.",
-				"Without propulsion, that is unsurvivable. Repair the submarine first.",
+				"Install all three components into the hull bays, then board the submarine.",
 			],
 		})
 
