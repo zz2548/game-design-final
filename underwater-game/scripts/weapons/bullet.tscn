@@ -15,12 +15,6 @@ script = ExtResource("1_bullet")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1402663823]
 shape = SubResource("RectangleShape2D_bullet")
 
-[node name="Visual" type="ColorRect" parent="." unique_id=1664770653]
-offset_left = -3.0
-offset_top = -1.0
-offset_right = 3.0
-offset_bottom = 1.0
-color = Color(1, 0.88, 0.3, 1)
 
 [node name="BulletArea" type="Area2D" parent="." unique_id=867542078]
 collision_layer = 4

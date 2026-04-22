@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cdxseykgech3"]
 
-[ext_resource type="Script" uid="uid://dnjemd8lyodrx" path="res://shared/Enemies/enemy.gd" id="1_epbig"]
+[ext_resource type="Script" path="res://shared/Enemies/enemy_melee.gd" id="1_epbig"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_epbig"]
 radius = 8.0
@@ -39,11 +39,13 @@ text = "!"
 horizontal_alignment = 1
 
 [node name="DetectionZone" type="Area2D" parent="." unique_id=155792756]
+collision_mask = 8
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionZone" unique_id=1892422719]
 shape = SubResource("CircleShape2D_4x6ml")
 
 [node name="HitZone" type="Area2D" parent="." unique_id=1253235713]
+collision_mask = 8
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HitZone" unique_id=1187525994]
 shape = SubResource("CircleShape2D_v300b")

@@ -17,6 +17,10 @@ var direction : Vector2 = Vector2.RIGHT
 var _distance_traveled : float = 0.0
 
 
+func _draw() -> void:
+	draw_circle(Vector2.ZERO, 3.0, Color(0.3, 0.7, 1.0))
+
+
 func _physics_process(delta: float) -> void:
 	var collision := move_and_collide(direction * SPEED * delta)
 	_distance_traveled += SPEED * delta

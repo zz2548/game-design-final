@@ -1,0 +1,69 @@
+[gd_scene format=3 uid="uid://baoeenemy0001"]
+
+[ext_resource type="Script" path="res://shared/Enemies/enemy_aoe.gd" id="1_aoe"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_aoe"]
+radius = 12.0
+height = 28.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_detect"]
+radius = 350.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hit"]
+radius = 24.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bhit"]
+radius = 16.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_shock"]
+radius = 150.0
+
+[node name="EnemyAoe" type="CharacterBody2D" groups=["enemies"]]
+collision_layer = 2
+script = ExtResource("1_aoe")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_aoe")
+
+[node name="Sprite" type="ColorRect" parent="."]
+offset_left = -12.0
+offset_top = -14.0
+offset_right = 12.0
+offset_bottom = 14.0
+color = Color(0.3, 0.1, 0.8, 1.0)
+
+[node name="AlertLabel" type="Label" parent="."]
+modulate = Color(1, 0.9, 0, 1)
+offset_left = -4.0
+offset_top = -40.0
+offset_right = 36.0
+offset_bottom = -17.0
+text = "!"
+horizontal_alignment = 1
+
+[node name="DetectionZone" type="Area2D" parent="."]
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionZone"]
+shape = SubResource("CircleShape2D_detect")
+
+[node name="HitZone" type="Area2D" parent="."]
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitZone"]
+shape = SubResource("CircleShape2D_hit")
+
+[node name="BulletHitZone" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BulletHitZone"]
+shape = SubResource("CircleShape2D_bhit")
+
+[node name="ShockZone" type="Area2D" parent="."]
+monitoring = true
+collision_layer = 0
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ShockZone"]
+shape = SubResource("CircleShape2D_shock")

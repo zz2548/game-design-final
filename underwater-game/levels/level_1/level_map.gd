@@ -40,6 +40,7 @@ const MAP_COLS      : int    = 200
 const MAP_ROWS      : int    = 64
 const TILE_VARIANTS : int    = 8
 const TILESET_PATH  : String = "res://assets/tiles/tileset.png"
+const BORDER        : int    = 30
 
 # ── Open-water zones (all coordinates inclusive) ──────────────────────────────
 # Zones that share a boundary row/column automatically form a doorway at
@@ -82,13 +83,13 @@ func _build_tilemap() -> TileMapLayer:
 	var tilemap := TileMapLayer.new()
 	tilemap.tile_set = _make_tileset()
 
-	for row in MAP_ROWS:
-		for col in MAP_COLS:
-			if _is_wall(col, row):
-				tilemap.set_cell(
-					Vector2i(col, row), 0,
-					Vector2i(_tile_variant(col, row), 0)
-				)
+	for row in range(-BORDER, MAP_ROWS + BORDER):
+		for col in range(-BORDER, MAP_COLS + BORDER):
+			var outside := col < 0 or col >= MAP_COLS or row < 0 or row >= MAP_ROWS
+			if outside:
+				tilemap.set_cell(Vector2i(col, row), 1, Vector2i(0, 0))
+			elif _is_wall(col, row):
+				tilemap.set_cell(Vector2i(col, row), 0, Vector2i(_tile_variant(col, row), 0))
 
 	return tilemap
 
@@ -116,6 +117,15 @@ func _make_tileset() -> TileSet:
 
 	# Source registered with TileSet BEFORE setting per-tile data.
 	ts.add_source(source, 0)
+
+	# Source 1 — solid black tile for the outer border.
+	var black_img := Image.create(TILE_SIZE, TILE_SIZE, false, Image.FORMAT_RGBA8)
+	black_img.fill(Color.BLACK)
+	var black_source := TileSetAtlasSource.new()
+	black_source.texture = ImageTexture.create_from_image(black_img)
+	black_source.texture_region_size = Vector2i(TILE_SIZE, TILE_SIZE)
+	black_source.create_tile(Vector2i(0, 0))
+	ts.add_source(black_source, 1)
 
 	var h        : float             = TILE_SIZE / 2.0
 	var poly     : PackedVector2Array = PackedVector2Array([

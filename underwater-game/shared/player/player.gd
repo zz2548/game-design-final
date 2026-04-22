@@ -266,19 +266,16 @@ func _physics_process(delta: float) -> void:
 			_light_on = false
 			cone_light.visible = false
 
-	# Count down fire cooldown
+	# Count down fire cooldown and auto-fire while LMB is held
 	if _fire_timer > 0.0:
 		_fire_timer -= delta
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		_fire()
 
 
 # ── Input (shooting) ──────────────────────────────────────────────────────────
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton \
-			and event.button_index == MOUSE_BUTTON_LEFT \
-			and event.pressed:
-		_fire()
-
 	# Toggle flashlight on/off (conserve battery in safe areas)
 	if event.is_action_pressed("toggle_light"):
 		if battery > 0.0:
@@ -301,9 +298,6 @@ func _fire() -> void:
 	# Block fire during active dialogue or while piloting the submarine
 	if DialogueManager.is_active or submarine_mode or current_weapon == null:
 		return
-	if _ammo.get(current_weapon.id, 0) <= 0:
-		# TODO: play a "dry fire" / click sound
-		return
 	if _fire_timer > 0.0:
 		return
 
@@ -323,10 +317,7 @@ func _fire() -> void:
 		bullet.direction       = dir
 		get_parent().add_child(bullet)
 
-	_ammo[current_weapon.id] -= 1
 	_fire_timer = current_weapon.fire_cooldown
-	emit_signal("ammo_changed", current_weapon.display_name,
-			_ammo[current_weapon.id], current_weapon.max_ammo)
 
 
 ## Call this from an ammo-pickup interactable to refill the current weapon's ammo.
