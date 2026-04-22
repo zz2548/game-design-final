@@ -285,67 +285,123 @@ position = Vector2(126, 112)
 [node name="HealthHUD" parent="." unique_id=1698132583 instance=ExtResource("8_healthhud")]
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1896972832]
-visible = false
 
-[node name="EnemyArena1" parent="Enemies" unique_id=700000001 instance=ExtResource("11_enemy")]
-position = Vector2(640, 560)
+[node name="Melee" type="Node2D" parent="Enemies" unique_id=1017215380]
 
-[node name="EnemyArena2" parent="Enemies" unique_id=700000002 instance=ExtResource("12_ranged")]
-position = Vector2(800, 432)
+[node name="Melee1" parent="Enemies/Melee" unique_id=700000001 instance=ExtResource("11_enemy")]
+position = Vector2(554, 86)
 
-[node name="EnemyArena3" parent="Enemies" unique_id=700000003 instance=ExtResource("11_enemy")]
-position = Vector2(1120, 432)
+[node name="Melee2" parent="Enemies/Melee" unique_id=700000003 instance=ExtResource("11_enemy")]
+position = Vector2(554, 256)
 
-[node name="EnemyArena4" parent="Enemies" unique_id=700000004 instance=ExtResource("12_ranged")]
-position = Vector2(1280, 560)
+[node name="Melee3" parent="Enemies/Melee" unique_id=700000006 instance=ExtResource("11_enemy")]
+position = Vector2(868, 371)
 
-[node name="EnemyArena5" parent="Enemies" unique_id=700000005 instance=ExtResource("13_aoe")]
-position = Vector2(960, 752)
-
-[node name="EnemyArena6" parent="Enemies" unique_id=700000006 instance=ExtResource("11_enemy")]
-position = Vector2(800, 1040)
-
-[node name="EnemyArena7" parent="Enemies" unique_id=700000007 instance=ExtResource("12_ranged")]
-position = Vector2(1120, 1040)
-
-[node name="EnemyObsDeck1" parent="Enemies" unique_id=700000008 instance=ExtResource("11_enemy")]
+[node name="Melee4" parent="Enemies/Melee" unique_id=700000008 instance=ExtResource("11_enemy")]
 position = Vector2(832, 96)
 
-[node name="EnemyObsDeck2" parent="Enemies" unique_id=700000009 instance=ExtResource("12_ranged")]
-position = Vector2(1088, 96)
+[node name="Melee5" parent="Enemies/Melee" unique_id=700000010 instance=ExtResource("11_enemy")]
+position = Vector2(736, 1376)
 
-[node name="EnemyReactor1" parent="Enemies" unique_id=700000010 instance=ExtResource("11_enemy")]
-position = Vector2(768, 1392)
+[node name="Melee6" parent="Enemies/Melee" unique_id=700000013 instance=ExtResource("11_enemy")]
+position = Vector2(128, 672)
 
-[node name="EnemyReactor2" parent="Enemies" unique_id=700000011 instance=ExtResource("13_aoe")]
-position = Vector2(960, 1536)
+[node name="Melee7" parent="Enemies/Melee" unique_id=700000014 instance=ExtResource("11_enemy")]
+position = Vector2(304, 848)
 
-[node name="EnemyReactor3" parent="Enemies" unique_id=700000012 instance=ExtResource("12_ranged")]
-position = Vector2(1152, 1392)
+[node name="Melee8" parent="Enemies/Melee" unique_id=700000017 instance=ExtResource("11_enemy")]
+position = Vector2(1856, 848)
 
-[node name="EnemyArmory1" parent="Enemies" unique_id=700000013 instance=ExtResource("11_enemy")]
-position = Vector2(160, 688)
-
-[node name="EnemyArmory2" parent="Enemies" unique_id=700000014 instance=ExtResource("11_enemy")]
-position = Vector2(320, 832)
-
-[node name="EnemyArmory3" parent="Enemies" unique_id=700000015 instance=ExtResource("12_ranged")]
-position = Vector2(208, 960)
-
-[node name="EnemyEngine1" parent="Enemies" unique_id=700000016 instance=ExtResource("12_ranged")]
-position = Vector2(1664, 688)
-
-[node name="EnemyEngine2" parent="Enemies" unique_id=700000017 instance=ExtResource("11_enemy")]
-position = Vector2(1824, 832)
-
-[node name="EnemyEngine3" parent="Enemies" unique_id=700000018 instance=ExtResource("13_aoe")]
-position = Vector2(1760, 960)
-
-[node name="EnemyNorthCor" parent="Enemies" unique_id=700000019 instance=ExtResource("11_enemy")]
+[node name="Melee9" parent="Enemies/Melee" unique_id=700000019 instance=ExtResource("11_enemy")]
 position = Vector2(960, 304)
 
-[node name="EnemySouthCor" parent="Enemies" unique_id=700000020 instance=ExtResource("12_ranged")]
-position = Vector2(960, 1200)
+[node name="Melee10" parent="Enemies/Melee" unique_id=581764293 instance=ExtResource("11_enemy")]
+position = Vector2(1920, 608)
+
+[node name="Melee11" parent="Enemies/Melee" unique_id=1432684195 instance=ExtResource("11_enemy")]
+position = Vector2(1088, 976)
+
+[node name="Melee12" parent="Enemies/Melee" unique_id=795820850 instance=ExtResource("11_enemy")]
+position = Vector2(1264, 1152)
+
+[node name="Melee13" parent="Enemies/Melee" unique_id=140080247 instance=ExtResource("11_enemy")]
+position = Vector2(1603, 348)
+
+[node name="Melee14" parent="Enemies/Melee" unique_id=262163447 instance=ExtResource("11_enemy")]
+position = Vector2(1920, 608)
+
+[node name="Melee15" parent="Enemies/Melee" unique_id=1669460854 instance=ExtResource("11_enemy")]
+position = Vector2(1393, 159)
+
+[node name="Melee16" parent="Enemies/Melee" unique_id=948873022 instance=ExtResource("11_enemy")]
+position = Vector2(641, 672)
+
+[node name="Melee17" parent="Enemies/Melee" unique_id=1049310644 instance=ExtResource("11_enemy")]
+position = Vector2(1429, 1663)
+
+[node name="Melee18" parent="Enemies/Melee" unique_id=1584657728 instance=ExtResource("11_enemy")]
+position = Vector2(1836, 1480)
+
+[node name="Melee19" parent="Enemies/Melee" unique_id=1400794038 instance=ExtResource("11_enemy")]
+position = Vector2(192, 1663)
+
+[node name="Melee20" parent="Enemies/Melee" unique_id=65881142 instance=ExtResource("11_enemy")]
+position = Vector2(1220, 525)
+
+[node name="Ranged" type="Node2D" parent="Enemies" unique_id=436390321]
+
+[node name="Ranged1" parent="Enemies/Ranged" unique_id=700000002 instance=ExtResource("12_ranged")]
+position = Vector2(605, 384)
+
+[node name="Ranged2" parent="Enemies/Ranged" unique_id=700000004 instance=ExtResource("12_ranged")]
+position = Vector2(1312, 528)
+
+[node name="Ranged3" parent="Enemies/Ranged" unique_id=700000007 instance=ExtResource("12_ranged")]
+position = Vector2(1065, 371)
+
+[node name="Ranged4" parent="Enemies/Ranged" unique_id=700000009 instance=ExtResource("12_ranged")]
+position = Vector2(1088, 96)
+
+[node name="Ranged5" parent="Enemies/Ranged" unique_id=700000012 instance=ExtResource("12_ranged")]
+position = Vector2(1184, 1376)
+
+[node name="Ranged6" parent="Enemies/Ranged" unique_id=700000015 instance=ExtResource("12_ranged")]
+position = Vector2(340, 751)
+
+[node name="Ranged7" parent="Enemies/Ranged" unique_id=700000016 instance=ExtResource("12_ranged")]
+position = Vector2(736, 692)
+
+[node name="Ranged8" parent="Enemies/Ranged" unique_id=700000020 instance=ExtResource("12_ranged")]
+position = Vector2(832, 1298)
+
+[node name="Ranged9" parent="Enemies/Ranged" unique_id=85677362 instance=ExtResource("12_ranged")]
+position = Vector2(81, 1653)
+
+[node name="Ranged10" parent="Enemies/Ranged" unique_id=782449846 instance=ExtResource("12_ranged")]
+position = Vector2(1920, 682)
+
+[node name="Ranged11" parent="Enemies/Ranged" unique_id=1899658953 instance=ExtResource("12_ranged")]
+position = Vector2(439, 243)
+
+[node name="Ranged12" parent="Enemies/Ranged" unique_id=1744088616 instance=ExtResource("12_ranged")]
+position = Vector2(2017, 51)
+
+[node name="AOE" type="Node2D" parent="Enemies" unique_id=1776281695]
+
+[node name="AOE1" parent="Enemies/AOE" unique_id=700000005 instance=ExtResource("13_aoe")]
+position = Vector2(641, 176)
+
+[node name="AOE2" parent="Enemies/AOE" unique_id=700000011 instance=ExtResource("13_aoe")]
+position = Vector2(960, 1520)
+
+[node name="AOE3" parent="Enemies/AOE" unique_id=700000018 instance=ExtResource("13_aoe")]
+position = Vector2(1792, 992)
+
+[node name="AOE4" parent="Enemies/AOE" unique_id=1011604670 instance=ExtResource("13_aoe")]
+position = Vector2(232, 908)
+
+[node name="AOE5" parent="Enemies/AOE" unique_id=805357615 instance=ExtResource("13_aoe")]
+position = Vector2(736, 560)
 
 [node name="OxygenRefills" type="Node2D" parent="." unique_id=1833771585]
 
