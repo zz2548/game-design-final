@@ -152,6 +152,10 @@ func _on_exit_reached(body: Node) -> void:
 			],
 		})
 		DialogueManager.dialogue_ended.connect(
-			func(): get_tree().change_scene_to_file("res://cutscene/transit_cinematic.tscn"),
+			func():
+				# Snapshot all completed Level 1 objectives into GameState
+				# before the scene is destroyed.
+				GameState.save_objectives_from_level_1()
+				get_tree().change_scene_to_file("res://cutscene/transit_cinematic.tscn"),
 			CONNECT_ONE_SHOT
 		)

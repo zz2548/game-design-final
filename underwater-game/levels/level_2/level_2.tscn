@@ -7,7 +7,7 @@
 [ext_resource type="PackedScene" path="res://shared/ui/BatteryHUD.tscn" id="6_bathud"]
 [ext_resource type="PackedScene" uid="uid://mlhwapbkc1vs" path="res://scripts/interactables/OxygenRefillStation.tscn" id="7_oxyrs"]
 [ext_resource type="PackedScene" path="res://shared/ui/HealthHUD.tscn" id="8_healthhud"]
-[ext_resource type="PackedScene" path="res://scripts/interactables/WeaponPickup.tscn" id="9_wpickup"]
+[ext_resource type="PackedScene" uid="uid://chkt7q6g0mw0o" path="res://scripts/interactables/WeaponPickup.tscn" id="9_wpickup"]
 [ext_resource type="PackedScene" path="res://shared/ui/InventoryUI.tscn" id="10_kgdtm"]
 [ext_resource type="Resource" uid="uid://coahldrxo3um" path="res://shared/weapons/shotgun.tres" id="10_shotgun"]
 [ext_resource type="PackedScene" uid="uid://eb3vk6h130ot" path="res://shared/ui/dialogue_ui.tscn" id="11_12l1j"]
