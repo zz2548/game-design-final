@@ -22,12 +22,8 @@ script = ExtResource("1_epbig")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=574711302]
 shape = SubResource("CapsuleShape2D_epbig")
 
-[node name="Sprite" type="ColorRect" parent="." unique_id=303590823]
-offset_left = -8.0
-offset_top = -10.0
-offset_right = 8.0
-offset_bottom = 10.0
-color = Color(1, 0.1, 0.1, 1)
+[node name="Sprite" type="AnimatedSprite2D" parent="." unique_id=303590823]
+scale = Vector2(0.8, 0.8)
 
 [node name="AlertLabel" type="Label" parent="." unique_id=118354886]
 modulate = Color(1, 0.9, 0, 1)

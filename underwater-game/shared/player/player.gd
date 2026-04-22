@@ -15,6 +15,7 @@ const SUB_DRAG     : float = 1.1    # coasting drag — vessel drifts noticeably
 
 var submarine_mode : bool = false
 var _swim_dir      : Vector2 = Vector2.ZERO  # smoothed input direction for curved turns
+var _sub_sprite    : AnimatedSprite2D = null  # set by level when boarding
 
 # ── Oxygen ────────────────────────────────────────────────────────────────────
 const MAX_OXYGEN        : float = 90.0  # seconds of air at a full tank
@@ -209,14 +210,27 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	_update_trails()
 
-	# Aim the cone light at the mouse cursor every frame.
-	# Offset the origin a few pixels toward the mouse so it always
-	# appears to emit from the same point regardless of cursor direction.
+	# Rotate the submarine sprite to face the direction of travel.
+	if submarine_mode and _sub_sprite != null:
+		var is_moving := velocity.length() > 8.0
+		if is_moving:
+			var angle := velocity.angle()
+			if cos(angle) >= 0.0:
+				_sub_sprite.flip_h = false
+				_sub_sprite.rotation = angle
+			else:
+				_sub_sprite.flip_h = true
+				var mirrored := (PI - angle) if angle > 0.0 else (-PI - angle)
+				_sub_sprite.rotation = -mirrored
+		else:
+			_sub_sprite.rotation = 0.0
+			_sub_sprite.flip_h = false
+
+	# Aim the cone light at the mouse cursor with a slight lag.
 	var to_mouse := get_global_mouse_position() - global_position
 	if to_mouse.length() > 1.0:
-		var dir := to_mouse.normalized()
-		cone_light.rotation = to_mouse.angle()
-		cone_light.position = dir * 5.0
+		cone_light.rotation = lerp_angle(cone_light.rotation, to_mouse.angle(), 2.5 * delta)
+		cone_light.position = Vector2.from_angle(cone_light.rotation) * 5.0
 
 	# Drive sprite animation and facing (only in free-swim)
 	if not submarine_mode:

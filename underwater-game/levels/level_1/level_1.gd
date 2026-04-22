@@ -105,6 +105,7 @@ func _on_submarine_boarded(player: Node) -> void:
 	# becomes (0, 0) since both nodes share the same global position.
 	_submarine_sprite.reparent(player)
 	_submarine_sprite.position = Vector2.ZERO
+	player._sub_sprite = _submarine_sprite
 
 	player.enter_submarine_mode()
 
