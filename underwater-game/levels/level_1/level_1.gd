@@ -27,6 +27,9 @@ var _level_ended: bool = false
 
 
 func _ready() -> void:
+	# ── Ambient music ─────────────────────────────────────────────────────────
+	MusicManager.play(["res://assets/sounds/ambient_l1.mp3", "res://assets/sounds/ambient_l1_2.mp3"], -10.0)
+
 	# ── Objectives ────────────────────────────────────────────────────────────
 	ObjectiveManager.clear_objectives()
 	_obj_engine = ObjectiveManager.add_objective("Recover the Drive Coupling")
@@ -93,6 +96,11 @@ func _on_item_added(item: ItemData, _qty: int) -> void:
 func _on_slot_filled() -> void:
 	if not (_slot_engine.is_filled and _slot_hull.is_filled and _slot_nav.is_filled):
 		return
+	var snd := AudioStreamPlayer.new()
+	snd.stream = load("res://assets/sounds/repair.mp3")
+	snd.finished.connect(snd.queue_free)
+	add_child(snd)
+	snd.play()
 	GameState.submarine_fixed = true
 	# Disable slot detection so only the submarine interactable is focusable.
 	_slot_engine.monitoring = false

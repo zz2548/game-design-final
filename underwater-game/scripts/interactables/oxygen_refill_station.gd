@@ -37,9 +37,13 @@ enum Mode {
 
 var _player_in_range : Node = null   # non-null only in PASSIVE mode while overlapping
 var _used            : bool = false  # guards single-use stations
+var _bubbles         : AudioStreamPlayer
 
 
 func _ready() -> void:
+	_bubbles = AudioStreamPlayer.new()
+	_bubbles.stream = load("res://assets/sounds/bubbles.wav")
+	add_child(_bubbles)
 	# Passive stations have no prompt — hide from the InteractionSystem by
 	# setting an empty label and connecting body signals manually.
 	if mode == Mode.PASSIVE:
@@ -68,11 +72,13 @@ func _process(delta: float) -> void:
 func _on_body_entered(body: Node) -> void:
 	if body.is_in_group("player"):
 		_player_in_range = body
+		_bubbles.play()
 
 
 func _on_body_exited(body: Node) -> void:
 	if body == _player_in_range:
 		_player_in_range = null
+		_bubbles.stop()
 
 
 # ── INTERACT override ─────────────────────────────────────────────────────────
@@ -85,6 +91,7 @@ func _on_interact(player: Node) -> void:
 
 	if player.has_method("refill_oxygen"):
 		player.refill_oxygen(interact_refill_amount)
+		_bubbles.play()
 
 	if single_use:
 		_used = true

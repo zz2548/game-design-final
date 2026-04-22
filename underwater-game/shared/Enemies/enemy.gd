@@ -18,6 +18,7 @@ var _state        : State  = State.IDLE
 var _state_timer  : float  = 0.0
 var _health       : int
 var _player_ref   : Node2D = null
+var _hit_sound    : AudioStreamPlayer
 
 @onready var detection_zone  : Area2D           = $DetectionZone
 @onready var hit_zone        : Area2D           = $HitZone
@@ -46,6 +47,9 @@ func _setup_sprite() -> void:
 
 func _ready() -> void:
 	_health = max_health
+	_hit_sound = AudioStreamPlayer.new()
+	_hit_sound.stream = load("res://assets/sounds/hit.mp3")
+	add_child(_hit_sound)
 	_setup_sprite()
 	detection_zone.body_entered.connect(_on_detection_body_entered)
 	detection_zone.body_exited.connect(_on_detection_body_exited)
@@ -141,8 +145,14 @@ func _on_detection_body_exited(body: Node2D) -> void:
 
 
 func _on_bullet_hit(_area: Area2D) -> void:
+	_hit_sound.play()
 	_health -= 1
 	if _health <= 0:
+		var snd := AudioStreamPlayer.new()
+		snd.stream = load("res://assets/sounds/mobdeath.mp3")
+		snd.finished.connect(snd.queue_free)
+		get_parent().add_child(snd)
+		snd.play()
 		emit_signal("died")
 		queue_free()
 		return

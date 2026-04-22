@@ -23,6 +23,11 @@ func _on_interact(player: Node) -> void:
 		return
 	var success := Inventory.add_item(item, quantity)
 	if success:
+		var snd := AudioStreamPlayer.new()
+		snd.stream = load("res://assets/sounds/item.mp3")
+		snd.finished.connect(snd.queue_free)
+		get_parent().add_child(snd)
+		snd.play()
 		queue_free()
 	else:
 		# Inventory full — could trigger a UI message

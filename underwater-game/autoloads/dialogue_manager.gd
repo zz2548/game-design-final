@@ -16,10 +16,16 @@
 
 extends Node
 
+var _ping : AudioStreamPlayer
+
 # Keep processing even while the scene tree is paused so dialogue can drive
 # input and advance lines.
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_ping = AudioStreamPlayer.new()
+	_ping.stream = load("res://assets/sounds/ping.mp3")
+	_ping.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_ping)
 
 signal dialogue_started
 signal line_advanced(speaker: String, text: String, portrait: Texture2D)
@@ -69,6 +75,7 @@ func end_dialogue_early() -> void:
 # ─── Private ─────────────────────────────────────────────────────────────────
 
 func _show_current_line() -> void:
+	_ping.play()
 	var text: String = _lines[_current_index]
 	emit_signal("line_advanced", _current_speaker, text, _current_portrait)
 

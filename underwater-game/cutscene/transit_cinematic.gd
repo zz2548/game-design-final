@@ -16,9 +16,9 @@ var _scrolling : bool  = true
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_fade_rect.modulate.a = 0.0
 	_setup_sub_sprite()
 	var tween := create_tween()
-	tween.tween_property(_fade_rect, "modulate:a", 0.0, 1.5)
 	tween.tween_interval(2.5)
 	tween.tween_callback(_trigger_dialogue)
 

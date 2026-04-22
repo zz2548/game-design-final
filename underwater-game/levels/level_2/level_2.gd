@@ -23,6 +23,9 @@ var _level_ended: bool = false
 func _ready() -> void:
 	SceneManager.current_level = 2
 
+	# ── Ambient music ─────────────────────────────────────────────────────────
+	MusicManager.play(["res://assets/sounds/ambient_l2.mp3"])
+
 	# ── Restore Level 1 objective history ────────────────────────────────────
 	# Replay the Level 1 snapshot so completed objectives appear at the top of
 	# the HUD as a record of prior progress, then append Level 2 objectives.

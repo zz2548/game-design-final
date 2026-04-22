@@ -70,6 +70,7 @@ var _weapons       : Array      = []   # ordered list of collected WeaponData
 signal weapon_changed(weapon_name: String)
 
 # ── Internal ──────────────────────────────────────────────────────────────────
+@onready var _camera           : Camera2D         = $Camera2D
 @onready var cone_light        : PointLight2D    = $ConeLight
 @onready var muzzle_flash      : PointLight2D    = $MuzzleFlash
 @onready var _sprite           : AnimatedSprite2D = $Sprite
@@ -81,10 +82,21 @@ var _fire_timer        : float  = 0.0
 var _hurt_timer        : float  = 0.0   # counts down while hurt animation plays
 var _pre_dialogue_pos  : Vector2
 
+var _fire_sound  : AudioStreamPlayer
+var _death_sound : AudioStreamPlayer
+
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 func _ready() -> void:
+	_fire_sound = AudioStreamPlayer.new()
+	_fire_sound.stream = load("res://assets/sounds/fire.mp3")
+	add_child(_fire_sound)
+
+	_death_sound = AudioStreamPlayer.new()
+	_death_sound.stream = load("res://assets/sounds/death.mp3")
+	add_child(_death_sound)
+
 	Inventory.item_added.connect(func(item, qty):
 		print("Picked up: ", item.display_name, " x", qty)
 	)
@@ -345,12 +357,22 @@ func _fire() -> void:
 		bullet.direction       = dir
 		get_parent().add_child(bullet)
 
+	_fire_sound.play()
+	_shake_camera()
+
 	muzzle_flash.position = aim_dir * current_weapon.bullet_offset
 	muzzle_flash.energy   = 4.0
 	var _mf := create_tween()
 	_mf.tween_property(muzzle_flash, "energy", 0.0, 0.1)
 
 	_fire_timer = current_weapon.fire_cooldown
+
+
+func _shake_camera() -> void:
+	var tween := create_tween()
+	for i in 3:
+		tween.tween_property(_camera, "offset", Vector2(randf_range(-2.5, 2.5), randf_range(-2.5, 2.5)), 0.025)
+	tween.tween_property(_camera, "offset", Vector2.ZERO, 0.04)
 
 
 func add_poison() -> void:
@@ -392,6 +414,7 @@ func _check_oxygen_warnings() -> void:
 
 
 func _die_oxygen() -> void:
+	_death_sound.play()
 	set_physics_process(false)
 	set_process_unhandled_input(false)
 	GameState.death_return_scene = get_tree().current_scene.scene_file_path
@@ -412,6 +435,7 @@ func take_damage(amount: int) -> void:
 
 ## Called by an enemy when the player is killed.
 func die() -> void:
+	_death_sound.play()
 	set_physics_process(false)
 	set_process_unhandled_input(false)
 	GameState.death_return_scene = get_tree().current_scene.scene_file_path
