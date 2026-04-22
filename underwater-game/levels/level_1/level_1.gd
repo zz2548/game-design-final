@@ -19,6 +19,7 @@ var _obj_escape: int
 @onready var _submarine_sprite : AnimatedSprite2D      = $Objects/Submarine/Sub
 @onready var _exit_trigger     : Area2D               = $ExitTrigger
 @onready var _corridor_trigger : Area2D               = $CorridorTrigger
+@onready var _camera           : Camera2D             = $player/Camera2D
 
 var _level_ended: bool = false
 
@@ -45,6 +46,12 @@ func _ready() -> void:
 	# ── Corridor boundary (block until sub is repaired) ───────────────────────
 	_corridor_trigger.body_entered.connect(_on_corridor_entered)
 
+	# ── Camera limits ─────────────────────────────────────────────────────────
+	_camera.limit_left   = -50
+	_camera.limit_top    = -50
+	_camera.limit_right  = 1025
+	_camera.limit_bottom = 655
+
 	# ── Submarine sprite ──────────────────────────────────────────────────────
 	_setup_sub_sprite()
 
@@ -54,7 +61,7 @@ func _setup_sub_sprite() -> void:
 	var frames := SpriteFrames.new()
 	frames.add_animation("idle")
 	frames.set_animation_loop("idle", true)
-	frames.set_animation_speed("idle", 2.0)
+	frames.set_animation_speed("idle", 8.0)
 	for i in 5:
 		var atlas := AtlasTexture.new()
 		atlas.atlas  = sheet
