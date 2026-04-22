@@ -17,6 +17,7 @@ var _obj_escape: int
 @onready var _submarine_sprite : AnimatedSprite2D         = $Objects/Submarine/Sub
 @onready var _exit_trigger     : Area2D                   = $ExitTrigger
 @onready var _corridor_trigger : Area2D                   = $CorridorTrigger
+@onready var _camera           : Camera2D                 = $player/Camera2D
 
 @onready var _slot_engine : ComponentSlotInteractable = $Objects/SlotEngine
 @onready var _slot_hull   : ComponentSlotInteractable = $Objects/SlotHull
@@ -51,6 +52,12 @@ func _ready() -> void:
 	# ── Corridor boundary (block until sub is repaired) ───────────────────────
 	_corridor_trigger.body_entered.connect(_on_corridor_entered)
 
+	# ── Camera limits ─────────────────────────────────────────────────────────
+	_camera.limit_left   = -50
+	_camera.limit_top    = -50
+	_camera.limit_right  = 1025
+	_camera.limit_bottom = 655
+
 	# ── Submarine sprite ──────────────────────────────────────────────────────
 	_setup_sub_sprite()
 
@@ -60,7 +67,7 @@ func _setup_sub_sprite() -> void:
 	var frames := SpriteFrames.new()
 	frames.add_animation("idle")
 	frames.set_animation_loop("idle", true)
-	frames.set_animation_speed("idle", 2.0)
+	frames.set_animation_speed("idle", 8.0)
 	for i in 5:
 		var atlas := AtlasTexture.new()
 		atlas.atlas  = sheet
@@ -110,6 +117,7 @@ func _on_submarine_boarded(player: Node) -> void:
 	player.global_position = _submarine.global_position
 	_submarine_sprite.reparent(player)
 	_submarine_sprite.position = Vector2.ZERO
+	player._sub_sprite = _submarine_sprite
 	player.enter_submarine_mode()
 
 
@@ -144,5 +152,6 @@ func _on_exit_reached(body: Node) -> void:
 			],
 		})
 		DialogueManager.dialogue_ended.connect(
-			func(): SceneManager.next_level(), CONNECT_ONE_SHOT
+			func(): get_tree().change_scene_to_file("res://cutscene/transit_cinematic.tscn"),
+			CONNECT_ONE_SHOT
 		)

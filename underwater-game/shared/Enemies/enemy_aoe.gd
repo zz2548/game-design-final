@@ -20,7 +20,7 @@ var _charge_tween : Tween = null
 
 func _on_ready() -> void:
 	chase_speed = 80.0
-	sprite.color = Color(0.3, 0.1, 0.8)
+	sprite.modulate = Color(0.3, 0.1, 0.8)
 
 
 func _tick_chase(delta: float) -> void:
@@ -78,7 +78,7 @@ func _release_shock() -> void:
 		_charge_tween.kill()
 
 	# White flash then return to base color
-	sprite.color = Color(1, 1, 1)
+	sprite.modulate = Color(1, 1, 1)
 	var flash := create_tween()
 	flash.tween_property(sprite, "color", Color(0.3, 0.1, 0.8), 0.4)
 

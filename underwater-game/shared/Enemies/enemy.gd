@@ -19,15 +19,31 @@ var _state_timer  : float  = 0.0
 var _health       : int
 var _player_ref   : Node2D = null
 
-@onready var detection_zone  : Area2D    = $DetectionZone
-@onready var hit_zone        : Area2D    = $HitZone
-@onready var bullet_hit_zone : Area2D    = $BulletHitZone
-@onready var sprite          : ColorRect = $Sprite
-@onready var alert_label     : Label     = $AlertLabel
+@onready var detection_zone  : Area2D           = $DetectionZone
+@onready var hit_zone        : Area2D           = $HitZone
+@onready var bullet_hit_zone : Area2D           = $BulletHitZone
+@onready var sprite          : AnimatedSprite2D = $Sprite
+@onready var alert_label     : Label            = $AlertLabel
+
+
+func _setup_sprite() -> void:
+	var tex : Texture2D = preload("res://assets/enemies/fish.png")
+	var frames := SpriteFrames.new()
+	frames.add_animation("swim")
+	frames.set_animation_loop("swim", true)
+	frames.set_animation_speed("swim", 8.0)
+	for i in 4:
+		var atlas := AtlasTexture.new()
+		atlas.atlas  = tex
+		atlas.region = Rect2(i * 32, 0, 32, 32)
+		frames.add_frame("swim", atlas)
+	sprite.sprite_frames = frames
+	sprite.play("swim")
 
 
 func _ready() -> void:
 	_health = max_health
+	_setup_sprite()
 	detection_zone.body_entered.connect(_on_detection_body_entered)
 	detection_zone.body_exited.connect(_on_detection_body_exited)
 	bullet_hit_zone.area_entered.connect(_on_bullet_hit)
@@ -50,7 +66,7 @@ func _physics_process(delta: float) -> void:
 		State.STUNNED: _tick_stunned(delta)
 
 	if velocity.x != 0:
-		sprite.position.x = -8 if velocity.x > 0 else 8
+		sprite.flip_h = velocity.x < 0
 
 	move_and_slide()
 

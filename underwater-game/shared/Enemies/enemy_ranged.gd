@@ -23,7 +23,7 @@ var _bullet_scene : PackedScene
 
 func _on_ready() -> void:
 	_bullet_scene = load(BULLET_SCENE)
-	sprite.color = Color(0.1, 0.5, 1.0)
+	sprite.modulate = Color(0.1, 0.5, 1.0)
 
 
 func _tick_chase(delta: float) -> void:
