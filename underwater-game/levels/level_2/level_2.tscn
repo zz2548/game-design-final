@@ -1,16 +1,21 @@
-[gd_scene format=4 uid="uid://1nkxj416o4om"]
+[gd_scene format=3 uid="uid://1nkxj416o4om"]
 
-[ext_resource type="Script" path="res://levels/level_2/level_2.gd" id="1_level2"]
-[ext_resource type="Script" path="res://levels/level_2/arena_map.gd" id="2_arenamap"]
+[ext_resource type="Script" uid="uid://ccwdgjwkt53xd" path="res://levels/level_2/level_2.gd" id="1_level2"]
+[ext_resource type="Script" uid="uid://c1opee6tx0gee" path="res://levels/level_2/arena_map.gd" id="2_arenamap"]
 [ext_resource type="PackedScene" uid="uid://dwcfh2wu8phsc" path="res://shared/player/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://shared/ui/WeaponHUD.tscn" id="4_weaponhud"]
 [ext_resource type="PackedScene" path="res://shared/ui/OxygenHUD.tscn" id="5_oxyhud"]
 [ext_resource type="PackedScene" path="res://shared/ui/BatteryHUD.tscn" id="6_bathud"]
+[ext_resource type="Texture2D" uid="uid://8e747nrdy8o3" path="res://assets/background/background.png" id="200_bg"]
+[ext_resource type="Texture2D" uid="uid://cth56d60i0b22" path="res://assets/background/midground.png" id="201_mg"]
 
-[node name="Level2" type="Node2D"]
+[node name="Level2" type="Node2D" unique_id=784246833]
 script = ExtResource("1_level2")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=2019324121]
+color = Color(0, 0, 0, 1)
+
+[node name="Background" type="ColorRect" parent="." unique_id=120229441]
 offset_left = -8000.0
 offset_top = -8000.0
 offset_right = 8000.0
@@ -18,31 +23,45 @@ offset_bottom = 8000.0
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
-[node name="ArenaMap" type="Node2D" parent="."]
+[node name="BackgroundLayer" type="Sprite2D" parent="." unique_id=1198202736]
+modulate = Color(1, 1, 1, 0.6)
+texture_repeat = 2
+position = Vector2(744, 432)
+texture = ExtResource("200_bg")
+region_enabled = true
+region_rect = Rect2(0, 0, 2461, 1645)
+
+[node name="MidgroundLayer" type="Sprite2D" parent="." unique_id=991817109]
+modulate = Color(1, 1, 1, 0.8)
+texture_repeat = 2
+position = Vector2(744, 432)
+texture = ExtResource("201_mg")
+region_enabled = true
+region_rect = Rect2(0, 0, 2461, 1645)
+
+[node name="ArenaMap" type="Node2D" parent="." unique_id=673793307]
 script = ExtResource("2_arenamap")
 
-[node name="SpawnPoints" type="Node2D" parent="."]
+[node name="SpawnPoints" type="Node2D" parent="." unique_id=1264232649]
 
-[node name="TopSpawn" type="Marker2D" parent="SpawnPoints"]
+[node name="TopSpawn" type="Marker2D" parent="SpawnPoints" unique_id=451562594]
 position = Vector2(432, 40)
 
-[node name="BottomSpawn" type="Marker2D" parent="SpawnPoints"]
+[node name="BottomSpawn" type="Marker2D" parent="SpawnPoints" unique_id=1807402341]
 position = Vector2(432, 616)
 
-[node name="LeftSpawn" type="Marker2D" parent="SpawnPoints"]
+[node name="LeftSpawn" type="Marker2D" parent="SpawnPoints" unique_id=827649409]
 position = Vector2(40, 328)
 
-[node name="RightSpawn" type="Marker2D" parent="SpawnPoints"]
+[node name="RightSpawn" type="Marker2D" parent="SpawnPoints" unique_id=1406990422]
 position = Vector2(824, 328)
 
-[node name="player" parent="." instance=ExtResource("3_player")]
+[node name="player" parent="." unique_id=1679713102 instance=ExtResource("3_player")]
 position = Vector2(432, 328)
-start_armed = true
 
-[node name="WaveHUD" type="CanvasLayer" parent="."]
+[node name="WaveHUD" type="CanvasLayer" parent="." unique_id=1280624520]
 
-[node name="WaveLabel" type="Label" parent="WaveHUD"]
-layout_mode = 3
+[node name="WaveLabel" type="Label" parent="WaveHUD" unique_id=2090636841]
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
@@ -50,12 +69,12 @@ offset_left = -120.0
 offset_top = 16.0
 offset_right = 120.0
 offset_bottom = 52.0
+grow_horizontal = 2
 theme_override_font_sizes/font_size = 24
-text = ""
 horizontal_alignment = 1
 
-[node name="WeaponHUD" parent="." instance=ExtResource("4_weaponhud")]
+[node name="WeaponHUD" parent="." unique_id=1668654430 instance=ExtResource("4_weaponhud")]
 
-[node name="OxygenHUD" parent="." instance=ExtResource("5_oxyhud")]
+[node name="OxygenHUD" parent="." unique_id=622223408 instance=ExtResource("5_oxyhud")]
 
-[node name="BatteryHUD" parent="." instance=ExtResource("6_bathud")]
+[node name="BatteryHUD" parent="." unique_id=1698132582 instance=ExtResource("6_bathud")]

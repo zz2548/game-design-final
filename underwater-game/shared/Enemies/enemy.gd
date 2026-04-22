@@ -22,11 +22,14 @@ var _player_ref   : Node2D = null
 @onready var detection_zone  : Area2D           = $DetectionZone
 @onready var hit_zone        : Area2D           = $HitZone
 @onready var bullet_hit_zone : Area2D           = $BulletHitZone
-@onready var sprite          : AnimatedSprite2D = $Sprite
+@onready var sprite          : CanvasItem        = $Sprite
 @onready var alert_label     : Label            = $AlertLabel
 
 
 func _setup_sprite() -> void:
+	if not sprite is AnimatedSprite2D:
+		return
+	var anim := sprite as AnimatedSprite2D
 	var tex : Texture2D = preload("res://assets/enemies/fish.png")
 	var frames := SpriteFrames.new()
 	frames.add_animation("swim")
@@ -37,8 +40,8 @@ func _setup_sprite() -> void:
 		atlas.atlas  = tex
 		atlas.region = Rect2(i * 32, 0, 32, 32)
 		frames.add_frame("swim", atlas)
-	sprite.sprite_frames = frames
-	sprite.play("swim")
+	anim.sprite_frames = frames
+	anim.play("swim")
 
 
 func _ready() -> void:
@@ -65,8 +68,8 @@ func _physics_process(delta: float) -> void:
 		State.ATTACK:  _tick_attack(delta)
 		State.STUNNED: _tick_stunned(delta)
 
-	if velocity.x != 0:
-		sprite.flip_h = velocity.x < 0
+	if velocity.x != 0 and sprite is AnimatedSprite2D:
+		(sprite as AnimatedSprite2D).flip_h = velocity.x < 0
 
 	move_and_slide()
 
