@@ -44,7 +44,7 @@ func _ready() -> void:
 	Inventory.item_added.connect(_on_item_added)
 
 	# ── Level gate (exit trigger) ─────────────────────────────────────────────
-	_level_gate.body_entered.connect(_on_gate_reached)
+	_level_gate.gate_opened.connect(_on_gate_reached)
 
 	# ── Enemy tracking ────────────────────────────────────────────────────────
 	var enemies: Array = []
@@ -69,23 +69,11 @@ func _on_item_added(item: ItemData, _qty: int) -> void:
 		ObjectiveManager.complete_objective(_obj_key)
 
 
-func _on_gate_reached(body: Node) -> void:
-	if _level_ended or not body.is_in_group("player"):
+func _on_gate_reached() -> void:
+	if _level_ended:
 		return
 
-	# Block exit until the key has been collected.
-	if not _has_key:
-		if not DialogueManager.is_active:
-			DialogueManager.start_dialogue({
-				"speaker": "ORCA",
-				"lines": [
-					"Bore shaft access is locked.",
-					"Find the Pelagis keycard before attempting to exit.",
-				],
-			})
-		return
-
-	# Key is in hand — complete the exit objective and move to Level 3.
+	# Gate already verified the key — complete the exit objective and advance.
 	_level_ended = true
 	ObjectiveManager.complete_objective(_obj_exit)
 

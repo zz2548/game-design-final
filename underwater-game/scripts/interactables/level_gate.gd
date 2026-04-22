@@ -1,6 +1,8 @@
 class_name LevelGate
 extends Interactable
 
+signal gate_opened
+
 const KEY_ID := "level2_key"
 
 
@@ -34,14 +36,7 @@ func _on_interact(player: Node) -> void:
 		Inventory.remove_item(KEY_ID, 1)
 		interaction_label = "Gate (Open)"
 		queue_redraw()
-		DialogueManager.start_dialogue({
-			"speaker": "ORCA",
-			"lines": ["Access key accepted.", "Proceeding to next sector."],
-		})
-		DialogueManager.dialogue_ended.connect(
-			func(): get_tree().change_scene_to_file("res://cutscene/transit_cinematic.tscn"),
-			CONNECT_ONE_SHOT
-		)
+		emit_signal("gate_opened")
 	else:
 		DialogueManager.start_dialogue({
 			"speaker": "ORCA",

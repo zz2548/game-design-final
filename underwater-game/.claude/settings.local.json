@@ -7,7 +7,9 @@
       "Bash(del \"C:\\\\Users\\\\jerry\\\\Desktop\\\\Programming Projects\\\\game-design-final\\\\underwater-game\\\\levels\\\\level_2\\\\arena_map.gd\")",
       "Bash(del \"C:\\\\Users\\\\jerry\\\\Desktop\\\\Programming Projects\\\\game-design-final\\\\underwater-game\\\\levels\\\\level_2\\\\arena_map.gd.uid\")",
       "Bash(del \"C:\\\\Users\\\\jerry\\\\Desktop\\\\Programming Projects\\\\game-design-final\\\\underwater-game\\\\scripts\\\\environment\\\\steam_vent.gd\")",
-      "Bash(del \"C:\\\\Users\\\\jerry\\\\Desktop\\\\Programming Projects\\\\game-design-final\\\\underwater-game\\\\scripts\\\\environment\\\\SteamVent.tscn\")"
+      "Bash(del \"C:\\\\Users\\\\jerry\\\\Desktop\\\\Programming Projects\\\\game-design-final\\\\underwater-game\\\\scripts\\\\environment\\\\SteamVent.tscn\")",
+      "Bash(grep -E \"\\\\.\\(gd|tscn\\)$\")",
+      "Bash(find /Users/jerryzou/Documents/GitHub/game-design-final/underwater-game -name *.gd)"
     ]
   }
 }

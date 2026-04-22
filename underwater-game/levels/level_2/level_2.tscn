@@ -21,6 +21,7 @@
 [ext_resource type="PackedScene" path="res://scripts/environment/ToxicPool.tscn" id="22_toxic"]
 [ext_resource type="PackedScene" path="res://scripts/interactables/KeyPickup.tscn" id="23_keypickup"]
 [ext_resource type="PackedScene" path="res://scripts/interactables/LevelGate.tscn" id="24_gate"]
+[ext_resource type="PackedScene" path="res://shared/ui/HintsUI.tscn" id="25_hints"]
 [ext_resource type="Texture2D" uid="uid://8e747nrdy8o3" path="res://assets/background/background.png" id="200_bg"]
 [ext_resource type="Texture2D" uid="uid://cth56d60i0b22" path="res://assets/background/midground.png" id="201_mg"]
 [ext_resource type="Texture2D" uid="uid://bpe1ryfofhmsg" path="res://assets/tiles/1_Industrial_Tileset_1B.png" id="300_ind_tile"]
@@ -295,6 +296,8 @@ position = Vector2(126, 112)
 [node name="InventoryUI" parent="HUD" unique_id=1520385462 instance=ExtResource("10_kgdtm")]
 
 [node name="DialogueUI" parent="HUD" unique_id=1340303138 instance=ExtResource("11_12l1j")]
+
+[node name="HintsUI" parent="HUD" unique_id=900000001 instance=ExtResource("25_hints")]
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1896972832]
 
