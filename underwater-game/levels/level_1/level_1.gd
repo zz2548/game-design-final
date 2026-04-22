@@ -150,5 +150,6 @@ func _on_exit_reached(body: Node) -> void:
 			],
 		})
 		DialogueManager.dialogue_ended.connect(
-			func(): SceneManager.next_level(), CONNECT_ONE_SHOT
+			func(): get_tree().change_scene_to_file("res://cutscene/transit_cinematic.tscn"),
+			CONNECT_ONE_SHOT
 		)
