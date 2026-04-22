@@ -146,4 +146,21 @@ func _on_bullet_hit(_area: Area2D) -> void:
 		emit_signal("died")
 		queue_free()
 		return
+	if _player_ref == null:
+		_player_ref = get_tree().get_first_node_in_group("player") as Node2D
+	_hit_react()
 	_enter_state(State.STUNNED)
+
+
+func _hit_react() -> void:
+	var orig_mod := modulate
+	modulate = Color(1.5, 1.5, 1.5)
+	create_tween().tween_property(self, "modulate", orig_mod, 0.2)
+
+	if sprite is Node2D:
+		var s := sprite as Node2D
+		var orig := s.position
+		var shake := create_tween()
+		shake.tween_property(s, "position", orig + Vector2(5, 0), 0.04)
+		shake.tween_property(s, "position", orig + Vector2(-5, 0), 0.04)
+		shake.tween_property(s, "position", orig, 0.04)

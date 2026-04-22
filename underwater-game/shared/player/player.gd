@@ -61,6 +61,7 @@ signal ammo_changed(weapon_name: String, current: int, maximum: int)
 
 # ── Internal ──────────────────────────────────────────────────────────────────
 @onready var cone_light        : PointLight2D    = $ConeLight
+@onready var muzzle_flash      : PointLight2D    = $MuzzleFlash
 @onready var _sprite           : AnimatedSprite2D = $Sprite
 @onready var _swim_trail       : CPUParticles2D   = $SwimTrail
 @onready var _sub_trail        : CPUParticles2D   = $SubTrail
@@ -330,6 +331,11 @@ func _fire() -> void:
 		bullet.rotation        = angle
 		bullet.direction       = dir
 		get_parent().add_child(bullet)
+
+	muzzle_flash.position = aim_dir * current_weapon.bullet_offset
+	muzzle_flash.energy   = 4.0
+	var _mf := create_tween()
+	_mf.tween_property(muzzle_flash, "energy", 0.0, 0.1)
 
 	_fire_timer = current_weapon.fire_cooldown
 

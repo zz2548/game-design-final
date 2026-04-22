@@ -60,6 +60,12 @@ energy = 6.68
 texture = ExtResource("3_cone_tex")
 texture_scale = 22.73
 
+[node name="MuzzleFlash" type="PointLight2D" parent="." unique_id=500000002]
+color = Color(1, 0.88, 0.5, 1)
+energy = 0.0
+texture = SubResource("GradientTexture2D_i3pqv")
+texture_scale = 1.5
+
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1370074111]
 zoom = Vector2(1.5, 1.5)
 
