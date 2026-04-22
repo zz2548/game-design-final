@@ -32,9 +32,7 @@ theme_override_constants/separation = 4
 layout_mode = 2
 text = "Harpoon Pistol"
 
-[node name="Divider" type="HSeparator" parent="Panel/Margin/VBox"]
+[node name="HintLabel" type="Label" parent="Panel/Margin/VBox"]
 layout_mode = 2
-
-[node name="AmmoLabel" type="Label" parent="Panel/Margin/VBox"]
-layout_mode = 2
-text = "30 / 30"
+visible = false
+text = "[X] swap"

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep *)",
+      "Bash(python3 -)",
+      "Bash(python -)",
+      "Bash(del \"C:\\\\Users\\\\jerry\\\\Desktop\\\\Programming Projects\\\\game-design-final\\\\underwater-game\\\\levels\\\\level_2\\\\arena_map.gd\")",
+      "Bash(del \"C:\\\\Users\\\\jerry\\\\Desktop\\\\Programming Projects\\\\game-design-final\\\\underwater-game\\\\levels\\\\level_2\\\\arena_map.gd.uid\")"
+    ]
+  }
+}

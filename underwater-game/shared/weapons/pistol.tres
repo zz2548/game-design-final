@@ -1,15 +1,10 @@
-[gd_resource type="Resource" script_class="WeaponData" format=3]
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://dx63etfvnquru"]
 
-[ext_resource type="Script" path="res://shared/weapons/weapon_data.gd" id="1_wpndata"]
+[ext_resource type="Script" uid="uid://unwqabv7df30" path="res://shared/weapons/weapon_data.gd" id="1_wpndata"]
 [ext_resource type="PackedScene" uid="uid://bc8ns80f5bwfx" path="res://scripts/weapons/bullet.tscn" id="2_bullet"]
 
 [resource]
 script = ExtResource("1_wpndata")
 id = "pistol"
-display_name = "Harpoon Pistol"
+display_name = "Bolt Blaster"
 bullet_scene = ExtResource("2_bullet")
-bullet_count = 1
-spread_angle = 0.0
-fire_cooldown = 0.2
-max_ammo = 30
-bullet_offset = 12.0

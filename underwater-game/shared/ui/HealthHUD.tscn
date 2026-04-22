@@ -1,0 +1,44 @@
+[gd_scene format=4]
+
+[ext_resource type="Script" path="res://shared/ui/health_hud.gd" id="1_healthhud"]
+
+[node name="HealthHUD" type="CanvasLayer"]
+script = ExtResource("1_healthhud")
+
+[node name="Panel" type="PanelContainer" parent="."]
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 170.0
+offset_bottom = 56.0
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TitleRow" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Panel/Margin/VBox/TitleRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "HULL"
+
+[node name="CountLabel" type="Label" parent="Panel/Margin/VBox/TitleRow"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "5 / 5"
+
+[node name="Divider" type="HSeparator" parent="Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="Bar" type="ProgressBar" parent="Panel/Margin/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 8)
+show_percentage = false

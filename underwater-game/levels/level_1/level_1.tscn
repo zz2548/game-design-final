@@ -19,6 +19,7 @@
 [ext_resource type="PackedScene" uid="uid://baoeenemy0001" path="res://shared/Enemies/enemy_aoe.tscn" id="20_lbtho"]
 [ext_resource type="Script" uid="uid://53tymc5t5t4x" path="res://scripts/interactables/component_slot_interactable.gd" id="20_slot"]
 [ext_resource type="PackedScene" path="res://shared/ui/BatteryHUD.tscn" id="98_bathud"]
+[ext_resource type="PackedScene" path="res://shared/ui/HealthHUD.tscn" id="97_healthhud"]
 [ext_resource type="PackedScene" path="res://shared/ui/OxygenHUD.tscn" id="99_oxyhud"]
 [ext_resource type="Texture2D" uid="uid://8e747nrdy8o3" path="res://assets/background/background.png" id="200_bg"]
 [ext_resource type="Texture2D" uid="uid://cth56d60i0b22" path="res://assets/background/midground.png" id="201_mg"]
@@ -479,6 +480,8 @@ shape = SubResource("shape_exit")
 [node name="OxygenHUD" parent="." unique_id=1999000001 instance=ExtResource("99_oxyhud")]
 
 [node name="BatteryHUD" parent="." unique_id=1999000003 instance=ExtResource("98_bathud")]
+
+[node name="HealthHUD" parent="." unique_id=1999000004 instance=ExtResource("97_healthhud")]
 
 [node name="CorridorTrigger" type="Area2D" parent="." unique_id=1111111111]
 position = Vector2(1576, 480)

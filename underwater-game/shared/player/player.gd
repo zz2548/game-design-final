@@ -17,6 +17,12 @@ var submarine_mode : bool = false
 var _swim_dir      : Vector2 = Vector2.ZERO  # smoothed input direction for curved turns
 var _sub_sprite    : AnimatedSprite2D = null  # set by level when boarding
 
+# ── Health ────────────────────────────────────────────────────────────────────
+const MAX_HEALTH : int = 5
+var health       : int = MAX_HEALTH
+
+signal health_changed(current: int, maximum: int)
+
 # ── Oxygen ────────────────────────────────────────────────────────────────────
 const MAX_OXYGEN        : float = 90.0  # seconds of air at a full tank
 const OXYGEN_DRAIN_RATE : float = 1.0   # units drained per second while free-swimming
@@ -54,10 +60,10 @@ const DEFAULT_WEAPON : WeaponData = preload("res://shared/weapons/pistol.tres")
 @export var start_armed : bool = true
 
 var current_weapon : WeaponData = null
-var _ammo          : Dictionary = {}   # weapon_id → current ammo (int)
+var _weapons       : Array      = []   # ordered list of collected WeaponData
 
-## Emitted whenever the equipped weapon or ammo count changes.
-signal ammo_changed(weapon_name: String, current: int, maximum: int)
+## Emitted whenever the equipped weapon changes.
+signal weapon_changed(weapon_name: String)
 
 # ── Internal ──────────────────────────────────────────────────────────────────
 @onready var cone_light        : PointLight2D    = $ConeLight
@@ -80,8 +86,11 @@ func _ready() -> void:
 	)
 	if start_armed:
 		equip_weapon(DEFAULT_WEAPON)
+	emit_signal("health_changed", health, MAX_HEALTH)
 	emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
 	emit_signal("battery_changed", battery, MAX_BATTERY)
+	if current_weapon != null:
+		emit_signal("weapon_changed", current_weapon.display_name)
 	_setup_sprite()
 	_setup_particle_trails()
 	_setup_interaction_prompt()
@@ -291,22 +300,22 @@ func _physics_process(delta: float) -> void:
 # ── Input (shooting) ──────────────────────────────────────────────────────────
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Toggle flashlight on/off (conserve battery in safe areas)
 	if event.is_action_pressed("toggle_light"):
 		if battery > 0.0:
 			_light_on = not _light_on
 			cone_light.visible = _light_on
+	if event.is_action_pressed("swap_weapon") and _weapons.size() > 1:
+		var idx := (_weapons.find(current_weapon) + 1) % _weapons.size()
+		equip_weapon(_weapons[idx])
 
 
 # ── Weapon logic ──────────────────────────────────────────────────────────────
 
-## Equip a weapon. First-time equip gives a full ammo pool; switching back
-## to a previously held weapon restores its last ammo count.
 func equip_weapon(weapon: WeaponData) -> void:
 	current_weapon = weapon
-	if not _ammo.has(weapon.id):
-		_ammo[weapon.id] = weapon.max_ammo
-	emit_signal("ammo_changed", weapon.display_name, _ammo[weapon.id], weapon.max_ammo)
+	if not _weapons.has(weapon):
+		_weapons.append(weapon)
+	emit_signal("weapon_changed", weapon.display_name)
 
 
 func _fire() -> void:
@@ -338,15 +347,6 @@ func _fire() -> void:
 	_mf.tween_property(muzzle_flash, "energy", 0.0, 0.1)
 
 	_fire_timer = current_weapon.fire_cooldown
-
-
-## Call this from an ammo-pickup interactable to refill the current weapon's ammo.
-func add_ammo(amount: int) -> void:
-	if current_weapon == null:
-		return
-	var id := current_weapon.id
-	_ammo[id] = mini(_ammo.get(id, 0) + amount, current_weapon.max_ammo)
-	emit_signal("ammo_changed", current_weapon.display_name, _ammo[id], current_weapon.max_ammo)
 
 
 ## Refill oxygen by `amount` units (capped at MAX_OXYGEN).
@@ -382,13 +382,16 @@ func _die_oxygen() -> void:
 	get_tree().change_scene_to_file("res://cutscene/death_screen.tscn")
 
 
-## Called by an enemy hit. Plays the hurt flash; supply a health system later.
-func take_damage(_amount: int) -> void:
+## Called by an enemy hit. Reduces health and triggers hurt animation.
+func take_damage(amount: int) -> void:
 	if _hurt_timer > 0.0:
-		return   # already in hit-stun, don't re-trigger
+		return   # already in hit-stun, iframes active
 	_sprite.play("hurt")
-	# hurt sheet: 5 frames @ 12 fps ≈ 0.42 s
-	_hurt_timer = 5.0 / 12.0
+	_hurt_timer = 5.0 / 12.0  # hurt sheet: 5 frames @ 12 fps ≈ 0.42 s
+	health = maxi(0, health - amount)
+	emit_signal("health_changed", health, MAX_HEALTH)
+	if health <= 0:
+		die()
 
 
 ## Called by an enemy when the player is killed.
