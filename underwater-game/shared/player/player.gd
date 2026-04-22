@@ -33,6 +33,10 @@ var oxygen : float = MAX_OXYGEN
 
 ## Emitted whenever the oxygen level changes (also fires once on _ready).
 signal oxygen_changed(current: float, maximum: float)
+## Emitted when poison state changes (true = currently being poisoned).
+signal poison_changed(is_poisoned: bool)
+
+var _poison_sources: int = 0
 
 var _oxygen_warned_low  : bool = false
 var _oxygen_warned_crit : bool = false
@@ -347,6 +351,18 @@ func _fire() -> void:
 	_mf.tween_property(muzzle_flash, "energy", 0.0, 0.1)
 
 	_fire_timer = current_weapon.fire_cooldown
+
+
+func add_poison() -> void:
+	_poison_sources += 1
+	if _poison_sources == 1:
+		emit_signal("poison_changed", true)
+
+
+func remove_poison() -> void:
+	_poison_sources = maxi(0, _poison_sources - 1)
+	if _poison_sources == 0:
+		emit_signal("poison_changed", false)
 
 
 ## Refill oxygen by `amount` units (capped at MAX_OXYGEN).

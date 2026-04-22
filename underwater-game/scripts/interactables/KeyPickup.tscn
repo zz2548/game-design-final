@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://key_pickup_001"]
+
+[ext_resource type="Script" path="res://scripts/interactables/key_pickup.gd" id="1_script"]
+[ext_resource type="Resource" path="res://shared/items/level2_key.tres" id="2_key"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_key"]
+radius = 14.0
+
+[node name="KeyPickup" type="Area2D" groups=["interactables"]]
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("1_script")
+item = ExtResource("2_key")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_key")

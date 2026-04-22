@@ -26,10 +26,12 @@ const COLOR_LOW  := Color(1.0,  0.75, 0.1)   # amber  25–50 %
 const COLOR_CRIT := Color(1.0,  0.25, 0.25)  # red    < 25 %
 
 var _ratio : float = 1.0
+var _poison_overlay : ColorRect
 
 
 func _ready() -> void:
 	_apply_style()
+	_build_poison_overlay()
 
 	await get_tree().process_frame
 
@@ -39,6 +41,7 @@ func _ready() -> void:
 		return
 
 	player.oxygen_changed.connect(_on_oxygen_changed)
+	player.poison_changed.connect(_on_poison_changed)
 	_on_oxygen_changed(player.oxygen, player.MAX_OXYGEN)
 
 
@@ -75,6 +78,19 @@ func _apply_style() -> void:
 	bar.show_percentage = false
 	bar.min_value       = 0.0
 	bar.max_value       = 1.0
+
+
+func _build_poison_overlay() -> void:
+	_poison_overlay = ColorRect.new()
+	_poison_overlay.color = Color(0.0, 1.0, 0.2, 0.18)
+	_poison_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_poison_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_poison_overlay.visible = false
+	panel.add_child(_poison_overlay)
+
+
+func _on_poison_changed(is_poisoned: bool) -> void:
+	_poison_overlay.visible = is_poisoned
 
 
 func _on_oxygen_changed(current: float, maximum: float) -> void:

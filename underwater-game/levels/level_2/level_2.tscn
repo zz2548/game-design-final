@@ -8,12 +8,19 @@
 [ext_resource type="PackedScene" uid="uid://mlhwapbkc1vs" path="res://scripts/interactables/OxygenRefillStation.tscn" id="7_oxyrs"]
 [ext_resource type="PackedScene" path="res://shared/ui/HealthHUD.tscn" id="8_healthhud"]
 [ext_resource type="PackedScene" path="res://scripts/interactables/WeaponPickup.tscn" id="9_wpickup"]
+[ext_resource type="PackedScene" path="res://shared/ui/InventoryUI.tscn" id="10_kgdtm"]
 [ext_resource type="Resource" uid="uid://coahldrxo3um" path="res://shared/weapons/shotgun.tres" id="10_shotgun"]
+[ext_resource type="PackedScene" uid="uid://eb3vk6h130ot" path="res://shared/ui/dialogue_ui.tscn" id="11_12l1j"]
 [ext_resource type="PackedScene" uid="uid://cdxseykgech3" path="res://shared/Enemies/enemy.tscn" id="11_enemy"]
 [ext_resource type="PackedScene" uid="uid://brangedenemy1" path="res://shared/Enemies/enemy_ranged.tscn" id="12_ranged"]
 [ext_resource type="PackedScene" uid="uid://baoeenemy0001" path="res://shared/Enemies/enemy_aoe.tscn" id="13_aoe"]
 [ext_resource type="PackedScene" path="res://scripts/interactables/PowerCell.tscn" id="16_5ts7o"]
 [ext_resource type="PackedScene" path="res://scripts/environment/PlaceableLight.tscn" id="17_dj0pt"]
+[ext_resource type="PackedScene" path="res://scripts/environment/ElectricHazard.tscn" id="20_electric"]
+[ext_resource type="PackedScene" path="res://scripts/environment/BubbleColumn.tscn" id="21_steam"]
+[ext_resource type="PackedScene" path="res://scripts/environment/ToxicPool.tscn" id="22_toxic"]
+[ext_resource type="PackedScene" path="res://scripts/interactables/KeyPickup.tscn" id="23_keypickup"]
+[ext_resource type="PackedScene" path="res://scripts/interactables/LevelGate.tscn" id="24_gate"]
 [ext_resource type="Texture2D" uid="uid://8e747nrdy8o3" path="res://assets/background/background.png" id="200_bg"]
 [ext_resource type="Texture2D" uid="uid://cth56d60i0b22" path="res://assets/background/midground.png" id="201_mg"]
 [ext_resource type="Texture2D" uid="uid://bpe1ryfofhmsg" path="res://assets/tiles/1_Industrial_Tileset_1B.png" id="300_ind_tile"]
@@ -276,15 +283,28 @@ tile_set = SubResource("TileSet_ind")
 [node name="player" parent="." unique_id=1679713102 instance=ExtResource("3_player")]
 position = Vector2(126, 112)
 
-[node name="WeaponHUD" parent="." unique_id=1668654430 instance=ExtResource("4_weaponhud")]
+[node name="HUD" type="Node" parent="." unique_id=1495862390]
 
-[node name="OxygenHUD" parent="." unique_id=622223408 instance=ExtResource("5_oxyhud")]
+[node name="WeaponHUD" parent="HUD" unique_id=1668654430 instance=ExtResource("4_weaponhud")]
+visible = false
 
-[node name="BatteryHUD" parent="." unique_id=1698132582 instance=ExtResource("6_bathud")]
+[node name="OxygenHUD" parent="HUD" unique_id=622223408 instance=ExtResource("5_oxyhud")]
+visible = false
 
-[node name="HealthHUD" parent="." unique_id=1698132583 instance=ExtResource("8_healthhud")]
+[node name="BatteryHUD" parent="HUD" unique_id=1698132582 instance=ExtResource("6_bathud")]
+visible = false
+
+[node name="HealthHUD" parent="HUD" unique_id=1698132583 instance=ExtResource("8_healthhud")]
+visible = false
+
+[node name="InventoryUI" parent="HUD" unique_id=1520385462 instance=ExtResource("10_kgdtm")]
+visible = false
+
+[node name="DialogueUI" parent="HUD" unique_id=1340303138 instance=ExtResource("11_12l1j")]
+visible = false
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1896972832]
+visible = false
 
 [node name="Melee" type="Node2D" parent="Enemies" unique_id=1017215380]
 
@@ -404,6 +424,7 @@ position = Vector2(232, 908)
 position = Vector2(736, 560)
 
 [node name="OxygenRefills" type="Node2D" parent="." unique_id=1833771585]
+visible = false
 
 [node name="OxygenStation" parent="OxygenRefills" unique_id=600000010 instance=ExtResource("7_oxyrs")]
 position = Vector2(216, 128)
@@ -425,6 +446,7 @@ position = Vector2(720, 51)
 weapon = ExtResource("10_shotgun")
 
 [node name="Powercells" type="Node2D" parent="." unique_id=56606340]
+visible = false
 
 [node name="PowerCell" parent="Powercells" unique_id=872487434 instance=ExtResource("16_5ts7o")]
 position = Vector2(449, 515)
@@ -433,6 +455,7 @@ position = Vector2(449, 515)
 position = Vector2(1643, 773)
 
 [node name="Lights" type="Node2D" parent="." unique_id=801415265]
+visible = false
 
 [node name="PlaceableLight" parent="Lights" unique_id=1760295753 instance=ExtResource("17_dj0pt")]
 position = Vector2(868, 658)
@@ -449,3 +472,40 @@ position = Vector2(1492, 176)
 energy = 0.5
 radius = 1.5
 flicker = true
+
+[node name="Hazards" type="Node2D" parent="." unique_id=800100000]
+
+[node name="Electric1" parent="Hazards" unique_id=800100001 instance=ExtResource("20_electric")]
+position = Vector2(494, 50)
+
+[node name="Electric2" parent="Hazards" unique_id=800100002 instance=ExtResource("20_electric")]
+position = Vector2(1700, 192)
+
+[node name="Electric3" parent="Hazards" unique_id=800100003 instance=ExtResource("20_electric")]
+position = Vector2(1056, 1232)
+
+[node name="BubbleColumn1" parent="Hazards" unique_id=800100004 instance=ExtResource("21_steam")]
+position = Vector2(550, 51)
+
+[node name="BubbleColumn2" parent="Hazards" unique_id=800100005 instance=ExtResource("21_steam")]
+position = Vector2(2025, 73)
+
+[node name="BubbleColumn3" parent="Hazards" unique_id=800100006 instance=ExtResource("21_steam")]
+position = Vector2(1757, 1386)
+
+[node name="BubbleColumn4" parent="Hazards" unique_id=901390760 instance=ExtResource("21_steam")]
+position = Vector2(72, 220)
+
+[node name="Toxic1" parent="Hazards" unique_id=800100007 instance=ExtResource("22_toxic")]
+position = Vector2(613, 384)
+radius = 100.0
+
+[node name="Toxic2" parent="Hazards" unique_id=800100008 instance=ExtResource("22_toxic")]
+position = Vector2(948, 812)
+radius = 100.0
+
+[node name="KeyPickup" parent="." unique_id=800200001 instance=ExtResource("23_keypickup")]
+position = Vector2(216, 505)
+
+[node name="LevelGate" parent="." unique_id=800200002 instance=ExtResource("24_gate")]
+position = Vector2(948, 1690)

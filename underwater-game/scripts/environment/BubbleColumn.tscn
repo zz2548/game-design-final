@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://bubble_col_001"]
+
+[ext_resource type="Script" path="res://scripts/environment/bubble_column.gd" id="1_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_col"]
+size = Vector2(96, 800)
+
+[node name="BubbleColumn" type="Area2D"]
+collision_mask = 8
+script = ExtResource("1_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_col")
