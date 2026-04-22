@@ -248,7 +248,6 @@ sources/0 = SubResource("TileSetAtlasSource_ind_wall")
 script = ExtResource("1_level2")
 
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=2019324121]
-visible = false
 color = Color(0, 0, 0, 1)
 
 [node name="Background" type="ColorRect" parent="." unique_id=120229441]
@@ -286,25 +285,18 @@ position = Vector2(126, 112)
 [node name="HUD" type="Node" parent="." unique_id=1495862390]
 
 [node name="WeaponHUD" parent="HUD" unique_id=1668654430 instance=ExtResource("4_weaponhud")]
-visible = false
 
 [node name="OxygenHUD" parent="HUD" unique_id=622223408 instance=ExtResource("5_oxyhud")]
-visible = false
 
 [node name="BatteryHUD" parent="HUD" unique_id=1698132582 instance=ExtResource("6_bathud")]
-visible = false
 
 [node name="HealthHUD" parent="HUD" unique_id=1698132583 instance=ExtResource("8_healthhud")]
-visible = false
 
 [node name="InventoryUI" parent="HUD" unique_id=1520385462 instance=ExtResource("10_kgdtm")]
-visible = false
 
 [node name="DialogueUI" parent="HUD" unique_id=1340303138 instance=ExtResource("11_12l1j")]
-visible = false
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1896972832]
-visible = false
 
 [node name="Melee" type="Node2D" parent="Enemies" unique_id=1017215380]
 
@@ -424,7 +416,6 @@ position = Vector2(232, 908)
 position = Vector2(736, 560)
 
 [node name="OxygenRefills" type="Node2D" parent="." unique_id=1833771585]
-visible = false
 
 [node name="OxygenStation" parent="OxygenRefills" unique_id=600000010 instance=ExtResource("7_oxyrs")]
 position = Vector2(216, 128)
@@ -446,7 +437,6 @@ position = Vector2(720, 51)
 weapon = ExtResource("10_shotgun")
 
 [node name="Powercells" type="Node2D" parent="." unique_id=56606340]
-visible = false
 
 [node name="PowerCell" parent="Powercells" unique_id=872487434 instance=ExtResource("16_5ts7o")]
 position = Vector2(449, 515)
@@ -455,7 +445,6 @@ position = Vector2(449, 515)
 position = Vector2(1643, 773)
 
 [node name="Lights" type="Node2D" parent="." unique_id=801415265]
-visible = false
 
 [node name="PlaceableLight" parent="Lights" unique_id=1760295753 instance=ExtResource("17_dj0pt")]
 position = Vector2(868, 658)
