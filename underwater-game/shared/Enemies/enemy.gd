@@ -6,7 +6,7 @@ class_name Enemy
 extends CharacterBody2D
 
 @export var ai_enabled      : bool  = true
-@export var chase_speed     : float = 220.0
+@export var chase_speed     : float = 110.0
 @export var max_health      : int   = 3
 @export var stun_duration   : float = 0.25
 
@@ -148,6 +148,7 @@ func _on_bullet_hit(_area: Area2D) -> void:
 	_hit_sound.play()
 	_health -= 1
 	if _health <= 0:
+		_spawn_death_vfx()
 		var snd := AudioStreamPlayer.new()
 		snd.stream = load("res://assets/sounds/mobdeath.mp3")
 		snd.finished.connect(snd.queue_free)
@@ -160,6 +161,25 @@ func _on_bullet_hit(_area: Area2D) -> void:
 		_player_ref = get_tree().get_first_node_in_group("player") as Node2D
 	_hit_react()
 	_enter_state(State.STUNNED)
+
+
+func _spawn_death_vfx() -> void:
+	var anim := AnimatedSprite2D.new()
+	var tex : Texture2D = load("res://assets/vfx/enemy-death.png")
+	var frames := SpriteFrames.new()
+	frames.add_animation("death")
+	frames.set_animation_loop("death", false)
+	frames.set_animation_speed("death", 12.0)
+	for i in 6:
+		var atlas := AtlasTexture.new()
+		atlas.atlas  = tex
+		atlas.region = Rect2(i * 52, 0, 52, 53)
+		frames.add_frame("death", atlas)
+	anim.sprite_frames = frames
+	anim.global_position = global_position
+	anim.animation_finished.connect(anim.queue_free)
+	get_parent().add_child(anim)
+	anim.play("death")
 
 
 func _hit_react() -> void:

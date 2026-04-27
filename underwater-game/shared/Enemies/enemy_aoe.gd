@@ -20,7 +20,19 @@ var _charge_tween : Tween = null
 
 func _on_ready() -> void:
 	chase_speed = 80.0
-	sprite.modulate = Color(0.3, 0.1, 0.8)
+	var anim := sprite as AnimatedSprite2D
+	var tex : Texture2D = load("res://assets/enemies/fish-dart.png")
+	var frames := SpriteFrames.new()
+	frames.add_animation("swim")
+	frames.set_animation_loop("swim", true)
+	frames.set_animation_speed("swim", 8.0)
+	for i in 4:
+		var atlas := AtlasTexture.new()
+		atlas.atlas  = tex
+		atlas.region = Rect2(i * 39, 0, 39, 20)
+		frames.add_frame("swim", atlas)
+	anim.sprite_frames = frames
+	anim.play("swim")
 
 
 func _tick_chase(delta: float) -> void:
@@ -69,20 +81,41 @@ func _start_charge() -> void:
 	if _charge_tween:
 		_charge_tween.kill()
 	_charge_tween = create_tween().set_loops(int(charge_duration / 0.3))
-	_charge_tween.tween_property(sprite, "color", Color(0.2, 0.8, 1.0), 0.15)
-	_charge_tween.tween_property(sprite, "color", Color(0.3, 0.0, 0.9), 0.15)
+	_charge_tween.tween_property(sprite, "modulate", Color(0.2, 0.8, 1.0), 0.15)
+	_charge_tween.tween_property(sprite, "modulate", Color(0.3, 0.0, 0.9), 0.15)
 
 
 func _release_shock() -> void:
 	if _charge_tween:
 		_charge_tween.kill()
 
-	# White flash then return to base color
 	sprite.modulate = Color(1, 1, 1)
 	var flash := create_tween()
-	flash.tween_property(sprite, "color", Color(0.3, 0.1, 0.8), 0.4)
+	flash.tween_property(sprite, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.4)
+
+	_spawn_explosion()
 
 	for body in shock_zone.get_overlapping_bodies():
 		if body.is_in_group("player") and body.has_method("take_damage"):
 			body.take_damage(attack_damage)
 			emit_signal("player_damaged", attack_damage)
+
+
+func _spawn_explosion() -> void:
+	var anim := AnimatedSprite2D.new()
+	var tex : Texture2D = load("res://assets/vfx/explosion.png")
+	var frames := SpriteFrames.new()
+	frames.add_animation("explode")
+	frames.set_animation_loop("explode", false)
+	frames.set_animation_speed("explode", 18.0)
+	for i in 11:
+		var atlas := AtlasTexture.new()
+		atlas.atlas  = tex
+		atlas.region = Rect2(i * 60, 0, 60, 82)
+		frames.add_frame("explode", atlas)
+	anim.sprite_frames = frames
+	anim.scale = Vector2(2.5, 2.5)
+	anim.global_position = global_position
+	anim.animation_finished.connect(anim.queue_free)
+	get_parent().add_child(anim)
+	anim.play("explode")

@@ -13,7 +13,7 @@ func _ready() -> void:
 
 func _build_bubbles() -> void:
 	_bubbles = CPUParticles2D.new()
-	_bubbles.amount = 60
+	_bubbles.amount = 120
 	_bubbles.lifetime = 4.0
 	_bubbles.explosiveness = 0.0
 	_bubbles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
@@ -23,9 +23,22 @@ func _build_bubbles() -> void:
 	_bubbles.initial_velocity_max = 80.0
 	_bubbles.spread = 10.0
 	_bubbles.direction = Vector2(0.0, 1.0)
-	_bubbles.color = Color(0.7, 0.92, 1.0, 0.55)
+	_bubbles.scale_amount_min = 0.8
+	_bubbles.scale_amount_max = 2.2
+	_bubbles.color = Color(0.82, 0.96, 1.0, 0.75)
+	_bubbles.texture = _make_bubble_texture()
 	_bubbles.emitting = true
 	add_child(_bubbles)
+
+
+func _make_bubble_texture() -> ImageTexture:
+	var img := Image.create(12, 12, false, Image.FORMAT_RGBA8)
+	for y in 12:
+		for x in 12:
+			var d := Vector2(x + 0.5, y + 0.5).distance_to(Vector2(6.0, 6.0))
+			var a := clampf(1.0 - d / 6.0, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, a * a))
+	return ImageTexture.create_from_image(img)
 
 
 func _physics_process(delta: float) -> void:

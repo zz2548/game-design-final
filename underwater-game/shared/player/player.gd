@@ -84,6 +84,7 @@ var _pre_dialogue_pos  : Vector2
 
 var _fire_sound  : AudioStreamPlayer
 var _death_sound : AudioStreamPlayer
+var _hurt_overlay : ColorRect
 
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
@@ -96,6 +97,15 @@ func _ready() -> void:
 	_death_sound = AudioStreamPlayer.new()
 	_death_sound.stream = load("res://assets/sounds/death.mp3")
 	add_child(_death_sound)
+
+	var cl := CanvasLayer.new()
+	cl.layer = 90
+	_hurt_overlay = ColorRect.new()
+	_hurt_overlay.color = Color(1.0, 0.0, 0.0, 0.0)
+	_hurt_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_hurt_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cl.add_child(_hurt_overlay)
+	add_child(cl)
 
 	Inventory.item_added.connect(func(item, qty):
 		print("Picked up: ", item.display_name, " x", qty)
@@ -203,6 +213,8 @@ func enter_submarine_mode() -> void:
 	submarine_mode = true
 	_sprite.hide()
 	$InteractionZone.monitoring = false   # no interactions while piloting
+	cone_light.texture_scale = 46.0
+	cone_light.energy = 9.0
 
 
 # ── Physics (movement) ────────────────────────────────────────────────────────
@@ -255,7 +267,7 @@ func _physics_process(delta: float) -> void:
 	# Aim the cone light at the mouse cursor with a slight lag.
 	var to_mouse := get_global_mouse_position() - global_position
 	if to_mouse.length() > 1.0:
-		cone_light.rotation = lerp_angle(cone_light.rotation, to_mouse.angle(), 2.5 * delta)
+		cone_light.rotation = lerp_angle(cone_light.rotation, to_mouse.angle(), 7.0 * delta)
 		cone_light.position = Vector2.from_angle(cone_light.rotation) * 5.0
 
 	# Drive sprite animation and facing (only in free-swim)
@@ -368,10 +380,10 @@ func _fire() -> void:
 	_fire_timer = current_weapon.fire_cooldown
 
 
-func _shake_camera() -> void:
+func _shake_camera(magnitude: float = 2.5, steps: int = 3) -> void:
 	var tween := create_tween()
-	for i in 3:
-		tween.tween_property(_camera, "offset", Vector2(randf_range(-2.5, 2.5), randf_range(-2.5, 2.5)), 0.025)
+	for i in steps:
+		tween.tween_property(_camera, "offset", Vector2(randf_range(-magnitude, magnitude), randf_range(-magnitude, magnitude)), 0.025)
 	tween.tween_property(_camera, "offset", Vector2.ZERO, 0.04)
 
 
@@ -429,8 +441,16 @@ func take_damage(amount: int) -> void:
 	_hurt_timer = 5.0 / 12.0  # hurt sheet: 5 frames @ 12 fps ≈ 0.42 s
 	health = maxi(0, health - amount)
 	emit_signal("health_changed", health, MAX_HEALTH)
+	_hurt_flash()
 	if health <= 0:
 		die()
+
+
+func _hurt_flash() -> void:
+	_shake_camera(5.0, 5)
+	_hurt_overlay.color.a = 0.45
+	var tween := create_tween()
+	tween.tween_property(_hurt_overlay, "color:a", 0.0, 0.35)
 
 
 ## Called by an enemy when the player is killed.

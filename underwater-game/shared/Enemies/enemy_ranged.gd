@@ -23,7 +23,39 @@ var _bullet_scene : PackedScene
 
 func _on_ready() -> void:
 	_bullet_scene = load(BULLET_SCENE)
-	sprite.modulate = Color(0.1, 0.5, 1.0)
+	var anim := sprite as AnimatedSprite2D
+	var tex : Texture2D = load("res://assets/enemies/fish-big.png")
+	var frames := SpriteFrames.new()
+	frames.add_animation("swim")
+	frames.set_animation_loop("swim", true)
+	frames.set_animation_speed("swim", 8.0)
+	for i in 4:
+		var atlas := AtlasTexture.new()
+		atlas.atlas  = tex
+		atlas.region = Rect2(i * 54, 0, 54, 49)
+		frames.add_frame("swim", atlas)
+	anim.sprite_frames = frames
+	anim.play("swim")
+
+
+func _physics_process(delta: float) -> void:
+	super._physics_process(delta)
+	_face_player()
+
+
+func _face_player() -> void:
+	var target := _player_ref if is_instance_valid(_player_ref) else null
+	if target == null:
+		return
+	var angle := (target.global_position - global_position).angle()
+	var anim  := sprite as AnimatedSprite2D
+	if cos(angle) >= 0.0:
+		anim.flip_h   = false
+		anim.rotation = angle
+	else:
+		anim.flip_h   = true
+		var mirrored  := (PI - angle) if angle > 0.0 else (-PI - angle)
+		anim.rotation = -mirrored
 
 
 func _tick_chase(delta: float) -> void:

@@ -1,0 +1,6 @@
+[gd_scene format=4 uid="uid://hologram_hint_001"]
+
+[ext_resource type="Script" path="res://scripts/environment/hologram_hint.gd" id="1_script"]
+
+[node name="HologramHint" type="Node2D"]
+script = ExtResource("1_script")

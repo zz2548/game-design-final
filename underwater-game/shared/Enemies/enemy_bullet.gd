@@ -16,6 +16,12 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
 
+func _draw() -> void:
+	draw_circle(Vector2.ZERO, 5.5, Color(1.0, 0.35, 0.0, 0.35))
+	draw_circle(Vector2.ZERO, 3.5, Color(1.0, 0.65, 0.1, 1.0))
+	draw_circle(Vector2.ZERO, 1.8, Color(1.0, 0.95, 0.7, 1.0))
+
+
 func _physics_process(delta: float) -> void:
 	position += direction * SPEED * delta
 	_distance_traveled += SPEED * delta

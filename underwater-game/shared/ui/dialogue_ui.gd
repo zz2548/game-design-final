@@ -14,6 +14,7 @@ func _ready() -> void:
 	# Must keep processing while the tree is paused so the typewriter
 	# tween and input handling still work during dialogue.
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	layer = 100
 	panel.hide()
 	_apply_theme()
 	DialogueManager.dialogue_started.connect(_on_dialogue_started)
