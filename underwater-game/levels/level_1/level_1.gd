@@ -19,9 +19,10 @@ var _obj_escape: int
 @onready var _corridor_trigger : Area2D                   = $CorridorTrigger
 @onready var _camera           : Camera2D                 = $player/Camera2D
 
-@onready var _slot_engine : ComponentSlotInteractable = $Objects/SlotEngine
-@onready var _slot_hull   : ComponentSlotInteractable = $Objects/SlotHull
-@onready var _slot_nav    : ComponentSlotInteractable = $Objects/SlotNav
+@onready var _slot_engine      : ComponentSlotInteractable = $Objects/SlotEngine
+@onready var _slot_hull        : ComponentSlotInteractable = $Objects/SlotHull
+@onready var _slot_nav         : ComponentSlotInteractable = $Objects/SlotNav
+@onready var _canvas_modulate  : CanvasModulate             = $CanvasModulate
 
 var _level_ended: bool = false
 
@@ -36,7 +37,7 @@ func _ready() -> void:
 	_obj_hull   = ObjectiveManager.add_objective("Recover the Pressure Seal")
 	_obj_nav    = ObjectiveManager.add_objective("Recover the Nav Core")
 	_obj_repair = ObjectiveManager.add_objective("Restore the Tethys-7")
-	_obj_escape = ObjectiveManager.add_objective("Breach into open ocean")
+	_obj_escape = ObjectiveManager.add_objective("Proceed to Kappa Station")
 
 	# ── Inventory signals (mark collect objectives) ───────────────────────────
 	Inventory.item_added.connect(_on_item_added)
@@ -127,6 +128,8 @@ func _on_submarine_boarded(player: Node) -> void:
 	_submarine_sprite.position = Vector2.ZERO
 	player._sub_sprite = _submarine_sprite
 	player.enter_submarine_mode()
+	var tw := create_tween()
+	tw.tween_property(_canvas_modulate, "color", Color(0.12, 0.13, 0.15, 1.0), 0.6)
 
 
 func _on_corridor_entered(body: Node) -> void:

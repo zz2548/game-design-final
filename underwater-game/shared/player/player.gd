@@ -227,8 +227,6 @@ func enter_submarine_mode() -> void:
 	submarine_mode = true
 	_sprite.hide()
 	$InteractionZone.monitoring = false   # no interactions while piloting
-	cone_light.texture_scale = 46.0
-	cone_light.energy = 9.0
 
 
 # ── Physics (movement) ────────────────────────────────────────────────────────

@@ -9,7 +9,9 @@
       "Bash(del \"C:\\\\Users\\\\jerry\\\\Desktop\\\\Programming Projects\\\\game-design-final\\\\underwater-game\\\\scripts\\\\environment\\\\steam_vent.gd\")",
       "Bash(del \"C:\\\\Users\\\\jerry\\\\Desktop\\\\Programming Projects\\\\game-design-final\\\\underwater-game\\\\scripts\\\\environment\\\\SteamVent.tscn\")",
       "Bash(grep -E \"\\\\.\\(gd|tscn\\)$\")",
-      "Bash(find /Users/jerryzou/Documents/GitHub/game-design-final/underwater-game -name *.gd)"
+      "Bash(find /Users/jerryzou/Documents/GitHub/game-design-final/underwater-game -name *.gd)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\jerry\\\\Downloads\\\\\" | Where-Object { $_.Extension -match \"\\\\.\\(png|jpg|jpeg|webp\\)\" } | Sort-Object LastWriteTime -Descending | Select-Object -First 10 | Format-Table Name, LastWriteTime)",
+      "PowerShell(python -c \"import PIL; print\\(PIL.__version__\\)\")"
     ]
   }
 }
