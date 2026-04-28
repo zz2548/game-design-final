@@ -3,19 +3,14 @@ extends Node
 # ── Cutscene cards ────────────────────────────────────────────────────────────
 # Each entry is displayed as a full-screen text card on a black background.
 const CARDS: Array[String] = [
-	"FORTY SECONDS BEFORE IMPACT\n\nYou were not supposed to be this deep.",
-
-	"The Tethys-7 was on a routine transit.\nA maintenance job. Nothing classified.\n\nThen something hit you.",
-
-	"The hull groaned.\nPressure alarms cascaded down the board.\n\nThen —\n\nsilence.",
-
-	"IMPACT + 00:40\n\nORCA comes back online.\nDiagnostics running.\nShe does not wait to be asked.",
-
-	"Three components.\nMissing.\n\nThe drive coupling.\nThe pressure seal.\nThe nav core.\n\nShe marks them on your HUD.",
-
-	"You ask what hit the sub.\n\nShe considers this for 1.2 seconds.\n\n\"Insufficient data.\"",
-
-	"The relay station ahead has gone offline.\nYour distress signal is blocked.\n\nYou are very, very deep.\n\nYou are not alone.\nYou have ORCA.\n\nThat will have to be enough.",
+	"06:42:00\n\nSublevel Station Depth-9 lost contact 72 hours prior.\nCause of blackout: undetermined.\nCorporate has dispatched a single operative for assessment.",
+	"09:17:33\n\nTethys-7 en route to Depth-9.\nStandard transit.\nNo anomalies logged.",
+	"11:58:21\n\nUnidentified contact.\nCollision imminent.\nEmergency protocols failed to initialize.",
+	"11:58:28\n\nHull integrity compromised.\nPressure systems offline.\nNavigation core unresponsive.",
+	"12:00:04\n\nOperative status: conscious.\nVessel status: critical.\nThree components confirmed missing.\n\nDrive coupling.\nPressure seal.\nNavigation core.",
+	"12:00:47\n\nDistress signal blocked.\nRelay station Depth-9 offline.\nCause undetermined.",
+	"12:01:09\n\nNature of contact: unclassified.\nOrigin: unknown.\nNo further data available.",
+	"12:01:11\n\nRecovery objective logged.\nRetrieve components.\nRestore vessel.\nProceed to Depth-9.\n\nDepth recorded: 3,847 meters.\nBackup unavailable.",
 ]
 
 const TYPEWRITER_SPEED : float = 0.033   # seconds per character
