@@ -85,6 +85,7 @@ var _pre_dialogue_pos  : Vector2
 var _fire_sound  : AudioStreamPlayer
 var _death_sound : AudioStreamPlayer
 var _hurt_overlay : ColorRect
+var _desat_rect   : ColorRect = null
 
 
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
@@ -97,6 +98,19 @@ func _ready() -> void:
 	_death_sound = AudioStreamPlayer.new()
 	_death_sound.stream = load("res://assets/sounds/death.mp3")
 	add_child(_death_sound)
+
+	var desat_cl := CanvasLayer.new()
+	desat_cl.layer = 88
+	_desat_rect = ColorRect.new()
+	_desat_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_desat_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var _shader := Shader.new()
+	_shader.code = "shader_type canvas_item;\nuniform sampler2D SCREEN_TEXTURE : hint_screen_texture, filter_linear_mipmap;\nuniform float desaturation : hint_range(0.0, 1.0) = 0.0;\nvoid fragment() {\n\tvec4 col = textureLod(SCREEN_TEXTURE, SCREEN_UV, 0.0);\n\tfloat gray = dot(col.rgb, vec3(0.299, 0.587, 0.114));\n\tCOLOR = vec4(mix(col.rgb, vec3(gray), desaturation), col.a);\n}"
+	var _mat := ShaderMaterial.new()
+	_mat.shader = _shader
+	_desat_rect.material = _mat
+	desat_cl.add_child(_desat_rect)
+	add_child(desat_cl)
 
 	var cl := CanvasLayer.new()
 	cl.layer = 90
@@ -441,6 +455,7 @@ func take_damage(amount: int) -> void:
 	_hurt_timer = 5.0 / 12.0  # hurt sheet: 5 frames @ 12 fps ≈ 0.42 s
 	health = maxi(0, health - amount)
 	emit_signal("health_changed", health, MAX_HEALTH)
+	_update_health_desat()
 	_hurt_flash()
 	if health <= 0:
 		die()
@@ -451,6 +466,19 @@ func _hurt_flash() -> void:
 	_hurt_overlay.color.a = 0.45
 	var tween := create_tween()
 	tween.tween_property(_hurt_overlay, "color:a", 0.0, 0.35)
+
+
+func _update_health_desat() -> void:
+	if _desat_rect == null:
+		return
+	var desat: float
+	if health <= 1:
+		desat = 0.85
+	elif health == 2:
+		desat = 0.5
+	else:
+		desat = 0.0
+	(_desat_rect.material as ShaderMaterial).set_shader_parameter("desaturation", desat)
 
 
 ## Called by an enemy when the player is killed.

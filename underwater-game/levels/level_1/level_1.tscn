@@ -459,10 +459,6 @@ shape = SubResource("shape_part")
 [node name="player" parent="." unique_id=1560876372 instance=ExtResource("1_player")]
 position = Vector2(37, 333)
 
-[node name="InventoryUI" parent="." unique_id=2083902792 instance=ExtResource("2_inventoryui")]
-
-[node name="DialogueUI" parent="." unique_id=1340303138 instance=ExtResource("5_e6u7d")]
-
 [node name="Enemy" parent="." unique_id=581764293 instance=ExtResource("11_qbdb0")]
 position = Vector2(1003, 528)
 
@@ -477,15 +473,21 @@ collision_mask = 8
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ExitTrigger" unique_id=-2094967294]
 shape = SubResource("shape_exit")
 
-[node name="HintsUI" parent="." unique_id=-2144967295 instance=ExtResource("11_hints")]
+[node name="HUD" type="Node" parent="." unique_id=1870613679]
 
-[node name="WeaponHUD" parent="." unique_id=1999000005 instance=ExtResource("96_weaponhud")]
+[node name="HintsUI" parent="HUD" unique_id=-2144967295 instance=ExtResource("11_hints")]
 
-[node name="OxygenHUD" parent="." unique_id=1999000001 instance=ExtResource("99_oxyhud")]
+[node name="WeaponHUD" parent="HUD" unique_id=1999000005 instance=ExtResource("96_weaponhud")]
 
-[node name="BatteryHUD" parent="." unique_id=1999000003 instance=ExtResource("98_bathud")]
+[node name="OxygenHUD" parent="HUD" unique_id=1999000001 instance=ExtResource("99_oxyhud")]
 
-[node name="HealthHUD" parent="." unique_id=1999000004 instance=ExtResource("97_healthhud")]
+[node name="BatteryHUD" parent="HUD" unique_id=1999000003 instance=ExtResource("98_bathud")]
+
+[node name="HealthHUD" parent="HUD" unique_id=1999000004 instance=ExtResource("97_healthhud")]
+
+[node name="InventoryUI" parent="HUD" unique_id=2083902792 instance=ExtResource("2_inventoryui")]
+
+[node name="DialogueUI" parent="HUD" unique_id=1340303138 instance=ExtResource("5_e6u7d")]
 
 [node name="CorridorTrigger" type="Area2D" parent="." unique_id=1111111111]
 position = Vector2(1576, 480)
@@ -500,13 +502,13 @@ position = Vector2(448, 386)
 [node name="EnemyAoe" parent="." unique_id=451009689 instance=ExtResource("20_lbtho")]
 position = Vector2(794, 260)
 
-[node name="HintMovement" parent="." instance=ExtResource("95_hologram")]
+[node name="HintMovement" parent="." unique_id=1782391456 instance=ExtResource("95_hologram")]
 position = Vector2(120, 295)
 hint_text = "WASD — Swim
 Mouse — Aim torch
 LMB — Fire"
 
-[node name="HintInteract" parent="." instance=ExtResource("95_hologram")]
+[node name="HintInteract" parent="." unique_id=1583449143 instance=ExtResource("95_hologram")]
 position = Vector2(280, 295)
 hint_text = "E — Interact
 F — Toggle torch
