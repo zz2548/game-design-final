@@ -469,12 +469,21 @@ flicker = true
 
 [node name="Electric1" parent="Hazards" unique_id=800100001 instance=ExtResource("20_electric")]
 position = Vector2(494, 50)
+damage = null
+interval_min = null
+interval_max = null
 
 [node name="Electric2" parent="Hazards" unique_id=800100002 instance=ExtResource("20_electric")]
 position = Vector2(1700, 192)
+damage = null
+interval_min = null
+interval_max = null
 
 [node name="Electric3" parent="Hazards" unique_id=800100003 instance=ExtResource("20_electric")]
 position = Vector2(1056, 1232)
+damage = null
+interval_min = null
+interval_max = null
 
 [node name="BubbleColumn1" parent="Hazards" unique_id=800100004 instance=ExtResource("21_steam")]
 position = Vector2(550, 51)
@@ -486,7 +495,7 @@ position = Vector2(2025, 73)
 position = Vector2(1757, 1386)
 
 [node name="BubbleColumn4" parent="Hazards" unique_id=901390760 instance=ExtResource("21_steam")]
-position = Vector2(72, 220)
+position = Vector2(83, 583)
 
 [node name="Toxic1" parent="Hazards" unique_id=800100007 instance=ExtResource("22_toxic")]
 position = Vector2(613, 384)

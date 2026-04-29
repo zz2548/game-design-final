@@ -10,8 +10,11 @@ var _sparks: CPUParticles2D
 var _timer: float = 0.0
 var _next_zap: float = 0.0
 var _zap_timer: float = 0.0
+var _charge_timer: float = 0.0
+var _charging: bool = false
 
-const ZAP_DURATION := 0.20
+const ZAP_DURATION := 0.75
+const CHARGE_DURATION := 0.8
 
 
 func _ready() -> void:
@@ -63,11 +66,26 @@ func _process(delta: float) -> void:
 			_light.energy = 0.35
 		return
 
+	if _charging:
+		_charge_timer -= delta
+		# Pulse the light during charge-up so the player notices
+		var pulse: float = 0.35 + 1.2 * abs(sin(_charge_timer * PI / CHARGE_DURATION * 3.0))
+		_light.energy = pulse
+		if _charge_timer <= 0.0:
+			_charging = false
+			_trigger_zap()
+		return
+
 	_timer += delta
 	if _timer >= _next_zap:
 		_timer = 0.0
 		_next_zap = randf_range(interval_min, interval_max)
-		_trigger_zap()
+		_start_charge()
+
+
+func _start_charge() -> void:
+	_charging = true
+	_charge_timer = CHARGE_DURATION
 
 
 func _trigger_zap() -> void:
