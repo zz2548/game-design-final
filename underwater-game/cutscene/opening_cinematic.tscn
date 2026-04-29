@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://opening_cinematic"]
+
+[ext_resource type="Script" path="res://cutscene/opening_cinematic.gd" id="1_script"]
+
+[node name="OpeningCinematic" type="Node"]
+script = ExtResource("1_script")
