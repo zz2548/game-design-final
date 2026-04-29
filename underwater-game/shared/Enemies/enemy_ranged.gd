@@ -19,9 +19,13 @@ var _burst_count  : int   = 0
 var _burst_timer  : float = 0.0
 
 var _bullet_scene : PackedScene
+var _fire_sound   : AudioStreamPlayer
 
 
 func _on_ready() -> void:
+	_fire_sound = AudioStreamPlayer.new()
+	_fire_sound.stream = load("res://assets/sounds/fire.mp3")
+	add_child(_fire_sound)
 	_bullet_scene = load(BULLET_SCENE)
 	var anim := sprite as AnimatedSprite2D
 	var tex : Texture2D = load("res://assets/enemies/fish-big.png")
@@ -119,3 +123,7 @@ func _fire_bullet() -> void:
 	b.global_position = global_position
 	b.direction = (_player_ref.global_position - global_position).normalized()
 	b.damage = attack_damage
+	_fire_sound.play()
+	var orig := modulate
+	modulate = Color(1.5, 1.3, 0.5)
+	create_tween().tween_property(self, "modulate", orig, 0.12)
