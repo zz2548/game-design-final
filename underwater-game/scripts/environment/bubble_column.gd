@@ -3,17 +3,23 @@ extends Area2D
 
 ## Downward push applied to the player per second while inside.
 @export var push_force: float = 1000.0
+@export var column_height: float = 300.0
 
 var _bubbles: CPUParticles2D
 
 
 func _ready() -> void:
+	var col := $CollisionShape2D as CollisionShape2D
+	var shape := RectangleShape2D.new()
+	shape.size = Vector2(96.0, column_height)
+	col.shape = shape
+	col.position = Vector2(0.0, column_height * 0.5)
 	_build_bubbles()
 
 
 func _build_bubbles() -> void:
 	_bubbles = CPUParticles2D.new()
-	_bubbles.amount = 120
+	_bubbles.amount = 100
 	_bubbles.lifetime = 4.0
 	_bubbles.explosiveness = 0.0
 	_bubbles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
@@ -44,4 +50,5 @@ func _make_bubble_texture() -> ImageTexture:
 func _physics_process(delta: float) -> void:
 	for body in get_overlapping_bodies():
 		if body.has_method("refill_oxygen"):
-			body.velocity.y += push_force * delta
+			var scale := 0.2 if body.get("submarine_mode") else 1.0
+			body.velocity.y += push_force * scale * delta

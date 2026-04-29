@@ -93,10 +93,10 @@ func _trigger_zap() -> void:
 	_sparks.emitting = true
 	_light.energy = 3.5
 	for body in get_overlapping_bodies():
-		if body.has_method("refill_oxygen"):
+		if body.has_method("refill_oxygen") and not body.get("submarine_mode"):
 			body.take_damage(damage)
 
 
 func _on_body_entered(body: Node) -> void:
-	if _zap_timer > 0.0 and body.has_method("refill_oxygen"):
+	if _zap_timer > 0.0 and body.has_method("refill_oxygen") and not body.get("submarine_mode"):
 		body.take_damage(damage)

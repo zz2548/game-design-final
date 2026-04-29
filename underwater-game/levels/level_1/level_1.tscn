@@ -526,9 +526,10 @@ position = Vector2(785, 556)
 
 [node name="BubbleColumn" parent="." unique_id=644223437 instance=ExtResource("32_bubble")]
 position = Vector2(266, -79)
+column_height = 554.0
 
 [node name="HintElectric" parent="." unique_id=1087945959 instance=ExtResource("95_hologram")]
-position = Vector2(330, 457)
+position = Vector2(292, 420)
 hint_text = "ELECTRIC HAZARD
 Delivers a shock on contact."
 
@@ -549,7 +550,7 @@ Mouse — Aim torch
 LMB — Fire"
 
 [node name="HintInteract" parent="." unique_id=1583449143 instance=ExtResource("95_hologram")]
-position = Vector2(280, 295)
+position = Vector2(388, 336)
 hint_text = "E — Interact
 F — Toggle torch
 X — Swap weapon"

@@ -487,15 +487,19 @@ interval_max = null
 
 [node name="BubbleColumn1" parent="Hazards" unique_id=800100004 instance=ExtResource("21_steam")]
 position = Vector2(550, 51)
+column_height = 349.0
 
 [node name="BubbleColumn2" parent="Hazards" unique_id=800100005 instance=ExtResource("21_steam")]
 position = Vector2(2025, 73)
+column_height = 1177.0
 
 [node name="BubbleColumn3" parent="Hazards" unique_id=800100006 instance=ExtResource("21_steam")]
 position = Vector2(1757, 1386)
+column_height = 364.0
 
 [node name="BubbleColumn4" parent="Hazards" unique_id=901390760 instance=ExtResource("21_steam")]
 position = Vector2(83, 583)
+column_height = 1167.0
 
 [node name="Toxic1" parent="Hazards" unique_id=800100007 instance=ExtResource("22_toxic")]
 position = Vector2(613, 384)

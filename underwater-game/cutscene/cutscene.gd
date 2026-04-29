@@ -38,6 +38,11 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel"):
+		get_viewport().set_input_as_handled()
+		_skip_all()
+		return
+
 	var pressed: bool = event.is_action_pressed("interact") or event.is_action_pressed("ui_accept")
 	if not pressed and event is InputEventMouseButton:
 		pressed = (event as InputEventMouseButton).pressed
@@ -109,6 +114,13 @@ func _advance() -> void:
 	_show_card(_card_index)
 	_fade_overlay(0.0, FADE_DURATION / 2.0)
 	_advancing = false
+
+
+func _skip_all() -> void:
+	if _advancing:
+		return
+	_advancing = true
+	_end_cutscene()
 
 
 func _end_cutscene() -> void:

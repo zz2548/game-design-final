@@ -225,6 +225,8 @@ func _build_anim(frames: SpriteFrames, anim: String, sheet: Texture2D,
 ## Called by the level once the player boards the submarine.
 func enter_submarine_mode() -> void:
 	submarine_mode = true
+	oxygen = MAX_OXYGEN
+	emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
 	_sprite.hide()
 	$InteractionZone.monitoring = false   # no interactions while piloting
 
