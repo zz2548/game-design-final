@@ -9,6 +9,7 @@ var death_return_scene  : String = ""   # set by player.gd before going to death
 # Persisted objective snapshots: Array of { "text": String, "completed": bool }
 var level_1_objectives  : Array  = []
 var level_2_objectives  : Array  = []
+var level_3_objectives  : Array  = []
 
 
 # Call this before leaving Level 1 to snapshot the current objective list.
@@ -19,3 +20,8 @@ func save_objectives_from_level_1() -> void:
 # Call this before leaving Level 2 to snapshot the current objective list.
 func save_objectives_from_level_2() -> void:
 	level_2_objectives = ObjectiveManager.objectives.duplicate(true)
+
+
+# Call this before leaving Level 3 to snapshot the current objective list.
+func save_objectives_from_level_3() -> void:
+	level_3_objectives = ObjectiveManager.objectives.duplicate(true)
