@@ -26,7 +26,8 @@ const COLOR_FULL := Color(0.95, 0.88, 0.25)  # bright yellow  > 50 %
 const COLOR_LOW  := Color(1.0,  0.55, 0.1)   # amber-orange   25–50 %
 const COLOR_CRIT := Color(1.0,  0.25, 0.25)  # red            < 25 %
 
-var _ratio : float = 1.0
+var _ratio      : float = 1.0
+var _warn_label : Label = null
 
 
 func _ready() -> void:
@@ -39,19 +40,27 @@ func _ready() -> void:
 		push_warning("BatteryHUD: no node found in group 'player'")
 		return
 
+	# Warning icon — injected into TitleRow before the seconds label
+	_warn_label = Label.new()
+	_warn_label.text = "⚠"
+	_warn_label.add_theme_font_size_override("font_size", 12)
+	_warn_label.add_theme_color_override("font_color", COLOR_CRIT)
+	_warn_label.visible = false
+	$Panel/Margin/VBox/TitleRow.add_child(_warn_label)
+	$Panel/Margin/VBox/TitleRow.move_child(_warn_label, 1)
+
 	player.battery_changed.connect(_on_battery_changed)
 	_on_battery_changed(player.battery, player.MAX_BATTERY)
 
 
 func _process(_delta: float) -> void:
-	# Pulse labels when battery is critical
-	if _ratio < 0.25:
-		var alpha := 0.55 + 0.45 * sin(Time.get_ticks_msec() * 0.007)
-		title_label.modulate.a   = alpha
-		seconds_label.modulate.a = alpha
-	else:
-		title_label.modulate.a   = 1.0
-		seconds_label.modulate.a = 1.0
+	if _ratio < 0.1:
+		# Critical: pulse the warning icon rapidly
+		var alpha := 0.4 + 0.6 * sin(Time.get_ticks_msec() * 0.012)
+		if _warn_label:
+			_warn_label.modulate.a = alpha
+	elif _warn_label:
+		_warn_label.modulate.a = 1.0
 
 
 func _apply_style() -> void:
@@ -95,3 +104,8 @@ func _on_battery_changed(current: float, maximum: float) -> void:
 
 	seconds_label.text = "%ds" % ceili(current)
 	seconds_label.add_theme_color_override("font_color", bar_color)
+
+	if _warn_label:
+		_warn_label.visible = _ratio <= 0.25
+		_warn_label.add_theme_color_override("font_color",
+				COLOR_CRIT if _ratio < 0.1 else COLOR_LOW)

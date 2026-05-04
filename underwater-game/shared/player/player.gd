@@ -523,20 +523,7 @@ func _update_cone_light(delta: float) -> void:
 
 
 func _check_battery_warnings() -> void:
-	if DialogueManager.is_active:
-		return
-	if not _battery_warned_low and battery <= BATTERY_WARN_LOW:
-		_battery_warned_low = true
-		DialogueManager.start_dialogue({
-			"speaker": "ORCA",
-			"lines": ["Torch battery at twenty-five percent.", "Find a power cell."],
-		})
-	elif not _battery_warned_crit and battery <= BATTERY_WARN_CRIT:
-		_battery_warned_crit = true
-		DialogueManager.start_dialogue({
-			"speaker": "ORCA",
-			"lines": ["Torch battery critical."],
-		})
+	pass
 
 
 func _process(_delta: float) -> void:
