@@ -24,11 +24,16 @@ GameState="*uid://c0cnnuynh7c34"
 ObjectiveManager="*res://autoloads/objective_manager.gd"
 MusicManager="*res://autoloads/music_manager.gd"
 ScreenFader="*res://autoloads/screen_fader.gd"
+_mcp_game_helper="*res://addons/godot_ai/runtime/game_helper.gd"
 
 [display]
 
 window/size/mode=3
 window/stretch/mode="canvas_items"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_ai/plugin.cfg")
 
 [input]
 
