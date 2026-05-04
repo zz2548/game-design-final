@@ -423,20 +423,7 @@ func refill_oxygen(amount: float) -> void:
 
 
 func _check_oxygen_warnings() -> void:
-	if DialogueManager.is_active:
-		return
-	if not _oxygen_warned_low and oxygen <= OXYGEN_WARN_LOW:
-		_oxygen_warned_low = true
-		DialogueManager.start_dialogue({
-			"speaker": "ORCA",
-			"lines": ["Oxygen at twenty-five percent.", "Locate a refill station."],
-		})
-	elif not _oxygen_warned_crit and oxygen <= OXYGEN_WARN_CRIT:
-		_oxygen_warned_crit = true
-		DialogueManager.start_dialogue({
-			"speaker": "ORCA",
-			"lines": ["Oxygen critical."],
-		})
+	pass
 
 
 func _die_oxygen() -> void:
