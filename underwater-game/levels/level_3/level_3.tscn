@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" path="res://scripts/environment/PlaceableLight.tscn" id="17_dj0pt"]
 [ext_resource type="PackedScene" path="res://scripts/environment/ElectricHazard.tscn" id="20_electric"]
 [ext_resource type="PackedScene" path="res://scripts/environment/BubbleColumn.tscn" id="21_steam"]
+[ext_resource type="PackedScene" uid="uid://cfwcmys2vfa8u" path="res://levels/level_3/boss_serpent.tscn" id="22_p5b22"]
 [ext_resource type="PackedScene" path="res://scripts/environment/ToxicPool.tscn" id="22_toxic"]
 [ext_resource type="PackedScene" path="res://shared/ui/HintsUI.tscn" id="25_hints"]
 [ext_resource type="Texture2D" uid="uid://8e747nrdy8o3" path="res://assets/background/background.png" id="200_bg"]
@@ -513,11 +514,11 @@ sources/0 = SubResource("TileSetAtlasSource_ind_wall")
 sources/1 = SubResource("TileSetAtlasSource_t8ssf")
 sources/2 = SubResource("TileSetAtlasSource_sfqu1")
 
-[node name="Level3" type="Node2D" unique_id=784246833]
+[node name="Level3" type="Node2D" unique_id=784246833 node_paths=PackedStringArray("boss")]
 script = ExtResource("1_level3")
+boss = NodePath("BossSerpent")
 
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=2019324121]
-visible = false
 color = Color(0, 0, 0, 1)
 
 [node name="Background" type="ColorRect" parent="." unique_id=120229441]
@@ -550,30 +551,23 @@ tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAABAAAAAAABAAAAAAACAAAAAAACAAA
 tile_set = SubResource("TileSet_ind")
 
 [node name="player" parent="." unique_id=1679713102 instance=ExtResource("3_player")]
-position = Vector2(1000, 65)
+position = Vector2(1000, 356.06)
 
 [node name="HUD" type="Node" parent="." unique_id=1495862390]
 
 [node name="WeaponHUD" parent="HUD" unique_id=1668654430 instance=ExtResource("4_weaponhud")]
-visible = false
 
 [node name="OxygenHUD" parent="HUD" unique_id=622223408 instance=ExtResource("5_oxyhud")]
-visible = false
 
 [node name="BatteryHUD" parent="HUD" unique_id=1698132582 instance=ExtResource("6_bathud")]
-visible = false
 
 [node name="HealthHUD" parent="HUD" unique_id=1698132583 instance=ExtResource("8_healthhud")]
-visible = false
 
 [node name="InventoryUI" parent="HUD" unique_id=1520385462 instance=ExtResource("10_kgdtm")]
-visible = false
 
 [node name="DialogueUI" parent="HUD" unique_id=1340303138 instance=ExtResource("11_12l1j")]
-visible = false
 
 [node name="HintsUI" parent="HUD" unique_id=900000001 instance=ExtResource("25_hints")]
-visible = false
 
 [node name="Enemies" type="Node2D" parent="." unique_id=1896972832]
 
@@ -698,3 +692,6 @@ radius = 100.0
 [node name="Toxic8" parent="Hazards" unique_id=1695741074 instance=ExtResource("22_toxic")]
 position = Vector2(976, 1652)
 radius = 100.0
+
+[node name="BossSerpent" parent="." unique_id=2051322997 instance=ExtResource("22_p5b22")]
+position = Vector2(942, 732)

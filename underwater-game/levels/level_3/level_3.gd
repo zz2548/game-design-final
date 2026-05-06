@@ -23,9 +23,9 @@
 
 extends Node2D
 
-# ── Boss references (assign in Inspector once boss scene exists) ──────────────
-@export var boss      : Node               = null  ## Root node of the boss — must have `died` signal
-@export var boss_body : BossBodyInteractable = null  ## Interactable child of boss scene
+# ── Boss references ───────────────────────────────────────────────────────────
+@export var boss : Node = null  ## Root node of the boss — must have `died` signal
+var boss_body    : BossBodyInteractable = null  ## Auto-fetched from boss node in _ready()
 
 # ── Objective indices ─────────────────────────────────────────────────────────
 var _obj_hostiles : int
@@ -64,6 +64,11 @@ func _ready() -> void:
 		boss.died.connect(_on_boss_defeated)
 	elif boss == null:
 		push_warning("Level3: No boss assigned. Use F8 to test the ending.")
+
+	# Auto-fetch boss_body from inside the boss scene (avoids needing the user
+	# to manually navigate instanced-scene children in the inspector).
+	if boss_body == null and boss != null:
+		boss_body = boss.get_node_or_null("BossBodyInteractable") as BossBodyInteractable
 
 	# ── Boss body starts hidden until boss dies ───────────────────────────────
 	if boss_body != null:

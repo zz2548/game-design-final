@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://cfwcmys2vfa8u"]
+
+[ext_resource type="Script" uid="uid://tejby2vutkht" path="res://scripts/boss/boss_serpent.gd" id="1_serpent"]
+[ext_resource type="Script" uid="uid://7nann1jlf8m0" path="res://scripts/interactables/boss_body_interactable.gd" id="2_bbi"]
+
+[sub_resource type="CircleShape2D" id="Circle_head"]
+radius = 28.0
+
+[sub_resource type="CircleShape2D" id="Circle_detect"]
+radius = 600.0
+
+[sub_resource type="CircleShape2D" id="Circle_hit"]
+radius = 32.0
+
+[sub_resource type="CircleShape2D" id="Circle_bhit"]
+radius = 26.0
+
+[sub_resource type="CircleShape2D" id="Circle_bbi"]
+radius = 80.0
+
+[node name="BossSerpent" type="CharacterBody2D" groups=["enemies"]]
+collision_layer = 2
+script = ExtResource("1_serpent")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("Circle_head")
+
+[node name="HeadSprite" type="AnimatedSprite2D" parent="."]
+
+[node name="AlertLabel" type="Label" parent="."]
+modulate = Color(1, 0.9, 0, 1)
+offset_left = -4.0
+offset_top = -52.0
+offset_right = 36.0
+offset_bottom = -29.0
+text = "!"
+horizontal_alignment = 1
+
+[node name="DetectionZone" type="Area2D" parent="."]
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionZone"]
+shape = SubResource("Circle_detect")
+
+[node name="HitZone" type="Area2D" parent="."]
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitZone"]
+shape = SubResource("Circle_hit")
+
+[node name="BulletHitZone" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BulletHitZone"]
+shape = SubResource("Circle_bhit")
+
+[node name="HitSound" type="AudioStreamPlayer" parent="."]
+
+[node name="FireSound" type="AudioStreamPlayer" parent="."]
+
+[node name="BossBodyInteractable" type="Area2D" parent="." groups=["interactables"]]
+script = ExtResource("2_bbi")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BossBodyInteractable"]
+shape = SubResource("Circle_bbi")
