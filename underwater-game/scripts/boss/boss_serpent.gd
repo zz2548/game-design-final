@@ -371,14 +371,22 @@ func _on_hit_zone_body_entered(body: Node2D) -> void:
 		emit_signal("player_damaged", attack_damage)
 
 
-func _on_head_bullet_hit(_area: Area2D) -> void:
+func _on_head_bullet_hit(area: Area2D) -> void:
+	var bullet := area.get_parent()
+	if not is_instance_valid(bullet):
+		return
 	_take_damage(head_hit_dmg)
+	bullet.queue_free()
 
 
 # Called by each body-segment BulletHitZone; _seg_index unused for now but
 # available for future per-segment behaviour.
-func _on_body_bullet_hit(_area: Area2D, _seg_index: int) -> void:
+func _on_body_bullet_hit(area: Area2D, _seg_index: int) -> void:
+	var bullet := area.get_parent()
+	if not is_instance_valid(bullet):
+		return
 	_take_damage(body_hit_dmg)
+	bullet.queue_free()
 
 
 func _on_head_anim_finished() -> void:
@@ -524,26 +532,40 @@ func _update_history() -> void:
 
 
 func _update_body_positions() -> void:
-	# push_front means index 0 = newest (head), index hist_len-1 = oldest.
-	# When history is too short for a segment's index, fall back to index 0
-	# (head position) so segments coil at the head rather than appearing at
-	# the stale spawn position far across the map.
-	var step     := int(SEGMENT_SPACING / SAMPLE_DIST)  # 20 samples per gap
 	var hist_len := _position_history.size()
 	if hist_len == 0:
 		return
 
-	for seg_i in _segments.size():
-		var idx     := step * (seg_i + 1)
-		var seg_pos := _position_history[idx] if idx < hist_len else _position_history[0]
-		_segments[seg_i].global_position = seg_pos
+	# Use _sample_accum (distance moved since last push_front) to interpolate
+	# between adjacent history samples. This gives sub-pixel smooth following
+	# instead of the visible discrete "stepping" of a plain index lookup.
+	#
+	# For a segment that should trail target_dist pixels behind the live head:
+	#   float_idx = (target_dist - _sample_accum) / SAMPLE_DIST
+	# history[0] is newest; float_idx is always positive since target_dist >> _sample_accum.
 
-		# Rotate so the segment faces toward the one ahead (toward head).
-		# Sprite points down at rotation 0, so subtract PI/2 to align with direction.
-		var ahead_idx := step * seg_i
-		var ahead_pos := _position_history[ahead_idx] if ahead_idx < hist_len else _position_history[0]
-		if seg_pos.distance_squared_to(ahead_pos) > 0.01:
-			_segments[seg_i].rotation = (ahead_pos - seg_pos).angle() - PI / 2.0
+	# Collect smooth world-space positions: slot 0 = head, slots 1..N = segments.
+	var world_pos : Array[Vector2] = []
+	world_pos.resize(_segments.size() + 1)
+	world_pos[0] = global_position
+
+	for seg_i in _segments.size():
+		var target_dist := SEGMENT_SPACING * float(seg_i + 1)
+		var float_idx   := (target_dist - _sample_accum) / SAMPLE_DIST
+		var base        := int(float_idx)
+		var t           := float_idx - float(base)  # fractional part [0, 1)
+
+		var p0 := _position_history[base]     if base     < hist_len else _position_history[0]
+		var p1 := _position_history[base + 1] if base + 1 < hist_len else p0
+		world_pos[seg_i + 1] = p0.lerp(p1, t)
+
+	# Apply positions and rotations together so each segment faces the one ahead.
+	for seg_i in _segments.size():
+		_segments[seg_i].global_position = world_pos[seg_i + 1]
+		var ahead := world_pos[seg_i]
+		var here  := world_pos[seg_i + 1]
+		if here.distance_squared_to(ahead) > 0.01:
+			_segments[seg_i].rotation = (ahead - here).angle() - PI / 2.0
 
 
 func _update_head_rotation() -> void:
