@@ -43,13 +43,15 @@ var boss_body : BossBodyInteractable = null  ## Auto-fetched from boss node in _
 var _boss_hud : CanvasLayer          = null  ## Instantiated at runtime
 
 # ── Objective indices ─────────────────────────────────────────────────────────
-var _obj_hostiles : int
-var _obj_boss     : int
+var _obj_hostiles  : int
+var _obj_boss      : int
+var _obj_boss_hint : int  = -1  # current boss-fight guidance objective
 
 # ── State ─────────────────────────────────────────────────────────────────────
-var _remaining_enemies : int  = 0
-var _boss_defeated     : bool = false
-var _level_ended       : bool = false
+var _remaining_enemies  : int  = 0
+var _boss_defeated      : bool = false
+var _level_ended        : bool = false
+var _boss_is_phase_2    : bool = false
 
 
 func _ready() -> void:
@@ -71,8 +73,9 @@ func _ready() -> void:
 			ObjectiveManager.complete_objective(idx)
 
 	# ── Level 3 objectives ────────────────────────────────────────────────────
-	_obj_hostiles = ObjectiveManager.add_objective("Eliminate all hostiles")
-	_obj_boss     = ObjectiveManager.add_objective("Defeat the boss") ## TODO: rename
+	_obj_hostiles  = ObjectiveManager.add_objective("Eliminate all hostiles")
+	_obj_boss      = ObjectiveManager.add_objective("Defeat the boss")
+	_obj_boss_hint = ObjectiveManager.add_objective("Activate both energy beams to expose the boss")
 
 	# ── Connect boss signals ──────────────────────────────────────────────────
 	if boss != null and boss.has_signal("died"):
@@ -82,6 +85,12 @@ func _ready() -> void:
 
 	if boss != null and boss.has_signal("phase_2_started"):
 		boss.phase_2_started.connect(_on_boss_phase_2_started)
+
+	if boss != null and boss.has_signal("vulnerability_changed"):
+		boss.vulnerability_changed.connect(_on_boss_vulnerability_changed)
+
+	if boss != null and boss.has_signal("window_consumed"):
+		boss.window_consumed.connect(_on_boss_window_consumed)
 
 	# ── Boss HUD ──────────────────────────────────────────────────────────────
 	if boss != null:
@@ -140,6 +149,9 @@ func _on_boss_defeated() -> void:
 	if _boss_defeated:
 		return
 	_boss_defeated = true
+	if _obj_boss_hint >= 0:
+		ObjectiveManager.complete_objective(_obj_boss_hint)
+		_obj_boss_hint = -1
 	ObjectiveManager.complete_objective(_obj_boss)
 
 	# Enable the body interactable so the player can trigger story content
@@ -201,10 +213,38 @@ func _on_beam_activated() -> void:
 
 ## Called when the boss emits phase_2_started — resets beams for round 2.
 func _on_boss_phase_2_started() -> void:
+	_boss_is_phase_2 = true
 	if beam_left != null:
 		beam_left.reset()
 	if beam_right != null:
 		beam_right.reset()
+	_set_boss_hint("Phase 2: Activate both energy beams to expose the boss again")
+
+
+func _on_boss_window_consumed() -> void:
+	if beam_left != null:
+		beam_left.reset()
+	if beam_right != null:
+		beam_right.reset()
+
+
+func _on_boss_vulnerability_changed(is_vulnerable: bool) -> void:
+	if is_vulnerable:
+		if not _boss_is_phase_2:
+			_set_boss_hint("Reactivate both energy beams to re-expose the boss")
+		else:
+			_set_boss_hint("Reactivate both energy beams (Phase 2)")
+	else:
+		if not _boss_is_phase_2:
+			_set_boss_hint("Boss exposed! Damage it now (up to 30 HP per window)")
+		else:
+			_set_boss_hint("Boss exposed! Dodge homing bullets and deal damage")
+
+
+func _set_boss_hint(text: String) -> void:
+	if _obj_boss_hint >= 0:
+		ObjectiveManager.complete_objective(_obj_boss_hint)
+	_obj_boss_hint = ObjectiveManager.add_objective(text)
 
 
 # ── Enemy tracking ────────────────────────────────────────────────────────────

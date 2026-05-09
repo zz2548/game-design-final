@@ -18,6 +18,7 @@
 [ext_resource type="PackedScene" path="res://scripts/environment/BubbleColumn.tscn" id="21_steam"]
 [ext_resource type="PackedScene" uid="uid://cfwcmys2vfa8u" path="res://levels/level_3/boss_serpent.tscn" id="22_p5b22"]
 [ext_resource type="PackedScene" path="res://scripts/environment/ToxicPool.tscn" id="22_toxic"]
+[ext_resource type="PackedScene" path="res://scripts/interactables/ArenaEnergyBeam.tscn" id="23_t8ssf"]
 [ext_resource type="PackedScene" path="res://shared/ui/HintsUI.tscn" id="25_hints"]
 [ext_resource type="Texture2D" uid="uid://8e747nrdy8o3" path="res://assets/background/background.png" id="200_bg"]
 [ext_resource type="Texture2D" uid="uid://cth56d60i0b22" path="res://assets/background/midground.png" id="201_mg"]
@@ -514,11 +515,14 @@ sources/0 = SubResource("TileSetAtlasSource_ind_wall")
 sources/1 = SubResource("TileSetAtlasSource_t8ssf")
 sources/2 = SubResource("TileSetAtlasSource_sfqu1")
 
-[node name="Level3" type="Node2D" unique_id=784246833 node_paths=PackedStringArray("boss")]
+[node name="Level3" type="Node2D" unique_id=784246833 node_paths=PackedStringArray("boss", "beam_left", "beam_right")]
 script = ExtResource("1_level3")
 boss = NodePath("BossSerpent")
+beam_left = NodePath("ArenaBeams/BeamLeft")
+beam_right = NodePath("ArenaBeams/BeamRight")
 
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=2019324121]
+visible = false
 color = Color(0, 0, 0, 1)
 
 [node name="Background" type="ColorRect" parent="." unique_id=120229441]
@@ -695,3 +699,12 @@ radius = 100.0
 
 [node name="BossSerpent" parent="." unique_id=2051322997 instance=ExtResource("22_p5b22")]
 position = Vector2(942, 732)
+arena_center = Vector2(942, 732)
+
+[node name="ArenaBeams" type="Node2D" parent="." unique_id=970615910]
+
+[node name="BeamLeft" parent="ArenaBeams" unique_id=585160572 instance=ExtResource("23_t8ssf")]
+position = Vector2(692, 732)
+
+[node name="BeamRight" parent="ArenaBeams" unique_id=1636787210 instance=ExtResource("23_t8ssf")]
+position = Vector2(1192, 732)

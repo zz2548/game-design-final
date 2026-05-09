@@ -116,12 +116,14 @@ func _build_ui() -> void:
 	_panel = PanelContainer.new()
 	_panel.name = "Panel"
 
-	_panel.set_anchor_and_offset(SIDE_LEFT,   0.5,  0.0)
-	_panel.set_anchor_and_offset(SIDE_RIGHT,  0.5,  0.0)
-	_panel.set_anchor_and_offset(SIDE_TOP,    0.0, 10.0)
-	_panel.set_anchor_and_offset(SIDE_BOTTOM, 0.0, 10.0)
-	_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_panel.custom_minimum_size = Vector2(220, 0)
+	_panel.anchor_left   = 0.5
+	_panel.anchor_right  = 0.5
+	_panel.anchor_top    = 0.0
+	_panel.anchor_bottom = 0.0
+	_panel.offset_left   = -110.0
+	_panel.offset_right  = 110.0
+	_panel.offset_top    = 10.0
+	_panel.grow_vertical = Control.GROW_DIRECTION_END
 
 	var panel_style := StyleBoxFlat.new()
 	panel_style.bg_color     = Color(0.06, 0.12, 0.18, 0.88)

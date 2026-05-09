@@ -20,7 +20,11 @@ func _ready() -> void:
 func _build_bubbles() -> void:
 	_bubbles = CPUParticles2D.new()
 	_bubbles.amount = 100
-	_bubbles.lifetime = 4.0
+	# Compute lifetime so the fastest particle (80 px/s + gravity 90) travels
+	# no farther than column_height, keeping visuals inside the collision zone.
+	# Solve: 80t + 45t² = column_height  →  t = (-80 + sqrt(6400 + 180*column_height)) / 90
+	var _lifetime := (-80.0 + sqrt(6400.0 + 180.0 * column_height)) / 90.0
+	_bubbles.lifetime = _lifetime
 	_bubbles.explosiveness = 0.0
 	_bubbles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
 	_bubbles.emission_rect_extents = Vector2(40.0, 2.0)

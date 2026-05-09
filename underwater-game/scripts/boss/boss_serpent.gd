@@ -27,6 +27,7 @@ extends CharacterBody2D
 signal died
 signal player_damaged(amount: int)
 signal phase_2_started
+signal window_consumed   ## Fired when the 30-HP damage cap is hit; beams must reset
 signal health_changed(current: int, maximum: int)
 signal vulnerability_changed(is_vulnerable: bool)
 signal became_visible
@@ -34,7 +35,7 @@ signal became_hidden
 
 # ── Exports ───────────────────────────────────────────────────────────────────
 @export var ai_enabled    : bool  = true
-@export var max_health    : int   = 30
+@export var max_health    : int   = 100
 @export var chase_speed   : float = 165.0
 @export var stun_duration : float = 0.15
 @export var attack_damage : int   = 1
@@ -44,6 +45,8 @@ signal became_hidden
 ## World-space centre of the boss arena. Set in the inspector to the middle of
 ## the room. The boss retreats here during PHASE_TRANSITION.
 @export var arena_center  : Vector2 = Vector2.ZERO
+## Radius from arena_center at which summoned minions spawn.
+@export var arena_radius  : float   = 500.0
 
 # ── Snake body ────────────────────────────────────────────────────────────────
 const NUM_SEGMENTS    : int   = 6
@@ -64,6 +67,9 @@ const SHOOT_BURST_SIZE       : int   = 3
 const SHOOT_BURST_DELAY      : float = 0.25
 const SLITHER_FREQ           : float = 2.2
 const SLITHER_AMPLITUDE      : float = 0.18
+
+# Per-vulnerability-window damage cap
+const VULN_DAMAGE_CAP : int = 30
 
 # Phase 2 homing ring
 const HOMING_COUNT         : int   = 8     # bullets spawned in a circle
@@ -90,6 +96,7 @@ enum State {
 	PHASE_TRANSITION,
 	HOMING_SHOOT_PREPARE,
 	HOMING_SHOOTING,
+	RESHIELD_MOVE,
 }
 var _state       : State = State.IDLE
 var _state_timer : float = 0.0
@@ -99,6 +106,7 @@ var _health      : int
 var _is_invulnerable   : bool  = true   # cleared by make_vulnerable()
 var _is_phase_2        : bool  = false
 var _phase_2_triggered : bool  = false  # guard against double-trigger
+var _summon_triggered  : bool  = false  # guard against double-summon
 var _invuln_pulse_t    : float = 0.0
 
 # Phase transition sub-stage: 0 = moving to centre, 1 = glowing at centre
@@ -106,14 +114,17 @@ var _trans_stage : int = 0
 
 # ── Runtime state ─────────────────────────────────────────────────────────────
 var _player_ref   : Node2D     = null
-var _bullet_scene : PackedScene
-var _homing_scene : PackedScene
+var _bullet_scene  : PackedScene
+var _homing_scene  : PackedScene
+var _minion_scene  : PackedScene
 var _ever_aggro   : bool = false
 
-var _attack_timer  : float = 2.5
-var _shoot_count   : int   = 0
-var _shoot_timer   : float = 0.0
-var _slither_timer : float = 0.0
+var _vuln_damage_in_window : int   = 0
+var _attack_timer          : float = 2.5
+var _shoot_count          : int   = 0
+var _shoot_timer          : float = 0.0
+var _slither_timer        : float = 0.0
+var _periodic_shoot_timer : float = 5.0
 
 # ── Wall navigation ───────────────────────────────────────────────────────────
 var _stuck_timer : float   = 0.0
@@ -140,6 +151,7 @@ func _ready() -> void:
 	_health        = max_health
 	_bullet_scene  = load("res://shared/Enemies/enemy_bullet.tscn")
 	_homing_scene  = load("res://scripts/boss/homing_bullet.tscn")
+	_minion_scene  = load("res://shared/Enemies/enemy_ranged.tscn")
 	_prev_sampled  = global_position
 	_position_history.append(global_position)
 
@@ -175,6 +187,7 @@ func make_vulnerable() -> void:
 	if not _is_invulnerable:
 		return
 	_is_invulnerable = false
+	_vuln_damage_in_window = 0
 	create_tween().tween_property(self, "modulate", Color.WHITE, 0.4)
 	emit_signal("vulnerability_changed", false)
 
@@ -240,6 +253,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_tick_invuln_pulse(delta)
+	_tick_periodic_shoot(delta)
 
 	match _state:
 		State.IDLE:                 _tick_idle(delta)
@@ -254,6 +268,7 @@ func _physics_process(delta: float) -> void:
 		State.PHASE_TRANSITION:     _tick_phase_transition(delta)
 		State.HOMING_SHOOT_PREPARE: _tick_homing_shoot_prepare(delta)
 		State.HOMING_SHOOTING:      _tick_homing_shooting(delta)
+		State.RESHIELD_MOVE:        _tick_reshield_move(delta)
 
 	move_and_slide()
 	_update_history()
@@ -273,6 +288,18 @@ func _tick_invuln_pulse(delta: float) -> void:
 	_invuln_pulse_t += delta
 	var p := 0.12 * sin(_invuln_pulse_t * 4.5)
 	modulate = Color(0.45 + p, 0.75 + p, 1.4 + p * 0.5)
+
+
+func _tick_periodic_shoot(delta: float) -> void:
+	_periodic_shoot_timer -= delta
+	if _periodic_shoot_timer > 0.0:
+		return
+	const INTERRUPTIBLE := [State.IDLE, State.ALERT, State.CHASE, State.BACKING_OFF, State.STUNNED]
+	if _state not in INTERRUPTIBLE or not _ever_aggro or not is_instance_valid(_player_ref):
+		_periodic_shoot_timer = 0.5  # retry soon
+		return
+	_periodic_shoot_timer = 5.0
+	_enter_state(State.HOMING_SHOOT_PREPARE if _is_phase_2 else State.SHOOT_PREPARE)
 
 
 # ── State ticks ───────────────────────────────────────────────────────────────
@@ -418,6 +445,17 @@ func _tick_homing_shooting(delta: float) -> void:
 		_enter_state(State.CHASE)
 
 
+func _tick_reshield_move(delta: float) -> void:
+	var to_centre := arena_center - global_position
+	if to_centre.length() > PHASE_TRANS_ARRIVE_DIST:
+		velocity = velocity.move_toward(
+				to_centre.normalized() * PHASE_TRANS_MOVE_SPEED, 1800.0 * delta)
+	else:
+		velocity           = Vector2.ZERO
+		global_position    = arena_center
+		_enter_state(State.CHASE)
+
+
 # ── Phase transition helpers ──────────────────────────────────────────────────
 
 func _start_glow_tween() -> void:
@@ -492,6 +530,9 @@ func _enter_state(new_state: State) -> void:
 			_state_timer = HOMING_LOCK_DURATION + 0.5
 			_spawn_homing_ring()
 
+		State.RESHIELD_MOVE:
+			_head_sprite.play("idle")
+
 
 # ── Detection / hit callbacks ─────────────────────────────────────────────────
 
@@ -561,24 +602,43 @@ func _flash_shield() -> void:
 func _take_damage(amount: int) -> void:
 	_hit_sound.play()
 	_health -= amount
+	_vuln_damage_in_window += amount
 	emit_signal("health_changed", maxi(_health, 0), max_health)
 
-	# Phase 2 trigger at 50% HP — clamp health so transition always fires exactly here
-	if not _phase_2_triggered and _health <= max_health / 2:
+	# Phase 2 trigger at 70 HP — clamp so transition always fires exactly here
+	if not _phase_2_triggered and _health <= 70:
 		_phase_2_triggered = true
-		_health = max_health / 2
+		_health = 70
 		_enter_state(State.PHASE_TRANSITION)
 		return
 
+	# Summon allies at 40 HP
+	if not _summon_triggered and _health <= 40:
+		_summon_triggered = true
+		_spawn_minions(5)
+
 	if _health <= 0:
 		_die()
+		return
+
+	# Re-shield once the 30-HP window is consumed; clamp excess damage
+	if _vuln_damage_in_window >= VULN_DAMAGE_CAP:
+		var excess := _vuln_damage_in_window - VULN_DAMAGE_CAP
+		_health               += excess
+		_vuln_damage_in_window = VULN_DAMAGE_CAP
+		emit_signal("health_changed", maxi(_health, 0), max_health)
+		_is_invulnerable = true
+		_apply_invuln_tint()
+		emit_signal("window_consumed")
+		emit_signal("vulnerability_changed", true)
+		_enter_state(State.RESHIELD_MOVE)
 		return
 
 	var orig := modulate
 	modulate = Color(1.6, 1.6, 1.6)
 	create_tween().tween_property(self, "modulate", orig, 0.2)
 
-	if _state not in [State.STUNNED, State.MELEE_CHARGE, State.PHASE_TRANSITION]:
+	if _state not in [State.STUNNED, State.MELEE_CHARGE, State.PHASE_TRANSITION, State.RESHIELD_MOVE]:
 		_enter_state(State.STUNNED)
 
 	if _player_ref == null:
@@ -649,6 +709,25 @@ func _spawn_homing_ring() -> void:
 		b.global_position = global_position + offset
 		b.lock_duration   = HOMING_LOCK_DURATION
 		b.damage          = 1
+
+
+func _spawn_minions(count: int) -> void:
+	if _minion_scene == null:
+		return
+	var scene_root   := get_tree().current_scene
+	var player       := get_tree().get_first_node_in_group("player") as Node2D
+	var origin       := arena_center if arena_center != Vector2.ZERO else global_position
+	var angle_step   := TAU / count
+	var angle_offset := randf() * TAU
+	for i in count:
+		var angle := angle_offset + angle_step * i
+		var m     := _minion_scene.instantiate()
+		scene_root.add_child(m)
+		m.global_position = origin + Vector2(cos(angle), sin(angle)) * arena_radius
+		# Force-aggro so minions attack immediately without waiting for detection
+		if is_instance_valid(player):
+			m.set("_player_ref", player)
+			m.call("_enter_state", Enemy.State.CHASE)
 
 
 # ── Wall navigation ───────────────────────────────────────────────────────────
