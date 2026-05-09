@@ -5,14 +5,32 @@
 # (sprites 2–7) are Node2D children whose positions are driven by a
 # position-history trail recorded from the head every physics frame.
 #
+# ── Phase overview ────────────────────────────────────────────────────────────
+#   Phase 1  Boss starts invulnerable. Player activates both ArenaEnergyBeams
+#            in level_3 → level calls make_vulnerable() → boss takes damage.
+#            At 50% HP the PHASE_TRANSITION state fires.
+#
+#   Transition  Boss returns to arena_center, glows blue, becomes invulnerable.
+#               Emits phase_2_started → level_3 resets the beams.
+#
+#   Phase 2  Player must activate both beams again. Now the ranged attack fires
+#            a ring of homing bullets that lock onto the player then travel
+#            straight (dodgeable by moving after the lock).
+#
 # Signal contract required by level_3.gd:
-#   signal died  — emitted the moment health hits zero (before queue_free)
+#   signal died            — emitted the moment health hits zero (before queue_free)
+#   signal phase_2_started — emitted when transition completes; level resets beams
 
 class_name BossSerpent
 extends CharacterBody2D
 
 signal died
 signal player_damaged(amount: int)
+signal phase_2_started
+signal health_changed(current: int, maximum: int)
+signal vulnerability_changed(is_vulnerable: bool)
+signal became_visible
+signal became_hidden
 
 # ── Exports ───────────────────────────────────────────────────────────────────
 @export var ai_enabled    : bool  = true
@@ -20,14 +38,18 @@ signal player_damaged(amount: int)
 @export var chase_speed   : float = 165.0
 @export var stun_duration : float = 0.15
 @export var attack_damage : int   = 1
-@export var head_hit_dmg  : int   = 1   # bullet hits head  → 1 HP lost
-@export var body_hit_dmg  : int   = 2   # bullet hits body  → 2 HP lost
+@export var head_hit_dmg  : int   = 1
+@export var body_hit_dmg  : int   = 2
+
+## World-space centre of the boss arena. Set in the inspector to the middle of
+## the room. The boss retreats here during PHASE_TRANSITION.
+@export var arena_center  : Vector2 = Vector2.ZERO
 
 # ── Snake body ────────────────────────────────────────────────────────────────
-const NUM_SEGMENTS    : int   = 6      # sprites 2–7
-const SEGMENT_SPACING : float = 40.0   # pixels between adjacent segment centres
-const SAMPLE_DIST     : float = 2.0    # record a history point every N pixels moved
-const MAX_HISTORY     : int   = 200    # SEGMENT_SPACING * NUM_SEGMENTS / SAMPLE_DIST = 120; 200 gives margin
+const NUM_SEGMENTS    : int   = 6
+const SEGMENT_SPACING : float = 40.0
+const SAMPLE_DIST     : float = 2.0
+const MAX_HISTORY     : int   = 200
 
 # ── Attack tuning ─────────────────────────────────────────────────────────────
 const MELEE_TRIGGER_DIST     : float = 90.0
@@ -40,8 +62,19 @@ const SHOOT_RANGE            : float = 300.0
 const SHOOT_PREPARE_DURATION : float = 1.0
 const SHOOT_BURST_SIZE       : int   = 3
 const SHOOT_BURST_DELAY      : float = 0.25
-const SLITHER_FREQ           : float = 2.2   # Hz
-const SLITHER_AMPLITUDE      : float = 0.18  # perpendicular speed multiplier
+const SLITHER_FREQ           : float = 2.2
+const SLITHER_AMPLITUDE      : float = 0.18
+
+# Phase 2 homing ring
+const HOMING_COUNT         : int   = 8     # bullets spawned in a circle
+const HOMING_PREPARE_DUR   : float = 1.2   # wind-up before ring fires
+const HOMING_LOCK_DURATION : float = 0.9   # seconds each bullet tracks before going straight
+const HOMING_SPAWN_RADIUS  : float = 55.0  # radius of the spawn circle around head
+
+# Phase transition
+const PHASE_TRANS_MOVE_SPEED  : float = 220.0
+const PHASE_TRANS_ARRIVE_DIST : float = 18.0
+const PHASE_TRANS_GLOW_DUR    : float = 2.2
 
 # ── State machine ─────────────────────────────────────────────────────────────
 enum State {
@@ -54,15 +87,28 @@ enum State {
 	SHOOT_PREPARE,
 	SHOOTING,
 	STUNNED,
+	PHASE_TRANSITION,
+	HOMING_SHOOT_PREPARE,
+	HOMING_SHOOTING,
 }
 var _state       : State = State.IDLE
 var _state_timer : float = 0.0
 var _health      : int
 
+# ── Phase / invulnerability ───────────────────────────────────────────────────
+var _is_invulnerable   : bool  = true   # cleared by make_vulnerable()
+var _is_phase_2        : bool  = false
+var _phase_2_triggered : bool  = false  # guard against double-trigger
+var _invuln_pulse_t    : float = 0.0
+
+# Phase transition sub-stage: 0 = moving to centre, 1 = glowing at centre
+var _trans_stage : int = 0
+
 # ── Runtime state ─────────────────────────────────────────────────────────────
 var _player_ref   : Node2D     = null
 var _bullet_scene : PackedScene
-var _ever_aggro   : bool = false  # once true, never returns to IDLE due to range
+var _homing_scene : PackedScene
+var _ever_aggro   : bool = false
 
 var _attack_timer  : float = 2.5
 var _shoot_count   : int   = 0
@@ -91,9 +137,10 @@ var _sample_accum     : float          = 0.0
 
 # ─────────────────────────────────────────────────────────────────────────────
 func _ready() -> void:
-	_health       = max_health
-	_bullet_scene = load("res://shared/Enemies/enemy_bullet.tscn")
-	_prev_sampled = global_position
+	_health        = max_health
+	_bullet_scene  = load("res://shared/Enemies/enemy_bullet.tscn")
+	_homing_scene  = load("res://scripts/boss/homing_bullet.tscn")
+	_prev_sampled  = global_position
 	_position_history.append(global_position)
 
 	_hit_sound.stream  = load("res://assets/sounds/hit.mp3")
@@ -108,6 +155,28 @@ func _ready() -> void:
 	_head_bhz.area_entered.connect(_on_head_bullet_hit)
 
 	_alert_label.hide()
+	_apply_invuln_tint()
+
+	# Screen-presence notifier so the HUD can show/hide with the boss
+	var notifier := VisibleOnScreenNotifier2D.new()
+	notifier.rect = Rect2(-220, -220, 440, 440)
+	add_child(notifier)
+	notifier.screen_entered.connect(func(): became_visible.emit())
+	notifier.screen_exited.connect(func(): became_hidden.emit())
+
+	emit_signal("health_changed", _health, max_health)
+	emit_signal("vulnerability_changed", _is_invulnerable)
+
+
+# ── Public API ────────────────────────────────────────────────────────────────
+
+## Called by level_3.gd when both ArenaEnergyBeams are simultaneously primed.
+func make_vulnerable() -> void:
+	if not _is_invulnerable:
+		return
+	_is_invulnerable = false
+	create_tween().tween_property(self, "modulate", Color.WHITE, 0.4)
+	emit_signal("vulnerability_changed", false)
 
 
 # ── Sprite setup ──────────────────────────────────────────────────────────────
@@ -116,7 +185,6 @@ func _setup_head_sprite() -> void:
 	var tex : Texture2D = load("res://assets/enemies/boss/1.png")
 	var frames := SpriteFrames.new()
 
-	# "idle" — frame 0 (mouth closed). Used for all non-attack states.
 	frames.add_animation("idle")
 	frames.set_animation_loop("idle", true)
 	frames.set_animation_speed("idle", 4.0)
@@ -125,7 +193,6 @@ func _setup_head_sprite() -> void:
 	a0.region = Rect2(0, 0, 96, 96)
 	frames.add_frame("idle", a0)
 
-	# "mouth" — frames 1–3 (mouth opening/open). Played before melee and ranged attacks.
 	frames.add_animation("mouth")
 	frames.set_animation_loop("mouth", false)
 	frames.set_animation_speed("mouth", 10.0)
@@ -136,7 +203,7 @@ func _setup_head_sprite() -> void:
 		frames.add_frame("mouth", a)
 
 	_head_sprite.sprite_frames = frames
-	_head_sprite.z_index = 1  # render on top of body segments
+	_head_sprite.z_index = 1
 	_head_sprite.play("idle")
 	_head_sprite.animation_finished.connect(_on_head_anim_finished)
 
@@ -151,14 +218,11 @@ func _setup_body_segments() -> void:
 		spr.texture = load("res://assets/enemies/boss/%d.png" % (i + 2))
 		seg.add_child(spr)
 
-		# Each segment can be hit by player bullets.
-		# Layer 0 so zones don't detect each other when stacked at spawn.
 		var bhz    := Area2D.new()
 		bhz.collision_layer = 0
 		bhz.collision_mask  = 4
 		var cs     := CollisionShape2D.new()
 		var circle := CircleShape2D.new()
-		# Segments taper toward the tail — slightly shrink the hit radius
 		circle.radius = maxf(14.0, 22.0 - float(i) * 1.4)
 		cs.shape = circle
 		bhz.add_child(cs)
@@ -175,21 +239,40 @@ func _physics_process(delta: float) -> void:
 	if not ai_enabled:
 		return
 
+	_tick_invuln_pulse(delta)
+
 	match _state:
-		State.IDLE:          _tick_idle(delta)
-		State.ALERT:         _tick_alert(delta)
-		State.CHASE:         _tick_chase(delta)
-		State.MELEE_WIND_UP: _tick_melee_wind_up(delta)
-		State.MELEE_CHARGE:  _tick_melee_charge(delta)
-		State.BACKING_OFF:   _tick_backing_off(delta)
-		State.SHOOT_PREPARE: _tick_shoot_prepare(delta)
-		State.SHOOTING:      _tick_shooting(delta)
-		State.STUNNED:       _tick_stunned(delta)
+		State.IDLE:                 _tick_idle(delta)
+		State.ALERT:                _tick_alert(delta)
+		State.CHASE:                _tick_chase(delta)
+		State.MELEE_WIND_UP:        _tick_melee_wind_up(delta)
+		State.MELEE_CHARGE:         _tick_melee_charge(delta)
+		State.BACKING_OFF:          _tick_backing_off(delta)
+		State.SHOOT_PREPARE:        _tick_shoot_prepare(delta)
+		State.SHOOTING:             _tick_shooting(delta)
+		State.STUNNED:              _tick_stunned(delta)
+		State.PHASE_TRANSITION:     _tick_phase_transition(delta)
+		State.HOMING_SHOOT_PREPARE: _tick_homing_shoot_prepare(delta)
+		State.HOMING_SHOOTING:      _tick_homing_shooting(delta)
 
 	move_and_slide()
 	_update_history()
 	_update_body_positions()
 	_update_head_rotation()
+
+
+# ── Invulnerability visual ────────────────────────────────────────────────────
+
+func _apply_invuln_tint() -> void:
+	modulate = Color(0.45, 0.75, 1.4)
+
+
+func _tick_invuln_pulse(delta: float) -> void:
+	if not _is_invulnerable or _state == State.PHASE_TRANSITION:
+		return
+	_invuln_pulse_t += delta
+	var p := 0.12 * sin(_invuln_pulse_t * 4.5)
+	modulate = Color(0.45 + p, 0.75 + p, 1.4 + p * 0.5)
 
 
 # ── State ticks ───────────────────────────────────────────────────────────────
@@ -207,7 +290,6 @@ func _tick_alert(delta: float) -> void:
 
 
 func _tick_chase(delta: float) -> void:
-	# Re-acquire player from scene tree if reference went stale
 	if not is_instance_valid(_player_ref):
 		_player_ref = get_tree().get_first_node_in_group("player") as Node2D
 		if _player_ref == null:
@@ -219,10 +301,10 @@ func _tick_chase(delta: float) -> void:
 	var dist      := to_player.length()
 
 	if dist > 0.1:
-		var desired := to_player / dist
-		var steered := _get_steered_dir(desired)
-		var perp    := Vector2(-steered.y, steered.x)
-		var wiggle  := sin(_slither_timer * SLITHER_FREQ * TAU) * SLITHER_AMPLITUDE
+		var desired  := to_player / dist
+		var steered  := _get_steered_dir(desired)
+		var perp     := Vector2(-steered.y, steered.x)
+		var wiggle   := sin(_slither_timer * SLITHER_FREQ * TAU) * SLITHER_AMPLITUDE
 		var move_dir := (steered + perp * wiggle + _stuck_boost).normalized()
 		velocity = velocity.move_toward(move_dir * chase_speed, 900.0 * delta)
 	else:
@@ -237,7 +319,7 @@ func _tick_chase(delta: float) -> void:
 	_attack_timer -= delta
 	if _attack_timer <= 0.0 and dist <= SHOOT_RANGE:
 		_attack_timer = randf_range(3.5, 6.0)
-		_enter_state(State.SHOOT_PREPARE)
+		_enter_state(State.HOMING_SHOOT_PREPARE if _is_phase_2 else State.SHOOT_PREPARE)
 
 
 func _tick_melee_wind_up(delta: float) -> void:
@@ -289,7 +371,6 @@ func _tick_shooting(delta: float) -> void:
 			_shoot_timer = SHOOT_BURST_DELAY
 		return
 
-	# All shots fired — resume chasing
 	_head_sprite.play("idle")
 	_enter_state(State.CHASE)
 
@@ -299,6 +380,58 @@ func _tick_stunned(delta: float) -> void:
 	_state_timer -= delta
 	if _state_timer <= 0.0:
 		_enter_state(State.CHASE if is_instance_valid(_player_ref) else State.IDLE)
+
+
+func _tick_phase_transition(delta: float) -> void:
+	if _trans_stage == 0:
+		# Move toward arena centre
+		var to_centre := arena_center - global_position
+		if to_centre.length() > PHASE_TRANS_ARRIVE_DIST:
+			velocity = velocity.move_toward(
+					to_centre.normalized() * PHASE_TRANS_MOVE_SPEED, 1800.0 * delta)
+		else:
+			velocity           = Vector2.ZERO
+			global_position    = arena_center
+			_trans_stage       = 1
+			_state_timer       = PHASE_TRANS_GLOW_DUR
+			_start_glow_tween()
+	else:
+		# Glow at centre
+		velocity = Vector2.ZERO
+		_state_timer -= delta
+		if _state_timer <= 0.0:
+			_finish_phase_transition()
+
+
+func _tick_homing_shoot_prepare(delta: float) -> void:
+	velocity = velocity.move_toward(Vector2.ZERO, 1400.0 * delta)
+	_state_timer -= delta
+	if _state_timer <= 0.0:
+		_enter_state(State.HOMING_SHOOTING)
+
+
+func _tick_homing_shooting(delta: float) -> void:
+	velocity = velocity.move_toward(Vector2.ZERO, 600.0 * delta)
+	_state_timer -= delta
+	if _state_timer <= 0.0:
+		_head_sprite.play("idle")
+		_enter_state(State.CHASE)
+
+
+# ── Phase transition helpers ──────────────────────────────────────────────────
+
+func _start_glow_tween() -> void:
+	var tw := create_tween().set_loops()
+	tw.tween_property(self, "modulate", Color(0.5, 0.85, 2.0), 0.4)
+	tw.tween_property(self, "modulate", Color(0.2, 0.55, 1.5), 0.4)
+
+
+func _finish_phase_transition() -> void:
+	_apply_invuln_tint()
+	_is_phase_2    = true
+	_attack_timer  = randf_range(1.5, 3.0)
+	emit_signal("phase_2_started")
+	_enter_state(State.CHASE)
 
 
 # ── State transitions ─────────────────────────────────────────────────────────
@@ -326,7 +459,6 @@ func _enter_state(new_state: State) -> void:
 
 		State.MELEE_CHARGE:
 			_state_timer = CHARGE_DURATION
-			# Keep mouth open (hold last frame of "mouth" animation)
 
 		State.BACKING_OFF:
 			_state_timer = BACK_OFF_DURATION
@@ -339,11 +471,26 @@ func _enter_state(new_state: State) -> void:
 		State.SHOOTING:
 			_shoot_count = SHOOT_BURST_SIZE - 1
 			_shoot_timer = SHOOT_BURST_DELAY
-			_fire_bullet()  # First shot immediately
+			_fire_bullet()
 
 		State.STUNNED:
 			_state_timer = stun_duration
 			_head_sprite.play("idle")
+
+		State.PHASE_TRANSITION:
+			_trans_stage     = 0
+			_is_invulnerable = true
+			_apply_invuln_tint()
+			emit_signal("vulnerability_changed", true)
+
+		State.HOMING_SHOOT_PREPARE:
+			_state_timer = HOMING_PREPARE_DUR
+			_head_sprite.play("mouth")
+
+		State.HOMING_SHOOTING:
+			# Linger long enough for bullets to complete their lock and travel
+			_state_timer = HOMING_LOCK_DURATION + 0.5
+			_spawn_homing_ring()
 
 
 # ── Detection / hit callbacks ─────────────────────────────────────────────────
@@ -358,7 +505,6 @@ func _on_detection_body_entered(body: Node2D) -> void:
 
 
 func _on_detection_body_exited(body: Node2D) -> void:
-	# Once the serpent has spotted the player it never loses track.
 	if body == _player_ref and not _ever_aggro:
 		_enter_state(State.IDLE)
 
@@ -375,35 +521,55 @@ func _on_head_bullet_hit(area: Area2D) -> void:
 	var bullet := area.get_parent()
 	if not is_instance_valid(bullet):
 		return
+	if _is_invulnerable:
+		bullet.queue_free()
+		_flash_shield()
+		return
 	_take_damage(head_hit_dmg)
 	bullet.queue_free()
 
 
-# Called by each body-segment BulletHitZone; _seg_index unused for now but
-# available for future per-segment behaviour.
 func _on_body_bullet_hit(area: Area2D, _seg_index: int) -> void:
 	var bullet := area.get_parent()
 	if not is_instance_valid(bullet):
+		return
+	if _is_invulnerable:
+		bullet.queue_free()
+		_flash_shield()
 		return
 	_take_damage(body_hit_dmg)
 	bullet.queue_free()
 
 
 func _on_head_anim_finished() -> void:
-	# "mouth" animation holds its last frame — only auto-return to idle when
-	# the boss is not in a state that needs the open mouth.
 	if _state not in [
 		State.MELEE_WIND_UP, State.MELEE_CHARGE,
-		State.SHOOT_PREPARE, State.SHOOTING
+		State.SHOOT_PREPARE, State.SHOOTING,
+		State.HOMING_SHOOT_PREPARE, State.HOMING_SHOOTING,
 	]:
 		_head_sprite.play("idle")
 
 
 # ── Damage / death ────────────────────────────────────────────────────────────
 
+func _flash_shield() -> void:
+	var orig := modulate
+	modulate = Color(1.8, 1.8, 2.2)
+	create_tween().tween_property(self, "modulate", orig, 0.15)
+
+
 func _take_damage(amount: int) -> void:
 	_hit_sound.play()
 	_health -= amount
+	emit_signal("health_changed", maxi(_health, 0), max_health)
+
+	# Phase 2 trigger at 50% HP — clamp health so transition always fires exactly here
+	if not _phase_2_triggered and _health <= max_health / 2:
+		_phase_2_triggered = true
+		_health = max_health / 2
+		_enter_state(State.PHASE_TRANSITION)
+		return
+
 	if _health <= 0:
 		_die()
 		return
@@ -412,8 +578,7 @@ func _take_damage(amount: int) -> void:
 	modulate = Color(1.6, 1.6, 1.6)
 	create_tween().tween_property(self, "modulate", orig, 0.2)
 
-	# Stun interrupts most states, but not an active charge
-	if _state not in [State.STUNNED, State.MELEE_CHARGE]:
+	if _state not in [State.STUNNED, State.MELEE_CHARGE, State.PHASE_TRANSITION]:
 		_enter_state(State.STUNNED)
 
 	if _player_ref == null:
@@ -421,11 +586,9 @@ func _take_damage(amount: int) -> void:
 
 
 func _die() -> void:
-	# Detach BossBodyInteractable before freeing the boss so the level script
-	# can enable it for the post-boss story sequence.
 	var bbi := get_node_or_null("BossBodyInteractable")
 	if is_instance_valid(bbi):
-		bbi.reparent(get_parent(), true)  # keep_global_transform = true
+		bbi.reparent(get_parent(), true)
 
 	_spawn_death_vfx()
 
@@ -458,7 +621,7 @@ func _spawn_death_vfx() -> void:
 	anim.play("death")
 
 
-# ── Projectile ────────────────────────────────────────────────────────────────
+# ── Projectiles ───────────────────────────────────────────────────────────────
 
 func _fire_bullet() -> void:
 	if _bullet_scene == null or not is_instance_valid(_player_ref):
@@ -474,10 +637,22 @@ func _fire_bullet() -> void:
 	create_tween().tween_property(self, "modulate", orig, 0.12)
 
 
+func _spawn_homing_ring() -> void:
+	if _homing_scene == null:
+		return
+	_fire_sound.play()
+	for i in HOMING_COUNT:
+		var angle  := (TAU / HOMING_COUNT) * i
+		var offset := Vector2(cos(angle), sin(angle)) * HOMING_SPAWN_RADIUS
+		var b      := _homing_scene.instantiate()
+		get_tree().current_scene.add_child(b)
+		b.global_position = global_position + offset
+		b.lock_duration   = HOMING_LOCK_DURATION
+		b.damage          = 1
+
+
 # ── Wall navigation ───────────────────────────────────────────────────────────
 
-# Cast 5 rays (0°, ±35°, ±70° from desired direction) and pick the one with
-# the best clearance, penalising directions far from the goal.
 func _get_steered_dir(desired: Vector2) -> Vector2:
 	var space := get_world_2d().direct_space_state
 	var rid   := get_rid()
@@ -502,8 +677,6 @@ func _get_steered_dir(desired: Vector2) -> Vector2:
 	return best_dir
 
 
-# When the serpent is barely moving despite trying to chase, build up a random
-# sideways boost so it can slide out of corners.
 func _tick_stuck(delta: float) -> void:
 	if velocity.length() < chase_speed * 0.22:
 		_stuck_timer += delta
@@ -519,8 +692,6 @@ func _tick_stuck(delta: float) -> void:
 # ── Snake body ────────────────────────────────────────────────────────────────
 
 func _update_history() -> void:
-	# Record a sample every SAMPLE_DIST pixels moved, using an accumulator so
-	# fast frames don't skip samples and slow frames don't record duplicates.
 	var d := global_position.distance_to(_prev_sampled)
 	_sample_accum  += d
 	_prev_sampled   = global_position
@@ -536,15 +707,6 @@ func _update_body_positions() -> void:
 	if hist_len == 0:
 		return
 
-	# Use _sample_accum (distance moved since last push_front) to interpolate
-	# between adjacent history samples. This gives sub-pixel smooth following
-	# instead of the visible discrete "stepping" of a plain index lookup.
-	#
-	# For a segment that should trail target_dist pixels behind the live head:
-	#   float_idx = (target_dist - _sample_accum) / SAMPLE_DIST
-	# history[0] is newest; float_idx is always positive since target_dist >> _sample_accum.
-
-	# Collect smooth world-space positions: slot 0 = head, slots 1..N = segments.
 	var world_pos : Array[Vector2] = []
 	world_pos.resize(_segments.size() + 1)
 	world_pos[0] = global_position
@@ -553,13 +715,12 @@ func _update_body_positions() -> void:
 		var target_dist := SEGMENT_SPACING * float(seg_i + 1)
 		var float_idx   := (target_dist - _sample_accum) / SAMPLE_DIST
 		var base        := int(float_idx)
-		var t           := float_idx - float(base)  # fractional part [0, 1)
+		var t           := float_idx - float(base)
 
 		var p0 := _position_history[base]     if base     < hist_len else _position_history[0]
 		var p1 := _position_history[base + 1] if base + 1 < hist_len else p0
 		world_pos[seg_i + 1] = p0.lerp(p1, t)
 
-	# Apply positions and rotations together so each segment faces the one ahead.
 	for seg_i in _segments.size():
 		_segments[seg_i].global_position = world_pos[seg_i + 1]
 		var ahead := world_pos[seg_i]
@@ -573,11 +734,8 @@ func _update_head_rotation() -> void:
 		return
 	var angle := velocity.angle()
 	if cos(angle) >= 0.0:
-		# Moving rightward: sprite faces down at rot=0, subtract PI/2 to face right.
 		_head_sprite.flip_v = false
 		_head_sprite.rotation = angle - PI / 2.0
 	else:
-		# Moving leftward: flip vertically so the head reads right-side-up,
-		# then add PI/2 to align the flipped sprite with the velocity direction.
 		_head_sprite.flip_v = true
 		_head_sprite.rotation = angle + PI / 2.0

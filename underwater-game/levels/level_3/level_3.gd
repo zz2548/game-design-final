@@ -11,21 +11,36 @@
 #
 #   3. In the Level3 scene, select this node (Level3) and assign:
 #        Boss          →  the boss node
-#        Boss Body     →  the BossBodyInteractable node inside the boss scene
+#        Beam Left     →  the ArenaEnergyBeam on the left side of the arena
+#        Beam Right    →  the ArenaEnergyBeam on the right side of the arena
 #
-#   4. Fill in the ## TODO: dialogue lines below.
+#   4. On the BossSerpent node set arena_center to the world-space centre of
+#      the arena room (the boss returns here during the phase transition).
 #
-#   5. Replace the win_screen transition at the bottom with your ending scene.
+#   5. Fill in the ## TODO: dialogue lines below.
+#
+#   6. Replace the win_screen transition at the bottom with your ending scene.
+#
+# ── Arena beam mechanic ───────────────────────────────────────────────────────
+#   The boss starts invulnerable. The player must activate both ArenaEnergyBeams
+#   (one on each side of the arena) to make the boss damageable.
+#   At 50% HP the boss retreats to the arena centre and re-shields. The beams
+#   reset and the player must activate them a second time to finish the fight.
 #
 # ── Testing without the boss ──────────────────────────────────────────────────
 #   Press F8 in a debug build to instantly trigger _on_boss_defeated().
+#   Press F7 in a debug build to instantly make the boss vulnerable (skip beams).
 # ─────────────────────────────────────────────────────────────────────────────
 
 extends Node2D
 
 # ── Boss references ───────────────────────────────────────────────────────────
-@export var boss : Node = null  ## Root node of the boss — must have `died` signal
-var boss_body    : BossBodyInteractable = null  ## Auto-fetched from boss node in _ready()
+@export var boss       : Node             = null  ## Must have `died` and `phase_2_started` signals
+@export var beam_left  : ArenaEnergyBeam  = null  ## Left-side energy beam interactable
+@export var beam_right : ArenaEnergyBeam  = null  ## Right-side energy beam interactable
+
+var boss_body : BossBodyInteractable = null  ## Auto-fetched from boss node in _ready()
+var _boss_hud : CanvasLayer          = null  ## Instantiated at runtime
 
 # ── Objective indices ─────────────────────────────────────────────────────────
 var _obj_hostiles : int
@@ -59,14 +74,24 @@ func _ready() -> void:
 	_obj_hostiles = ObjectiveManager.add_objective("Eliminate all hostiles")
 	_obj_boss     = ObjectiveManager.add_objective("Defeat the boss") ## TODO: rename
 
-	# ── Connect boss signal ───────────────────────────────────────────────────
+	# ── Connect boss signals ──────────────────────────────────────────────────
 	if boss != null and boss.has_signal("died"):
 		boss.died.connect(_on_boss_defeated)
 	elif boss == null:
 		push_warning("Level3: No boss assigned. Use F8 to test the ending.")
 
-	# Auto-fetch boss_body from inside the boss scene (avoids needing the user
-	# to manually navigate instanced-scene children in the inspector).
+	if boss != null and boss.has_signal("phase_2_started"):
+		boss.phase_2_started.connect(_on_boss_phase_2_started)
+
+	# ── Boss HUD ──────────────────────────────────────────────────────────────
+	if boss != null:
+		var hud_scene := load("res://shared/ui/BossHUD.tscn") as PackedScene
+		if hud_scene:
+			_boss_hud = hud_scene.instantiate()
+			add_child(_boss_hud)
+			_boss_hud.connect_boss(boss)
+
+	# Auto-fetch boss_body from inside the boss scene
 	if boss_body == null and boss != null:
 		boss_body = boss.get_node_or_null("BossBodyInteractable") as BossBodyInteractable
 
@@ -74,6 +99,16 @@ func _ready() -> void:
 	if boss_body != null:
 		boss_body.process_mode = Node.PROCESS_MODE_DISABLED
 		boss_body.visible      = false
+
+	# ── Wire up arena beams ───────────────────────────────────────────────────
+	if beam_left != null:
+		beam_left.beam_primed.connect(_on_beam_activated)
+	else:
+		push_warning("Level3: beam_left not assigned.")
+	if beam_right != null:
+		beam_right.beam_primed.connect(_on_beam_activated)
+	else:
+		push_warning("Level3: beam_right not assigned.")
 
 	# ── Enemy tracking ────────────────────────────────────────────────────────
 	var enemies : Array = []
@@ -84,14 +119,19 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# ── DEV SHORTCUT: simulate boss death (debug builds only) ─────────────────
-	if OS.is_debug_build() \
-			and event is InputEventKey \
-			and event.keycode == KEY_F8 \
-			and event.pressed \
-			and not event.echo:
-		push_warning("Level3 [DEV]: F8 pressed — simulating boss defeated.")
+	if not OS.is_debug_build():
+		return
+	if not event is InputEventKey or not event.pressed or event.echo:
+		return
+
+	if event.keycode == KEY_F8:
+		push_warning("Level3 [DEV]: F8 — simulating boss defeated.")
 		_on_boss_defeated()
+
+	if event.keycode == KEY_F7:
+		push_warning("Level3 [DEV]: F7 — making boss vulnerable (skipping beams).")
+		if boss != null and boss.has_method("make_vulnerable"):
+			boss.make_vulnerable()
 
 
 # ── Boss defeated ─────────────────────────────────────────────────────────────
@@ -146,6 +186,25 @@ func _on_boss_examined() -> void:
 func _finish_ending() -> void:
 	## TODO: Replace with your actual ending scene (credits, epilogue, etc.)
 	get_tree().change_scene_to_file("res://cutscene/win_screen.tscn")
+
+
+# ── Arena beam coordination ───────────────────────────────────────────────────
+
+func _on_beam_activated() -> void:
+	if boss == null or not boss.has_method("make_vulnerable"):
+		return
+	var left_on  := beam_left  != null and beam_left.is_primed()
+	var right_on := beam_right != null and beam_right.is_primed()
+	if left_on and right_on:
+		boss.make_vulnerable()
+
+
+## Called when the boss emits phase_2_started — resets beams for round 2.
+func _on_boss_phase_2_started() -> void:
+	if beam_left != null:
+		beam_left.reset()
+	if beam_right != null:
+		beam_right.reset()
 
 
 # ── Enemy tracking ────────────────────────────────────────────────────────────

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://boss_hud_01"]
+
+[ext_resource type="Script" path="res://shared/ui/boss_hud.gd" id="1_bosshud"]
+
+[node name="BossHUD" type="CanvasLayer"]
+script = ExtResource("1_bosshud")
