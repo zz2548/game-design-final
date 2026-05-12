@@ -49,6 +49,7 @@ var _card_skip : bool = false
 
 
 func _ready() -> void:
+	MusicManager.play(["res://assets/sounds/ambient_l1.mp3"], -4.0)
 	_S = get_viewport().get_visible_rect().size
 	_cam_focus = _S * 0.5
 

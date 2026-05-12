@@ -30,6 +30,7 @@ var _auto_timer     : SceneTreeTimer = null
 # ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 func _ready() -> void:
+	MusicManager.play(["res://assets/sounds/ambient_l1.mp3"], -4.0)
 	_overlay.color = Color.BLACK
 	_overlay.color.a = 1.0
 	_prompt.modulate.a = 0.0
