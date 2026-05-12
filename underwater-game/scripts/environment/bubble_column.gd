@@ -19,20 +19,24 @@ func _ready() -> void:
 
 func _build_bubbles() -> void:
 	_bubbles = CPUParticles2D.new()
-	_bubbles.amount = 100
-	# Compute lifetime so the fastest particle (80 px/s + gravity 90) travels
-	# no farther than column_height, keeping visuals inside the collision zone.
-	# Solve: 80t + 45t² = column_height  →  t = (-80 + sqrt(6400 + 180*column_height)) / 90
-	var _lifetime := (-80.0 + sqrt(6400.0 + 180.0 * column_height)) / 90.0
-	_bubbles.lifetime = _lifetime
-	_bubbles.explosiveness = 0.0
-	_bubbles.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	# Containment guarantee: with gravity = 0, motion is purely linear.
+	# The fastest particle travels exactly  v_max * lifetime  pixels.
+	# Setting  lifetime = column_height / v_max  means it reaches the bottom
+	# edge and stops — it can never overshoot regardless of column_height.
+	# lifetime_randomness adds natural variation without breaking the bound
+	# (shorter-lived particles travel less, not more).
+	const V_MAX : float = 80.0
+	_bubbles.amount               = 80
+	_bubbles.lifetime             = column_height / V_MAX
+	_bubbles.lifetime_randomness  = 0.4
+	_bubbles.explosiveness        = 0.0
+	_bubbles.emission_shape       = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
 	_bubbles.emission_rect_extents = Vector2(40.0, 2.0)
-	_bubbles.gravity = Vector2(0.0, 90.0)
+	_bubbles.gravity              = Vector2.ZERO   # no gravity — guarantees containment
 	_bubbles.initial_velocity_min = 40.0
-	_bubbles.initial_velocity_max = 80.0
-	_bubbles.spread = 10.0
-	_bubbles.direction = Vector2(0.0, 1.0)
+	_bubbles.initial_velocity_max = V_MAX
+	_bubbles.spread               = 5.0
+	_bubbles.direction            = Vector2(0.0, 1.0)
 	_bubbles.scale_amount_min = 0.8
 	_bubbles.scale_amount_max = 2.2
 	_bubbles.color = Color(0.82, 0.96, 1.0, 0.75)
