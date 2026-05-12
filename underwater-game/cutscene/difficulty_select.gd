@@ -164,10 +164,10 @@ func _make_panel(label: String, lines: Array, col: Color) -> PanelContainer:
 # ── Selection highlight ───────────────────────────────────────────────────────
 
 func _refresh_selection() -> void:
-	var cols := [COL_EASY, COL_HARD]
+	var cols : Array[Color] = [COL_EASY, COL_HARD]
 	for i in _panels.size():
 		var style := _panels[i].get_theme_stylebox("panel") as StyleBoxFlat
-		var col   := cols[i]
+		var col : Color = cols[i]
 		if i == _selected:
 			style.bg_color = Color(col.r * 0.28, col.g * 0.28, col.b * 0.28, 1.0)
 			style.set_border_width_all(3)
