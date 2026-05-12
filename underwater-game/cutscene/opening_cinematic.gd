@@ -163,6 +163,11 @@ func _boom(pos: Vector2, sc: float, fps: float, big: bool) -> void:
 	snd.pitch_scale = randf_range(0.75, 1.1)
 	snd.finished.connect(snd.queue_free)
 	add_child(snd); snd.play()
+	var boom_snd := AudioStreamPlayer.new()
+	boom_snd.stream = load("res://assets/sounds/explosion.mp3")
+	boom_snd.volume_db = -14.0
+	boom_snd.finished.connect(boom_snd.queue_free)
+	add_child(boom_snd); boom_snd.play()
 
 
 func _make_fish(path: String, fc: int, fw: int, fh: int, sc: float) -> AnimatedSprite2D:

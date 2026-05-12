@@ -99,6 +99,13 @@ func _explode() -> void:
 	get_parent().add_child(snd)
 	snd.play()
 
+	var boom_snd := AudioStreamPlayer.new()
+	boom_snd.stream = load("res://assets/sounds/explosion.mp3")
+	boom_snd.volume_db = -12.0
+	boom_snd.finished.connect(boom_snd.queue_free)
+	get_parent().add_child(boom_snd)
+	boom_snd.play()
+
 	queue_free()
 
 

@@ -5,7 +5,8 @@
       "Bash(python3 *)",
       "Bash(python *)",
       "Bash(Get-ChildItem -Recurse)",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(git stash *)"
     ]
   }
 }
