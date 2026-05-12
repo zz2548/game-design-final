@@ -57,7 +57,6 @@ func _auto_advance() -> void:
 
 
 func _on_dialogue_ended() -> void:
-	_scrolling = false
 	var tween := create_tween()
 	tween.tween_property(_fade_rect, "modulate:a", 1.0, 1.5)
 	tween.tween_callback(func(): SceneManager.next_level())

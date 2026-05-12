@@ -8,8 +8,9 @@ enum Difficulty { EASY, HARD }
 ## Set from the difficulty select screen before the game begins.
 var difficulty : Difficulty = Difficulty.HARD
 
-var submarine_fixed     : bool   = false
-var death_return_scene  : String = ""   # set by player.gd before going to death screen
+var submarine_fixed        : bool   = false
+var death_return_scene     : String = ""   # set by player.gd before going to death screen
+var melee_tutorial_shown   : bool   = false
 
 # Persisted objective snapshots: Array of { "text": String, "completed": bool }
 var level_1_objectives  : Array  = []

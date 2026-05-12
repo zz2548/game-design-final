@@ -82,6 +82,8 @@ signal weapon_changed(weapon_name: String)
 var _fire_timer        : float  = 0.0
 var _hurt_timer        : float  = 0.0   # counts down while hurt animation plays
 var _pre_dialogue_pos  : Vector2
+var movement_locked    : bool   = false
+var shooting_locked    : bool   = false
 
 var _fire_sound  : AudioStreamPlayer
 var _death_sound : AudioStreamPlayer
@@ -235,10 +237,13 @@ func enter_submarine_mode() -> void:
 # ── Physics (movement) ────────────────────────────────────────────────────────
 
 func _physics_process(delta: float) -> void:
-	var input_dir := Vector2(
+	var input_dir := Vector2.ZERO if movement_locked else Vector2(
 		Input.get_axis("move_left", "move_right"),
 		Input.get_axis("move_up", "move_down")
 	)
+
+	if movement_locked:
+		velocity = Vector2.ZERO
 
 	if submarine_mode:
 		# Heavy vessel: slow thrust build-up, long glide after engines cut
@@ -362,6 +367,8 @@ func equip_weapon(weapon: WeaponData) -> void:
 
 
 func _fire() -> void:
+	if shooting_locked:
+		return
 	# Block fire during active dialogue or while piloting the submarine
 	if DialogueManager.is_active or submarine_mode or current_weapon == null:
 		return

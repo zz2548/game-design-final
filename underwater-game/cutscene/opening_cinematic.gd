@@ -286,8 +286,17 @@ func _build_dbox(speaker: String, text: String, show_prompt: bool) -> Array:
 	return [panel, rtl, prompt]
 
 
+func _ping() -> void:
+	var snd := AudioStreamPlayer.new()
+	snd.stream = load("res://assets/sounds/ping.mp3")
+	snd.finished.connect(snd.queue_free)
+	add_child(snd)
+	snd.play()
+
+
 # Non-blocking — plays during the cinematic and auto-dismisses.
 func _dbox(speaker: String, text: String, duration: float) -> void:
+	_ping()
 	if is_instance_valid(_cur_dbox):
 		var old := _cur_dbox
 		create_tween().tween_property(old, "modulate:a", 0.0, 0.25).finished.connect(old.queue_free)
@@ -305,6 +314,7 @@ func _dbox(speaker: String, text: String, duration: float) -> void:
 
 # Blocking — waits for typewriter then E/auto-advance. Used on black-screen cards.
 func _card_dbox(speaker: String, text: String, hold: float) -> void:
+	_ping()
 	if is_instance_valid(_cur_dbox):
 		var old := _cur_dbox; _cur_dbox = null
 		create_tween().tween_property(old, "modulate:a", 0.0, 0.2).finished.connect(old.queue_free)
@@ -339,12 +349,12 @@ func _run() -> void:
 
 	# ── Cards 1–2 on black screen ─────────────────────────────────────────────
 	await _card_dbox("TRANSMISSION LOG",
-		"06:42:00 — Relay Station Kappa lost contact 72 hours prior.\nCause of blackout: undetermined. Corporate has dispatched a single operative for assessment.",
+		"06:42:00 — Relay Station Kappa lost contact 72 hours prior.\n\nCause of blackout: undetermined. Corporate has dispatched a single operative for assessment.",
 		2.2)
 	if _skip: _finish(); return
 
 	await _card_dbox("ORCA",
-		"09:17:33 — Tethys-7 en route to Station Kappa.\nStandard transit. No anomalies logged.",
+		"09:17:33 — Tethys-7 en route to Station Kappa.\n\nStandard transit. No anomalies logged.",
 		2.0)
 	if _skip: _finish(); return
 
@@ -441,15 +451,6 @@ func _run() -> void:
 	# ── Tension ───────────────────────────────────────────────────────────────
 	create_tween().tween_property(dark, "color:a", 0.65, 2.2)
 
-	var ts1 := Label.new()
-	ts1.text = "11:58:21"
-	ts1.position = Vector2(_S.x * 0.06, _S.y * 0.07)
-	ts1.modulate.a = 0.0
-	ts1.add_theme_color_override("font_color", Color(0.82, 0.8, 0.48))
-	ts1.add_theme_font_size_override("font_size", 20)
-	_ui.add_child(ts1)
-	create_tween().tween_property(ts1, "modulate:a", 1.0, 0.4)
-
 	# Fish start drifting erratically
 	for f in fish_nodes:
 		if not is_instance_valid(f): continue
@@ -461,7 +462,7 @@ func _run() -> void:
 	await _w(1.0)
 	if _skip: _finish(); return
 
-	_dbox("ORCA", "⚠  Anomalous reading. Bearing 0-4-7.", 3.5)
+	_dbox("ORCA", "Anomalous reading. Bearing 0-4-7.", 3.5)
 
 	# Sub wobble
 	var wobble := create_tween().set_loops()
@@ -469,19 +470,77 @@ func _run() -> void:
 	wobble.tween_property(_sub, "rotation", -0.06, 0.26)
 	_shake(3.0, 0.5)
 
-	# Warning HUD
-	var warn := Label.new()
-	warn.text = "⚠  UNIDENTIFIED CONTACT"
-	warn.position = Vector2(_S.x * 0.5 - 210, _S.y * 0.14)
-	warn.modulate.a = 0.0
-	warn.add_theme_color_override("font_color", Color(1.0, 0.18, 0.07))
-	warn.add_theme_font_size_override("font_size", 26)
-	_ui.add_child(warn)
-	var warn_pulse := create_tween().set_loops(8)
-	warn_pulse.tween_property(warn, "modulate:a", 1.0, 0.12)
-	warn_pulse.tween_property(warn, "modulate:a", 0.2, 0.22)
+	# Alarm sound
+	var alarm_snd := AudioStreamPlayer.new()
+	alarm_snd.stream = load("res://assets/sounds/alarm.mp3")
+	alarm_snd.volume_db = -18.0
+	alarm_snd.finished.connect(alarm_snd.queue_free)
+	add_child(alarm_snd)
+	alarm_snd.play()
 
-	await _w(1.4)
+	# Warning HUD
+	var warn_impact_font := SystemFont.new()
+	warn_impact_font.font_names   = PackedStringArray(["Impact", "Arial Black", "Franklin Gothic Heavy", "sans-serif"])
+	warn_impact_font.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
+
+	var warn_panel := PanelContainer.new()
+	warn_panel.layout_mode     = 1
+	warn_panel.anchor_left     = 0.5
+	warn_panel.anchor_right    = 0.5
+	warn_panel.anchor_top      = 0.0
+	warn_panel.anchor_bottom   = 0.0
+	warn_panel.offset_left     = -240.0
+	warn_panel.offset_right    =  240.0
+	warn_panel.offset_top      =  18.0
+	warn_panel.offset_bottom   =  18.0
+	warn_panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	warn_panel.grow_vertical   = Control.GROW_DIRECTION_END
+	var warn_style := StyleBoxFlat.new()
+	warn_style.bg_color     = Color(0.06, 0.01, 0.01, 0.92)
+	warn_style.border_color = Color(1.0, 0.15, 0.05, 1.0)
+	warn_style.set_border_width_all(2)
+	warn_style.set_corner_radius_all(4)
+	warn_style.content_margin_left   = 22.0
+	warn_style.content_margin_right  = 22.0
+	warn_style.content_margin_top    = 10.0
+	warn_style.content_margin_bottom = 12.0
+	warn_panel.add_theme_stylebox_override("panel", warn_style)
+	warn_panel.modulate.a = 0.0
+	_ui.add_child(warn_panel)
+
+	var warn_vbox := VBoxContainer.new()
+	warn_vbox.add_theme_constant_override("separation", 6)
+	warn_panel.add_child(warn_vbox)
+
+	var warn_header := Label.new()
+	warn_header.text = "STATUS ALERT"
+	warn_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	warn_header.uppercase = true
+	warn_header.add_theme_font_override("font", _make_font())
+	warn_header.add_theme_font_size_override("font_size", 11)
+	warn_header.add_theme_color_override("font_color", Color(1.0, 0.35, 0.15, 0.75))
+	warn_vbox.add_child(warn_header)
+
+	var warn_div := HSeparator.new()
+	var warn_sep_style := StyleBoxFlat.new()
+	warn_sep_style.bg_color = Color(1.0, 0.15, 0.05, 0.45)
+	warn_sep_style.set_content_margin_all(0)
+	warn_div.add_theme_stylebox_override("separator", warn_sep_style)
+	warn_vbox.add_child(warn_div)
+
+	var warn := Label.new()
+	warn.text = "UNIDENTIFIED CONTACT"
+	warn.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	warn.add_theme_color_override("font_color", Color(1.0, 0.18, 0.07))
+	warn.add_theme_font_override("font", warn_impact_font)
+	warn.add_theme_font_size_override("font_size", 28)
+	warn_vbox.add_child(warn)
+
+	var warn_pulse := create_tween().set_loops(8)
+	warn_pulse.tween_property(warn_panel, "modulate:a", 1.0, 0.12)
+	warn_pulse.tween_property(warn_panel, "modulate:a", 0.2, 0.22)
+
+	await _w(2.4)
 	if _skip: _finish(); return
 
 	# ── THE SERPENT enters from the left edge ─────────────────────────────────
@@ -518,11 +577,11 @@ func _run() -> void:
 	_shake(9.0, 1.2)
 
 	warn_pulse.kill()
-	warn.text     = "⚠  COLLISION IMMINENT"
-	warn.modulate.a = 1.0
+	warn.text             = "COLLISION IMMINENT"
+	warn_panel.modulate.a = 1.0
 	var warn_flash := create_tween().set_loops(5)
-	warn_flash.tween_property(warn, "modulate:a", 0.1, 0.1)
-	warn_flash.tween_property(warn, "modulate:a", 1.0, 0.1)
+	warn_flash.tween_property(warn_panel, "modulate:a", 0.1, 0.1)
+	warn_flash.tween_property(warn_panel, "modulate:a", 1.0, 0.1)
 
 	_dbox("ORCA", "EMERGENCY PROTOCOLS — BRACE FOR IMPACT —", 3.0)
 
@@ -602,13 +661,6 @@ func _run() -> void:
 	_shake(24.0, 0.9)
 	_zoom_to(1.0, _S * 0.5, 1.4)
 
-	var ts2 := Label.new()
-	ts2.text = "11:58:28"; ts2.position = Vector2(_S.x*0.06, _S.y*0.14); ts2.modulate.a = 0.0
-	ts2.add_theme_color_override("font_color", Color(0.82, 0.8, 0.48))
-	ts2.add_theme_font_size_override("font_size", 20)
-	_ui.add_child(ts2)
-	create_tween().tween_property(ts2, "modulate:a", 1.0, 0.2)
-
 	# Fish scatter
 	for f in fish_nodes:
 		if not is_instance_valid(f): continue
@@ -648,12 +700,10 @@ func _run() -> void:
 
 	# ── Remaining cards as dialogue boxes ─────────────────────────────────────
 	var cards := [
-		["TRANSMISSION LOG", "11:58:21 — Unidentified contact. Collision imminent.\nEmergency protocols failed to initialize."],
-		["TRANSMISSION LOG", "11:58:28 — Hull integrity compromised.\nPressure systems offline. Navigation core unresponsive."],
-		["ORCA",             "12:00:04 — Operative status: conscious. Vessel status: critical.\nThree components confirmed missing.\n\nDrive coupling.  Pressure seal.  Navigation core."],
-		["ORCA",             "12:00:47 — Distress signal blocked.\nRelay station Kappa offline. Cause undetermined."],
-		["TRANSMISSION LOG", "12:01:09 — Nature of contact: unclassified.\nOrigin: unknown. No further data available."],
-		["ORCA",             "12:01:11 — Recovery objective logged.\nRetrieve components. Restore vessel. Proceed to Station Kappa.\n\nDepth recorded: 3,847 meters.  Backup unavailable."],
+		["TRANSMISSION LOG", "11:58:28 — Hull integrity compromised. Pressure systems offline. Navigation core unresponsive."],
+		["ORCA",             "12:00:04 — Three components confirmed missing:\n\nDrive coupling.  Pressure seal.  Navigation core."],
+		["ORCA",             "12:00:47 — Distress signal blocked... Relay station Kappa offline. Cause undetermined.\n\nNo further data available."],
+		["ORCA",             "12:01:11 — Recovery objective logged.\n\nRetrieve components & restore the vessel. Proceed to Station Kappa, quickly!"],
 	]
 	for c in cards:
 		if _skip: break

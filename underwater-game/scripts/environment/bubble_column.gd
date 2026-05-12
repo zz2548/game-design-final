@@ -42,7 +42,7 @@ func _build_bubbles() -> void:
 	var lt      : float = column_height / V_MAX
 	_bubbles.amount               = 80
 	_bubbles.lifetime             = lt
-	_bubbles.lifetime_randomness  = 0.4
+	_bubbles.lifetime_randomness  = 0.1
 	_bubbles.preprocess           = lt   # pre-simulate a full lifetime so the column
 	                                     # is already populated on frame 1 — prevents
 	                                     # the initial burst of particles all sitting

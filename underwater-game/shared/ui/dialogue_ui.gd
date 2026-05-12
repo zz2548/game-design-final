@@ -80,6 +80,11 @@ func _apply_theme() -> void:
 func _on_dialogue_started() -> void:
 	panel.show()
 	prompt_label.text = "[E] Continue"
+	var snd := AudioStreamPlayer.new()
+	snd.stream = load("res://assets/sounds/ping.mp3")
+	snd.finished.connect(snd.queue_free)
+	add_child(snd)
+	snd.play()
 
 func _on_line_advanced(speaker: String, text: String, portrait: Texture2D) -> void:
 	speaker_label.text = speaker

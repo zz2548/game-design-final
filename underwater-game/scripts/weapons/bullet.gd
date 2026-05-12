@@ -15,6 +15,23 @@ const MAX_RANGE : float = 1200.0
 var direction : Vector2 = Vector2.RIGHT
 
 var _distance_traveled : float = 0.0
+var _hit               : bool  = false
+
+@onready var _bullet_area : Area2D = $BulletArea
+
+
+func _ready() -> void:
+	_bullet_area.collision_mask = 4  # detect BulletHitZone (enemy layer 4)
+	_bullet_area.area_entered.connect(_on_hit_enemy)
+
+
+func _on_hit_enemy(area: Area2D) -> void:
+	if _hit:
+		return
+	if area.name != "BulletHitZone":
+		return
+	_hit = true
+	queue_free()
 
 
 func _draw() -> void:
@@ -22,6 +39,8 @@ func _draw() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if _hit:
+		return
 	var collision := move_and_collide(direction * SPEED * delta)
 	_distance_traveled += SPEED * delta
 

@@ -6,7 +6,13 @@
       "Bash(python *)",
       "Bash(Get-ChildItem -Recurse)",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(git stash *)"
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(git stash *)",
+      "Bash(git add *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Downloads\\\\game-design-final\\\\underwater-game\" -Filter \"*.tres\" -Recurse)",
+      "Bash(Select-Object FullName)",
+      "PowerShell(ffprobe *)"
     ]
   }
 }
