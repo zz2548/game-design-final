@@ -126,6 +126,10 @@ var _shoot_timer          : float = 0.0
 var _slither_timer        : float = 0.0
 var _periodic_shoot_timer : float = 5.0
 
+# ── Line-of-sight tracking ────────────────────────────────────────────────────
+var _player_in_range : bool  = false  # player is inside the detection zone
+var _los_check_timer : float = 0.0    # polls LOS while player is in range but unseen
+
 # ── Wall navigation ───────────────────────────────────────────────────────────
 var _stuck_timer : float   = 0.0
 var _stuck_boost : Vector2 = Vector2.ZERO
@@ -254,6 +258,7 @@ func _physics_process(delta: float) -> void:
 
 	_tick_invuln_pulse(delta)
 	_tick_periodic_shoot(delta)
+	_tick_los_check(delta)
 
 	match _state:
 		State.IDLE:                 _tick_idle(delta)
@@ -478,7 +483,10 @@ func _enter_state(new_state: State) -> void:
 	_state = new_state
 	match new_state:
 		State.IDLE:
-			_player_ref = null
+			# Keep _player_ref if the player is still inside the detection zone
+			# so the LOS poller can still see them.
+			if not _player_in_range:
+				_player_ref = null
 			_alert_label.hide()
 			velocity = Vector2.ZERO
 			_head_sprite.play("idle")
@@ -534,20 +542,59 @@ func _enter_state(new_state: State) -> void:
 			_head_sprite.play("idle")
 
 
+# ── Line-of-sight ─────────────────────────────────────────────────────────────
+
+## Returns true if there is a clear straight line from the boss to the player
+## with no wall (collision layer 1) in between.
+func _has_los_to_player() -> bool:
+	if not is_instance_valid(_player_ref):
+		return false
+	var space := get_world_2d().direct_space_state
+	var q     := PhysicsRayQueryParameters2D.create(
+			global_position, _player_ref.global_position, 1)  # layer 1 = walls
+	q.exclude = [get_rid()]
+	return space.intersect_ray(q).is_empty()
+
+
+## Polls LOS while the player is in detection range but the boss hasn't
+## aggroed yet (e.g. player entered zone from behind a wall).
+func _tick_los_check(delta: float) -> void:
+	if _ever_aggro or not _player_in_range or _state != State.IDLE:
+		return
+	_los_check_timer -= delta
+	if _los_check_timer > 0.0:
+		return
+	_los_check_timer = 0.25
+	if _has_los_to_player():
+		_ever_aggro = true
+		_enter_state(State.ALERT)
+
+
 # ── Detection / hit callbacks ─────────────────────────────────────────────────
 
 func _on_detection_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
-	_player_ref = body
-	_ever_aggro  = true
-	if _state == State.IDLE:
+	_player_ref      = body
+	_player_in_range = true
+	if _ever_aggro:
+		# Already knows the player — resume chase if currently idle
+		if _state == State.IDLE:
+			_enter_state(State.ALERT)
+	elif _has_los_to_player():
+		# First sighting — only aggro if there's a clear line of sight
+		_ever_aggro = true
 		_enter_state(State.ALERT)
+	# else: player is in range but blocked by a wall; _tick_los_check will poll
 
 
 func _on_detection_body_exited(body: Node2D) -> void:
-	if body == _player_ref and not _ever_aggro:
-		_enter_state(State.IDLE)
+	if body != _player_ref:
+		return
+	_player_in_range = false
+	if not _ever_aggro:
+		_player_ref = null
+		# Already in IDLE — nothing else to do
 
 
 func _on_hit_zone_body_entered(body: Node2D) -> void:
