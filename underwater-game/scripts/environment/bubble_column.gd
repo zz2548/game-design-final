@@ -1,20 +1,33 @@
+@tool
 class_name BubbleColumn
 extends Area2D
 
 ## Downward push applied to the player per second while inside.
 @export var push_force: float = 1000.0
-@export var column_height: float = 300.0
+@export var column_height: float = 300.0 :
+	set(value):
+		column_height = value
+		_update_shape()   # live-update in editor and at runtime
 
 var _bubbles: CPUParticles2D
 
 
 func _ready() -> void:
-	var col := $CollisionShape2D as CollisionShape2D
+	_update_shape()
+	if not Engine.is_editor_hint():
+		_build_bubbles()
+
+
+## Resize/reposition the collision rectangle to match column_height.
+## Called both from the setter (editor) and from _ready() (runtime).
+func _update_shape() -> void:
+	var col := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if col == null:
+		return
 	var shape := RectangleShape2D.new()
 	shape.size = Vector2(96.0, column_height)
 	col.shape = shape
 	col.position = Vector2(0.0, column_height * 0.5)
-	_build_bubbles()
 
 
 func _build_bubbles() -> void:
