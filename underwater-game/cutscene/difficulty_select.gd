@@ -76,21 +76,13 @@ func _build_ui() -> void:
 	var py      : float = S.y * 0.5 - panel_h * 0.5
 
 	var options := [
-		{
-			"label": "EASY",
-			"col":   COL_EASY,
-			"lines": ["Oxygen refills also restore health.", "For a more relaxed experience."],
-		},
-		{
-			"label": "HARD",
-			"col":   COL_HARD,
-			"lines": ["Standard difficulty.", "Health is not restored by oxygen."],
-		},
+		{"label": "EASY", "col": COL_EASY},
+		{"label": "HARD", "col": COL_HARD},
 	]
 
 	for i in 2:
 		var opt    : Dictionary    = options[i]
-		var panel  := _make_panel(opt["label"], opt["lines"], opt["col"] as Color)
+		var panel  := _make_panel(opt["label"], opt["col"] as Color)
 		panel.set_anchors_preset(Control.PRESET_TOP_LEFT)
 		panel.offset_left   = px + i * (panel_w + gap)
 		panel.offset_top    = py
@@ -120,7 +112,7 @@ func _build_ui() -> void:
 	_ui.add_child(hint)
 
 
-func _make_panel(label: String, lines: Array, col: Color) -> PanelContainer:
+func _make_panel(label: String, col: Color) -> PanelContainer:
 	var panel := PanelContainer.new()
 	panel.mouse_filter = Control.MOUSE_FILTER_STOP
 
@@ -135,28 +127,12 @@ func _make_panel(label: String, lines: Array, col: Color) -> PanelContainer:
 	style.content_margin_bottom = 20.0
 	panel.add_theme_stylebox_override("panel", style)
 
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
-
 	var title := Label.new()
 	title.text = label
 	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override("font_color", col)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
-
-	var sep := HSeparator.new()
-	vbox.add_child(sep)
-
-	for line : String in lines:
-		var lbl := Label.new()
-		lbl.text = line
-		lbl.add_theme_font_size_override("font_size", 14)
-		lbl.add_theme_color_override("font_color", Color(0.78, 0.88, 0.96))
-		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		vbox.add_child(lbl)
+	panel.add_child(title)
 
 	return panel
 
