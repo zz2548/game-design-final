@@ -39,22 +39,27 @@ func _build_bubbles() -> void:
 	# lifetime_randomness adds natural variation without breaking the bound
 	# (shorter-lived particles travel less, not more).
 	const V_MAX : float = 80.0
+	var lt      : float = column_height / V_MAX
 	_bubbles.amount               = 80
-	_bubbles.lifetime             = column_height / V_MAX
+	_bubbles.lifetime             = lt
 	_bubbles.lifetime_randomness  = 0.4
+	_bubbles.preprocess           = lt   # pre-simulate a full lifetime so the column
+	                                     # is already populated on frame 1 — prevents
+	                                     # the initial burst of particles all sitting
+	                                     # at the emission strip (top of column)
 	_bubbles.explosiveness        = 0.0
 	_bubbles.emission_shape       = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
 	_bubbles.emission_rect_extents = Vector2(40.0, 2.0)
-	_bubbles.gravity              = Vector2.ZERO   # no gravity — guarantees containment
+	_bubbles.gravity              = Vector2.ZERO
 	_bubbles.initial_velocity_min = 40.0
 	_bubbles.initial_velocity_max = V_MAX
 	_bubbles.spread               = 5.0
 	_bubbles.direction            = Vector2(0.0, 1.0)
-	_bubbles.scale_amount_min = 0.8
-	_bubbles.scale_amount_max = 2.2
-	_bubbles.color = Color(0.82, 0.96, 1.0, 0.75)
-	_bubbles.texture = _make_bubble_texture()
-	_bubbles.emitting = true
+	_bubbles.scale_amount_min     = 0.8
+	_bubbles.scale_amount_max     = 2.2
+	_bubbles.color                = Color(0.82, 0.96, 1.0, 0.75)
+	_bubbles.texture              = _make_bubble_texture()
+	_bubbles.emitting             = true
 	add_child(_bubbles)
 
 
