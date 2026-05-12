@@ -3,6 +3,11 @@
 # Tracks global progression flags across scenes.
 extends Node
 
+enum Difficulty { EASY, HARD }
+
+## Set from the difficulty select screen before the game begins.
+var difficulty : Difficulty = Difficulty.HARD
+
 var submarine_fixed     : bool   = false
 var death_return_scene  : String = ""   # set by player.gd before going to death screen
 

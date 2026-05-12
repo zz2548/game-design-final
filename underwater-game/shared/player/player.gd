@@ -31,6 +31,9 @@ const OXYGEN_WARN_CRIT  : float = 9.0   # 10% — critical ORCA warning
 
 var oxygen : float = MAX_OXYGEN
 
+# Easy-mode HP regen: fractional HP accumulates here until a whole point is ready.
+var _easy_heal_accum : float = 0.0
+
 ## Emitted whenever the oxygen level changes (also fires once on _ready).
 signal oxygen_changed(current: float, maximum: float)
 ## Emitted when poison state changes (true = currently being poisoned).
@@ -415,11 +418,29 @@ func remove_poison() -> void:
 
 ## Refill oxygen by `amount` units (capped at MAX_OXYGEN).
 ## Call this from oxygen-station interactables.
+## On Easy difficulty this also restores health proportionally.
 func refill_oxygen(amount: float) -> void:
-	oxygen = minf(MAX_OXYGEN, oxygen + amount)
+	var prev     := oxygen
+	oxygen        = minf(MAX_OXYGEN, oxygen + amount)
 	_oxygen_warned_low  = false
 	_oxygen_warned_crit = false
 	emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
+
+	if GameState.difficulty == GameState.Difficulty.EASY:
+		var filled := oxygen - prev
+		if filled > 0.0:
+			_easy_heal_accum += (filled / MAX_OXYGEN) * MAX_HEALTH
+			var hp_gain := int(_easy_heal_accum)
+			if hp_gain > 0:
+				_easy_heal_accum -= float(hp_gain)
+				heal(hp_gain)
+
+
+## Restore `amount` HP (capped at MAX_HEALTH). Used by Easy-mode oxygen stations.
+func heal(amount: int) -> void:
+	health = mini(MAX_HEALTH, health + amount)
+	emit_signal("health_changed", health, MAX_HEALTH)
+	_update_health_desat()
 
 
 func _check_oxygen_warnings() -> void:
