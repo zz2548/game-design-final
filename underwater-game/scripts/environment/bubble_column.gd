@@ -56,7 +56,10 @@ func _make_bubble_texture() -> ImageTexture:
 
 
 func _physics_process(delta: float) -> void:
+	# Push direction follows the node's local +Y axis so rotating the node
+	# in the editor automatically rotates the current direction.
+	var push_dir := global_transform.y.normalized()
 	for body in get_overlapping_bodies():
 		if body.has_method("refill_oxygen"):
 			var scale := 0.2 if body.get("submarine_mode") else 1.0
-			body.velocity.y += push_force * scale * delta
+			body.velocity += push_dir * push_force * scale * delta
