@@ -522,7 +522,6 @@ beam_left = NodePath("ArenaBeams/BeamLeft")
 beam_right = NodePath("ArenaBeams/BeamRight")
 
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=2019324121]
-visible = false
 color = Color(0, 0, 0, 1)
 
 [node name="Background" type="ColorRect" parent="." unique_id=120229441]
@@ -555,7 +554,7 @@ tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAABAAAAAAABAAAAAAACAAAAAAACAAA
 tile_set = SubResource("TileSet_ind")
 
 [node name="player" parent="." unique_id=1679713102 instance=ExtResource("3_player")]
-position = Vector2(1000, 356.06)
+position = Vector2(1000, 114)
 
 [node name="HUD" type="Node" parent="." unique_id=1495862390]
 
@@ -653,16 +652,6 @@ interval_max = null
 
 [node name="BubbleColumn1" parent="Hazards" unique_id=800100004 instance=ExtResource("21_steam")]
 position = Vector2(83, -1)
-column_height = 349.0
-
-[node name="BubbleColumn2" parent="Hazards" unique_id=1726281162 instance=ExtResource("21_steam")]
-position = Vector2(96, 1082)
-rotation = -1.5707964
-column_height = 349.0
-
-[node name="BubbleColumn3" parent="Hazards" unique_id=224832638 instance=ExtResource("21_steam")]
-position = Vector2(1813, 1101)
-rotation = -4.712389
 column_height = 349.0
 
 [node name="Toxic1" parent="Hazards" unique_id=800100007 instance=ExtResource("22_toxic")]

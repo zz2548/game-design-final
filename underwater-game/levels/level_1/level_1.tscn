@@ -354,6 +354,7 @@ size = Vector2(48, 128)
 script = ExtResource("12_level")
 
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1930376493]
+visible = false
 color = Color(0, 0, 0, 1)
 
 [node name="Background" type="ColorRect" parent="." unique_id=472897320]
@@ -473,10 +474,10 @@ shape = SubResource("shape_part")
 position = Vector2(37, 333)
 
 [node name="Enemy" parent="." unique_id=581764293 instance=ExtResource("11_qbdb0")]
-position = Vector2(1003, 528)
+position = Vector2(780, 548)
 
 [node name="Enemy2" parent="." unique_id=1290169317 instance=ExtResource("11_qbdb0")]
-position = Vector2(789, 64)
+position = Vector2(531, 73)
 
 [node name="ExitTrigger" type="Area2D" parent="." unique_id=-2094967295]
 position = Vector2(1025, 324)
