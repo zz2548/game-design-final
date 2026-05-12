@@ -115,8 +115,16 @@ func _tick_attack(delta: float) -> void:
 		_fire_bullet()
 
 
+func _has_line_of_sight() -> bool:
+	var space := get_world_2d().direct_space_state
+	var query := PhysicsRayQueryParameters2D.create(global_position, _player_ref.global_position, 1)
+	return space.intersect_ray(query).is_empty()
+
+
 func _fire_bullet() -> void:
 	if not is_instance_valid(_player_ref) or _bullet_scene == null:
+		return
+	if not _has_line_of_sight():
 		return
 	var b : Node2D = _bullet_scene.instantiate()
 	get_tree().current_scene.add_child(b)

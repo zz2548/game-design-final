@@ -157,6 +157,12 @@ func _boom(pos: Vector2, sc: float, fps: float, big: bool) -> void:
 	anim.position = pos
 	anim.animation_finished.connect(anim.queue_free)
 	_world.add_child(anim); anim.play("e")
+	var snd := AudioStreamPlayer.new()
+	snd.stream = load("res://assets/sounds/mobdeath.mp3")
+	snd.volume_db = 6.0 if big else 2.0
+	snd.pitch_scale = randf_range(0.75, 1.1)
+	snd.finished.connect(snd.queue_free)
+	add_child(snd); snd.play()
 
 
 func _make_fish(path: String, fc: int, fw: int, fh: int, sc: float) -> AnimatedSprite2D:

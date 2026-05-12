@@ -42,6 +42,18 @@ func _trigger_dialogue() -> void:
 		],
 	})
 	DialogueManager.dialogue_ended.connect(_on_dialogue_ended, CONNECT_ONE_SHOT)
+	_auto_advance()
+
+
+func _auto_advance() -> void:
+	await get_tree().create_timer(2.5).timeout
+	if not DialogueManager.is_active:
+		return
+	DialogueManager.advance()
+	await get_tree().create_timer(2.5).timeout
+	if not DialogueManager.is_active:
+		return
+	DialogueManager.advance()
 
 
 func _on_dialogue_ended() -> void:
