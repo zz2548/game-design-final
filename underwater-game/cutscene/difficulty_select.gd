@@ -1,23 +1,91 @@
 extends Node
 
-# Scene that loads after this screen confirms a difficulty selection.
 const NEXT_SCENE := "res://cutscene/level_select.tscn"
 
-# ── Panel colours ─────────────────────────────────────────────────────────────
 const COL_EASY : Color = Color(0.20, 0.78, 0.40)
 const COL_HARD : Color = Color(0.85, 0.22, 0.18)
-const COL_BG   : Color = Color(0.02, 0.05, 0.10)
 
-# ── State ─────────────────────────────────────────────────────────────────────
-var _selected  : int  = 1          # 0 = EASY, 1 = HARD  (default Hard)
+var _selected  : int  = 1
 var _confirmed : bool = false
 var _panels    : Array[PanelContainer] = []
 var _ui        : CanvasLayer
 
+var _bg       : Sprite2D = null
+var _mg       : Sprite2D = null
+var _bg_x     : float    = 0.0
+var _mg_x     : float    = 0.0
+var _swimmers : Array    = []
+
+const BG_SCROLL := 14.0
+const MG_SCROLL := 28.0
+
 
 func _ready() -> void:
+	_build_bg()
 	_build_ui()
 	_refresh_selection()
+
+
+func _process(delta: float) -> void:
+	_bg_x += BG_SCROLL * delta
+	_mg_x += MG_SCROLL * delta
+	if _bg: _bg.region_rect = Rect2(_bg_x, 0, 2461, 1645)
+	if _mg: _mg.region_rect = Rect2(_mg_x, 0, 2461, 1645)
+	var S := get_viewport().get_visible_rect().size
+	for s in _swimmers:
+		var node : AnimatedSprite2D = s["node"]
+		if not is_instance_valid(node): continue
+		node.position.x += s["vx"] * delta
+		if s["vx"] > 0 and node.position.x > S.x + 80: node.position.x = -80.0
+		elif s["vx"] < 0 and node.position.x < -80:    node.position.x = S.x + 80.0
+
+
+func _build_bg() -> void:
+	var S := get_viewport().get_visible_rect().size
+
+	_bg = Sprite2D.new()
+	_bg.texture        = load("res://assets/background/background.png")
+	_bg.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	_bg.region_enabled = true
+	_bg.region_rect    = Rect2(0, 0, 2461, 1645)
+	_bg.modulate       = Color(1, 1, 1, 0.6)
+	_bg.position       = Vector2(744, 432)
+	add_child(_bg)
+
+	_mg = Sprite2D.new()
+	_mg.texture        = load("res://assets/background/midground.png")
+	_mg.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	_mg.region_enabled = true
+	_mg.region_rect    = Rect2(0, 0, 2461, 1645)
+	_mg.modulate       = Color(1, 1, 1, 0.8)
+	_mg.position       = Vector2(744, 432)
+	add_child(_mg)
+
+	var p := _make_swimmer("res://assets/player/player-swiming.png", 7, 80, 80, 10.0)
+	p.position = Vector2(S.x * 0.38, S.y * 0.54); p.scale = Vector2(2.0, 2.0)
+	add_child(p); _swimmers.append({"node": p, "vx": 72.0})
+
+	var e1 := _make_swimmer("res://assets/enemies/fish.png", 4, 32, 32, 8.0)
+	e1.position = Vector2(S.x * 0.70, S.y * 0.30); e1.scale = Vector2(1.8, 1.8)
+	add_child(e1); _swimmers.append({"node": e1, "vx": 45.0})
+
+	var e2 := _make_swimmer("res://assets/enemies/fish-big.png", 4, 54, 49, 8.0)
+	e2.position = Vector2(S.x * 0.20, S.y * 0.68); e2.scale = Vector2(1.7, 1.7); e2.flip_h = true
+	add_child(e2); _swimmers.append({"node": e2, "vx": -52.0})
+
+	var e3 := _make_swimmer("res://assets/enemies/fish.png", 4, 32, 32, 8.0)
+	e3.position = Vector2(S.x * 0.10, S.y * 0.40); e3.scale = Vector2(1.4, 1.4)
+	add_child(e3); _swimmers.append({"node": e3, "vx": 36.0})
+
+
+func _make_swimmer(path: String, fc: int, fw: int, fh: int, fps: float) -> AnimatedSprite2D:
+	var tex := load(path) as Texture2D
+	var sf  := SpriteFrames.new()
+	sf.add_animation("swim"); sf.set_animation_loop("swim", true); sf.set_animation_speed("swim", fps)
+	for i in fc:
+		var a := AtlasTexture.new(); a.atlas = tex; a.region = Rect2(i * fw, 0, fw, fh); sf.add_frame("swim", a)
+	var sp := AnimatedSprite2D.new(); sp.sprite_frames = sf; sp.play("swim")
+	return sp
 
 
 # ── UI construction ───────────────────────────────────────────────────────────
@@ -26,13 +94,6 @@ func _build_ui() -> void:
 	_ui = CanvasLayer.new()
 	_ui.layer = 10
 	add_child(_ui)
-
-	# Background
-	var bg := ColorRect.new()
-	bg.color = COL_BG
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_ui.add_child(bg)
 
 	# Fade-in overlay
 	var fade := ColorRect.new()

@@ -37,7 +37,7 @@ func _w(t: float) -> void:
 
 
 func _run() -> void:
-	MusicManager.stop()
+	MusicManager.play(["res://assets/sounds/ambient_l2.mp3"])
 
 	# ── Background ────────────────────────────────────────────────────────────
 	var bg := ColorRect.new()
@@ -186,6 +186,12 @@ func _show_card(ui: CanvasLayer, text: String, hold: float) -> void:
 	rtl.add_theme_font_size_override("normal_font_size", 15)
 	rtl.add_theme_color_override("default_color", Color(0.80, 0.91, 0.97))
 	vbox.add_child(rtl)
+
+	var ping := AudioStreamPlayer.new()
+	ping.stream = load("res://assets/sounds/ping.mp3")
+	ping.finished.connect(ping.queue_free)
+	add_child(ping)
+	ping.play()
 
 	create_tween().tween_property(panel, "modulate:a", 1.0, 0.3)
 

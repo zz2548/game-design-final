@@ -2,7 +2,7 @@
 extends Node
 
 func _ready() -> void:
-	get_tree().change_scene_to_file.call_deferred("res://cutscene/difficulty_select.tscn")
+	get_tree().change_scene_to_file.call_deferred("res://cutscene/main_menu.tscn")
 
 	# ── Debug shortcuts — uncomment to skip directly to a scene ──────────────
 	# get_tree().change_scene_to_file.call_deferred("res://cutscene/opening_cinematic.tscn")
