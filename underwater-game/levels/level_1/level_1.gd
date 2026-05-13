@@ -420,6 +420,7 @@ func _run_reinforcement_wave() -> void:
 	const HIDDEN_SPAWNS : Array = [Vector2(170, 350), Vector2(750, 560)]
 
 	var melee_scene := load("res://shared/Enemies/enemy.tscn") as PackedScene
+	var spawned : Array = []
 
 	for pos in SHOWN_SPAWNS:
 		var pan := create_tween()
@@ -431,18 +432,18 @@ func _run_reinforcement_wave() -> void:
 		await get_tree().create_timer(0.12).timeout
 
 		var e := melee_scene.instantiate() as Enemy
+		e.ai_enabled = false  # held until pan-back completes
 		add_child(e)
 		e.global_position = pos
-		e.set("_player_ref", _player)
-		e.call("_enter_state", Enemy.State.CHASE)
+		spawned.append(e)
 		await get_tree().create_timer(0.55).timeout
 
 	for pos in HIDDEN_SPAWNS:
 		var e := melee_scene.instantiate() as Enemy
+		e.ai_enabled = false  # held until pan-back completes
 		add_child(e)
 		e.global_position = pos
-		e.set("_player_ref", _player)
-		e.call("_enter_state", Enemy.State.CHASE)
+		spawned.append(e)
 
 	# Pan back to the clamped camera position so there is no snap when the
 	# normal bounded camera re-enables.
@@ -456,6 +457,13 @@ func _run_reinforcement_wave() -> void:
 	await pan_back.finished
 
 	_stop_cine_cam()
+
+	# Activate all spawned enemies now that the camera is back on the player.
+	for e in spawned:
+		if is_instance_valid(e):
+			e.set("_player_ref", _player)
+			e.ai_enabled = true
+			e.call("_enter_state", Enemy.State.CHASE)
 
 
 func _spawn_poof(world_pos: Vector2) -> void:
@@ -575,11 +583,8 @@ func _on_slot_filled() -> void:
 	DialogueManager.start_dialogue({
 		"speaker": "ORCA",
 		"lines": [
-			"Drive coupling installed.",
-			"Pressure seal nominal.",
-			"Nav core online.",
-			"Tethys-7 is operational.",
-			"Approach the helm to depart.",
+			"Drive coupling installed. Pressure seal nominal. Nav core online.",
+			"Tethys-7 is operational. Approach the helm to depart.",
 		],
 	})
 
@@ -620,10 +625,7 @@ func _on_exit_reached(body: Node) -> void:
 		DialogueManager.start_dialogue({
 			"speaker": "ORCA",
 			"lines": [
-				"Tethys-7 clear of the trench.",
-				"Auto-routing to Station Kappa — the only pressurized structure in range.",
-				"Pulling Kappa's last status report.",
-				"Most of it is redacted.",
+				"Tethys-7 clear of the trench. Auto-routing to Station Kappa, the only pressurized structure in range.",
 			],
 		})
 		DialogueManager.dialogue_ended.connect(

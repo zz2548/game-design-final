@@ -230,7 +230,7 @@ func _run_boss_intro() -> void:
 	DialogueManager.start_dialogue({
 		"speaker": "ORCA",
 		"lines": [
-			"That creature is shielded — direct fire won't penetrate it.",
+			"That creature is shielded. Direct fire won't penetrate it.",
 			"I'm detecting two energy emitters in this chamber.",
 			"Activate both to bring the shield down.",
 		],
@@ -260,16 +260,140 @@ func _on_boss_defeated() -> void:
 		ObjectiveManager.complete_objective(_obj_boss_hint)
 		_obj_boss_hint = -1
 	ObjectiveManager.complete_objective(_obj_boss)
-
 	_level_ended = true
 	GameState.save_objectives_from_level_3()
-	DialogueManager.start_dialogue({
-		"speaker": "ORCA",
-		"lines": ["Threat neutralised."],
-	})
-	DialogueManager.dialogue_ended.connect(func() -> void:
-		get_tree().change_scene_to_file("res://cutscene/win_screen.tscn")
-	, CONNECT_ONE_SHOT)
+	_run_ending.call_deferred()
+
+
+func _run_ending() -> void:
+	# Freeze player and all remaining enemies.
+	var player := get_tree().get_first_node_in_group("player")
+	if player != null:
+		player.movement_locked = true
+		player.shooting_locked = true
+		if player.has_node("InteractionSystem"):
+			player.get_node("InteractionSystem").set_process_unhandled_input(false)
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if "ai_enabled" in e:
+			e.ai_enabled = false
+	if is_instance_valid(_boss_hud):
+		_boss_hud.hide()
+
+	# Slow creeping zoom in on the player over the full dialogue duration.
+	var cam : Camera2D = null
+	if player != null:
+		cam = player.get_node_or_null("Camera2D")
+	if cam != null:
+		create_tween().tween_property(cam, "zoom", Vector2(2.5, 2.5), 32.0) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+	# ORCA pieces it together — one panel, lines cycle through.
+	await _ending_dialogue("ORCA", [
+		["Threat neutralised.", 1.4],
+		["Apex organism confirmed. Europa's subsurface biosphere is intact and inhabited.", 1.4],
+		["Cross-referencing station logs. A seismic survey team accessed the bore shaft six days before the blackout. There is no record of their return.", 1.4],
+		["Corporate filed no emergency response. No missing persons report...", 1.4],
+		["They knew a team had gone in and not come back. They sent us anyway.", 1.4],
+		["We were sent to confirm how dangerous it was, not to assess a blackout... They view us as expendable.", 1.8],
+		["If we hadn't made it back... they would have had their answer.", 1.4],
+		["Once we make it back, we have some questioning to do.", 3.0]
+	])
+
+	# Cut to black, then win screen.
+	var fade_layer := CanvasLayer.new()
+	fade_layer.layer = 99
+	add_child(fade_layer)
+	var fade_rect := ColorRect.new()
+	fade_rect.color = Color(0.0, 0.0, 0.0, 0.0)
+	fade_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	fade_layer.add_child(fade_rect)
+	create_tween().tween_property(fade_rect, "color:a", 1.0, 1.8)
+	await get_tree().create_timer(2.0).timeout
+	get_tree().change_scene_to_file("res://cutscene/win_screen.tscn")
+
+
+# ── Ending dialogue ───────────────────────────────────────────────────────────
+# Builds one panel and cycles all lines through it without flickering.
+# lines: Array of [text: String, hold_seconds: float] pairs.
+
+func _ending_dialogue(speaker: String, lines: Array) -> void:
+	var font := _make_ui_font()
+	var layer := CanvasLayer.new()
+	layer.layer = 40
+	add_child(layer)
+
+	var panel := PanelContainer.new()
+	panel.layout_mode     = 1
+	panel.anchor_left     = 0.0;   panel.anchor_top    = 1.0
+	panel.anchor_right    = 1.0;   panel.anchor_bottom = 1.0
+	panel.offset_left     = 72.0;  panel.offset_top    = -210.0
+	panel.offset_right    = -72.0; panel.offset_bottom = -24.0
+	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	panel.grow_vertical   = Control.GROW_DIRECTION_BEGIN
+	var sbox := StyleBoxFlat.new()
+	sbox.bg_color     = Color(0.04, 0.09, 0.14, 0.93)
+	sbox.border_color = Color(0.18, 0.52, 0.68, 0.75)
+	sbox.set_border_width_all(1)
+	sbox.set_corner_radius_all(6)
+	sbox.content_margin_left   = 22.0; sbox.content_margin_right  = 22.0
+	sbox.content_margin_top    = 14.0; sbox.content_margin_bottom = 12.0
+	panel.add_theme_stylebox_override("panel", sbox)
+	panel.modulate.a = 0.0
+	layer.add_child(panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	panel.add_child(vbox)
+
+	var spk_lbl := Label.new()
+	spk_lbl.text      = speaker
+	spk_lbl.uppercase = true
+	spk_lbl.add_theme_font_override("font", font)
+	spk_lbl.add_theme_font_size_override("font_size", 12)
+	spk_lbl.add_theme_color_override("font_color", Color(0.28, 0.82, 1.0))
+	vbox.add_child(spk_lbl)
+
+	var div  := HSeparator.new()
+	var dsep := StyleBoxFlat.new()
+	dsep.bg_color = Color(0.18, 0.52, 0.68, 0.4)
+	dsep.set_content_margin_all(0)
+	div.add_theme_stylebox_override("separator", dsep)
+	vbox.add_child(div)
+
+	var rtl := RichTextLabel.new()
+	rtl.custom_minimum_size = Vector2(20, 60)
+	rtl.bbcode_enabled  = true
+	rtl.fit_content     = false
+	rtl.scroll_active   = false
+	rtl.autowrap_mode   = TextServer.AUTOWRAP_WORD_SMART
+	rtl.visible_ratio   = 0.0
+	rtl.add_theme_font_override("normal_font", font)
+	rtl.add_theme_font_size_override("normal_font_size", 15)
+	rtl.add_theme_color_override("default_color", Color(0.80, 0.91, 0.97))
+	vbox.add_child(rtl)
+
+	create_tween().tween_property(panel, "modulate:a", 1.0, 0.4)
+	await get_tree().create_timer(0.45).timeout
+
+	for line_data in lines:
+		var text : String = line_data[0]
+		var hold : float  = line_data[1]
+		rtl.text          = text
+		rtl.visible_ratio = 0.0
+		create_tween().tween_property(rtl, "visible_ratio", 1.0, text.length() * 0.028)
+		await get_tree().create_timer(text.length() * 0.028 + hold).timeout
+
+	create_tween().tween_property(panel, "modulate:a", 0.0, 0.4)
+	await get_tree().create_timer(0.45).timeout
+	layer.queue_free()
+
+
+func _make_ui_font() -> SystemFont:
+	var f := SystemFont.new()
+	f.font_names   = PackedStringArray(["Consolas", "Courier New", "monospace"])
+	f.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
+	return f
 
 
 # ── Arena beam coordination ───────────────────────────────────────────────────

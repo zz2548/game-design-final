@@ -27,7 +27,7 @@ func _ready() -> void:
 	_label.text = (
 		"[center][color=#11cc66][font_size=64][b]MISSION COMPLETE[/b][/font_size][/color]"
 		+ "\n\n"
-		+ "[color=#404040][font_size=13]Kappa Station neutralised. Surface team en route.[/font_size][/color][/center]"
+		+ "[color=#404040][font_size=13]Kappa Station assessed. Threat neutralised.\n\nCorporate has been notified.[/font_size][/color][/center]"
 	)
 	_label.visible_ratio = 0.0
 

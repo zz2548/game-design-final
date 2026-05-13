@@ -349,12 +349,12 @@ func _run() -> void:
 
 	# ── Cards 1–2 on black screen ─────────────────────────────────────────────
 	await _card_dbox("TRANSMISSION LOG",
-		"06:42:00 — Relay Station Kappa lost contact 72 hours prior.\n\nCause of blackout: undetermined. Corporate has dispatched a single operative for assessment.",
+		"06:42:00 — Communications with Station Kappa were lost contact 72 hours ago.\n\nCause of blackout: undetermined. Corporate has dispatched a single operative for assessment.",
 		2.2)
 	if _skip: _finish(); return
 
 	await _card_dbox("ORCA",
-		"09:17:33 — Tethys-7 en route to Station Kappa.\n\nStandard transit. No anomalies logged.",
+		"09:17:33 — Tethys-7 is en route to Station Kappa.\n\nStandard transit, and no anomalies logged.",
 		2.0)
 	if _skip: _finish(); return
 
@@ -700,10 +700,8 @@ func _run() -> void:
 
 	# ── Remaining cards as dialogue boxes ─────────────────────────────────────
 	var cards := [
-		["TRANSMISSION LOG", "11:58:28 — Hull integrity compromised. Pressure systems offline. Navigation core unresponsive."],
-		["ORCA",             "12:00:04 — Three components confirmed missing:\n\nDrive coupling.  Pressure seal.  Navigation core."],
-		["ORCA",             "12:00:47 — Distress signal blocked... Relay station Kappa offline. Cause undetermined.\n\nNo further data available."],
-		["ORCA",             "12:01:11 — Recovery objective logged.\n\nRetrieve components & restore the vessel. Proceed to Station Kappa, quickly!"],
+		["TRANSMISSION LOG", "11:58:28 — Hull integrity compromised. Pressure systems offline. Navigation core unresponsive.\n\nThree components confirmed missing: Drive coupling.  Pressure seal.  Navigation core."],
+		["ORCA",             "12:01:11 — Recovery objective logged.\n\nRetrieve components & restore the vessel. Then, proceed to Station Kappa, quickly!"],
 	]
 	for c in cards:
 		if _skip: break

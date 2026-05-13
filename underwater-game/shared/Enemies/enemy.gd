@@ -9,6 +9,9 @@ extends CharacterBody2D
 @export var chase_speed     : float = 110.0
 @export var max_health      : int   = 3
 @export var stun_duration   : float = 0.25
+## If > 0, enemy keeps chasing until the player is this far away instead of
+## de-aggroing when they leave the detection zone boundary.
+@export var deaggro_distance : float = 0.0
 
 signal died
 signal player_damaged(amount: int)
@@ -95,6 +98,9 @@ func _tick_chase(delta: float) -> void:
 		_enter_state(State.IDLE)
 		return
 	var to_player := _player_ref.global_position - global_position
+	if deaggro_distance > 0.0 and to_player.length() > deaggro_distance:
+		_enter_state(State.IDLE)
+		return
 	velocity = velocity.move_toward(to_player.normalized() * chase_speed, 800 * delta)
 
 
@@ -140,8 +146,11 @@ func _on_detection_body_entered(body: Node2D) -> void:
 
 
 func _on_detection_body_exited(body: Node2D) -> void:
-	if body == _player_ref and _state != State.IDLE:
-		_enter_state(State.IDLE)
+	if body != _player_ref or _state == State.IDLE:
+		return
+	if deaggro_distance > 0.0:
+		return  # distance-based leash handled in _tick_chase
+	_enter_state(State.IDLE)
 
 
 func _on_bullet_hit(_area: Area2D) -> void:

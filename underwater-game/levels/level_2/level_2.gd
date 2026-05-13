@@ -51,6 +51,17 @@ func _ready() -> void:
 	for enemy in enemies:
 		enemy.died.connect(_on_enemy_died)
 
+	# ── Melee enemy tuning — bigger aggro range, long leash ──────────────────
+	for e in $Enemies/Melee.get_children():
+		if not e is Enemy:
+			continue
+		var cs := e.detection_zone.get_child(0) as CollisionShape2D
+		if cs != null and cs.shape is CircleShape2D:
+			var s := CircleShape2D.new()
+			s.radius = 250.0
+			cs.shape = s
+		e.deaggro_distance = 650.0
+
 	# ── Ranged tutorial ───────────────────────────────────────────────────────
 	_ranged_1.detection_zone.body_entered.connect(_on_ranged_1_detected, CONNECT_ONE_SHOT)
 
@@ -184,8 +195,14 @@ func _on_ranged_1_detected(body: Node2D) -> void:
 func _run_ranged_tutorial() -> void:
 	if not is_instance_valid(_ranged_1):
 		return
+
+	# Freeze all enemies and lock the player — mirrors level 1's melee tutorial.
+	var all_enemies := get_tree().get_nodes_in_group("enemies")
+	for e in all_enemies:
+		if "ai_enabled" in e:
+			e.ai_enabled = false
+	_player.movement_locked = true
 	_start_cine_cam()
-	_player.shooting_locked = false  # _start_cine_cam locks this; undo it
 
 	var pan := create_tween()
 	pan.tween_property(_cine_cam, "global_position", _ranged_1.global_position, 0.85) \
@@ -193,11 +210,16 @@ func _run_ranged_tutorial() -> void:
 	await pan.finished
 	await get_tree().create_timer(0.3).timeout
 
-	await _hud_dialogue("ORCA", [
-		"New contact — ranged organism.",
-		"This variant maintains distance and fires biological projectiles.",
-		"Find cover between engagements.",
-	])
+	DialogueManager.start_dialogue({
+		"speaker": "ORCA",
+		"lines": [
+			"New contact — ranged organism.",
+			"This variant maintains distance and fires biological projectiles.",
+			"Find cover between engagements.",
+		],
+	})
+	await DialogueManager.dialogue_ended
+	_player.movement_locked = true  # dialogue_ended re-enables input — re-lock for pan back
 
 	var pan_back := create_tween()
 	pan_back.tween_property(_cine_cam, "global_position", _player.global_position, 0.85) \
@@ -205,6 +227,12 @@ func _run_ranged_tutorial() -> void:
 	await pan_back.finished
 
 	_stop_cine_cam()
+	_player.movement_locked = false
+
+	# Re-enable all enemies now that the player has control back.
+	for e in all_enemies:
+		if is_instance_valid(e) and "ai_enabled" in e:
+			e.ai_enabled = true
 
 
 # ── Pickup reactions ──────────────────────────────────────────────────────────
