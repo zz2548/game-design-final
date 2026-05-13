@@ -510,4 +510,4 @@ radius = 100.0
 position = Vector2(216, 505)
 
 [node name="LevelGate" parent="." unique_id=800200002 instance=ExtResource("24_gate")]
-position = Vector2(948, 1690)
+position = Vector2(948, 1709)
