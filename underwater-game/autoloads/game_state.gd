@@ -12,6 +12,10 @@ var submarine_fixed        : bool   = false
 var death_return_scene     : String = ""   # set by player.gd before going to death screen
 var melee_tutorial_shown   : bool   = false
 
+# Persisted weapon state across level transitions.
+var saved_weapons         : Array[String] = []   # resource_path of each collected weapon
+var saved_current_weapon  : String        = ""   # resource_path of equipped weapon
+
 # Persisted objective snapshots: Array of { "text": String, "completed": bool }
 var level_1_objectives  : Array  = []
 var level_2_objectives  : Array  = []

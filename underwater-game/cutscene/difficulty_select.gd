@@ -1,7 +1,7 @@
 extends Node
 
 # Scene that loads after this screen confirms a difficulty selection.
-const NEXT_SCENE := "res://cutscene/opening_cinematic.tscn"
+const NEXT_SCENE := "res://cutscene/level_select.tscn"
 
 # ── Panel colours ─────────────────────────────────────────────────────────────
 const COL_EASY : Color = Color(0.20, 0.78, 0.40)

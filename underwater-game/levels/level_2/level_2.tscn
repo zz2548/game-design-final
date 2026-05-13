@@ -342,7 +342,6 @@ position = Vector2(1264, 1152)
 [node name="Melee13" parent="Enemies/Melee" unique_id=140080247 instance=ExtResource("11_enemy")]
 position = Vector2(1603, 348)
 
-
 [node name="Melee15" parent="Enemies/Melee" unique_id=1669460854 instance=ExtResource("11_enemy")]
 position = Vector2(1393, 159)
 
@@ -496,7 +495,7 @@ position = Vector2(1757, 1386)
 column_height = 364.0
 
 [node name="BubbleColumn4" parent="Hazards" unique_id=901390760 instance=ExtResource("21_steam")]
-position = Vector2(83, 583)
+position = Vector2(77, 226)
 column_height = 1167.0
 
 [node name="Toxic1" parent="Hazards" unique_id=800100007 instance=ExtResource("22_toxic")]

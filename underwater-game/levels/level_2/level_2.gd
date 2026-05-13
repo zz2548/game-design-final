@@ -26,16 +26,8 @@ func _ready() -> void:
 	# ── Ambient music ─────────────────────────────────────────────────────────
 	MusicManager.play(["res://assets/sounds/ambient_l2.mp3"])
 
-	# ── Restore Level 1 objective history ────────────────────────────────────
-	# Replay the Level 1 snapshot so completed objectives appear at the top of
-	# the HUD as a record of prior progress, then append Level 2 objectives.
-	ObjectiveManager.clear_objectives()
-	for entry in GameState.level_1_objectives:
-		var idx := ObjectiveManager.add_objective(entry["text"])
-		if entry["completed"]:
-			ObjectiveManager.complete_objective(idx)
-
 	# ── Level 2 objectives ────────────────────────────────────────────────────
+	ObjectiveManager.clear_objectives()
 	_obj_key      = ObjectiveManager.add_objective("Find the access key to the bore shaft")
 	_obj_exit     = ObjectiveManager.add_objective("Exit Kappa Station")
 	_obj_hostiles = ObjectiveManager.add_objective("Eliminate all hostiles [optional]")

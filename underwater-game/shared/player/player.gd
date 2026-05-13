@@ -128,7 +128,17 @@ func _ready() -> void:
 		print("Picked up: ", item.display_name, " x", qty)
 	)
 	if start_armed:
-		equip_weapon(DEFAULT_WEAPON)
+		if GameState.saved_weapons.size() > 0:
+			for path in GameState.saved_weapons:
+				var w : WeaponData = load(path)
+				if w and not _weapons.has(w):
+					_weapons.append(w)
+			var cw : WeaponData = null
+			if GameState.saved_current_weapon != "":
+				cw = load(GameState.saved_current_weapon)
+			equip_weapon(cw if cw != null else (_weapons[0] if _weapons.size() > 0 else DEFAULT_WEAPON))
+		else:
+			equip_weapon(DEFAULT_WEAPON)
 	emit_signal("health_changed", health, MAX_HEALTH)
 	emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
 	emit_signal("battery_changed", battery, MAX_BATTERY)
@@ -364,6 +374,11 @@ func equip_weapon(weapon: WeaponData) -> void:
 	if not _weapons.has(weapon):
 		_weapons.append(weapon)
 	emit_signal("weapon_changed", weapon.display_name)
+	GameState.saved_current_weapon = weapon.resource_path if weapon.resource_path != "" else ""
+	GameState.saved_weapons = []
+	for w in _weapons:
+		if w.resource_path != "":
+			GameState.saved_weapons.append(w.resource_path)
 
 
 func _fire() -> void:

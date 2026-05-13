@@ -44,9 +44,9 @@ func _build_bubbles() -> void:
 	_bubbles.lifetime             = lt
 	_bubbles.lifetime_randomness  = 0.1
 	_bubbles.preprocess           = lt   # pre-simulate a full lifetime so the column
-	                                     # is already populated on frame 1 — prevents
-	                                     # the initial burst of particles all sitting
-	                                     # at the emission strip (top of column)
+										 # is already populated on frame 1 — prevents
+										 # the initial burst of particles all sitting
+										 # at the emission strip (top of column)
 	_bubbles.explosiveness        = 0.0
 	_bubbles.emission_shape       = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
 	_bubbles.emission_rect_extents = Vector2(40.0, 2.0)

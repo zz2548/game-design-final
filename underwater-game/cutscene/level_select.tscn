@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://level_select_001"]
+
+[ext_resource type="Script" path="res://cutscene/level_select.gd" id="1_script"]
+
+[node name="LevelSelect" type="Node2D"]
+script = ExtResource("1_script")

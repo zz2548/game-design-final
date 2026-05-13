@@ -61,21 +61,11 @@ func _ready() -> void:
 	## TODO: Replace with level 3 ambient track when available
 	MusicManager.play(["res://assets/sounds/ambient_l2.mp3"])
 
-	# ── Restore objective history ─────────────────────────────────────────────
-	ObjectiveManager.clear_objectives()
-	for entry in GameState.level_1_objectives:
-		var idx := ObjectiveManager.add_objective(entry["text"])
-		if entry["completed"]:
-			ObjectiveManager.complete_objective(idx)
-	for entry in GameState.level_2_objectives:
-		var idx := ObjectiveManager.add_objective(entry["text"])
-		if entry["completed"]:
-			ObjectiveManager.complete_objective(idx)
-
 	# ── Level 3 objectives ────────────────────────────────────────────────────
-	_obj_hostiles  = ObjectiveManager.add_objective("Eliminate all hostiles")
+	ObjectiveManager.clear_objectives()
+	_obj_hostiles  = ObjectiveManager.add_objective("Clear all hostiles")
 	_obj_boss      = ObjectiveManager.add_objective("Defeat the boss")
-	_obj_boss_hint = ObjectiveManager.add_objective("Activate both energy beams to expose the boss")
+	_obj_boss_hint = ObjectiveManager.add_objective("Activate both energy beams")
 
 	# ── Connect boss signals ──────────────────────────────────────────────────
 	if boss != null and boss.has_signal("died"):
@@ -218,7 +208,7 @@ func _on_boss_phase_2_started() -> void:
 		beam_left.reset()
 	if beam_right != null:
 		beam_right.reset()
-	_set_boss_hint("Phase 2: Activate both energy beams to expose the boss again")
+	_set_boss_hint("Activate both energy beams again")
 
 
 func _on_boss_window_consumed() -> void:
@@ -230,15 +220,9 @@ func _on_boss_window_consumed() -> void:
 
 func _on_boss_vulnerability_changed(is_vulnerable: bool) -> void:
 	if is_vulnerable:
-		if not _boss_is_phase_2:
-			_set_boss_hint("Reactivate both energy beams to re-expose the boss")
-		else:
-			_set_boss_hint("Reactivate both energy beams (Phase 2)")
+		_set_boss_hint("Boss exposed — deal damage now")
 	else:
-		if not _boss_is_phase_2:
-			_set_boss_hint("Boss exposed! Damage it now (up to 30 HP per window)")
-		else:
-			_set_boss_hint("Boss exposed! Dodge homing bullets and deal damage")
+		_set_boss_hint("Reactivate both energy beams")
 
 
 func _set_boss_hint(text: String) -> void:
