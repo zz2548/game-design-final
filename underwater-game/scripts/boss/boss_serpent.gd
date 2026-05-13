@@ -121,6 +121,10 @@ var _homing_scene  : PackedScene
 var _minion_scene  : PackedScene
 var _ever_aggro   : bool = false
 
+var _projectile_sound      : AudioStreamPlayer = null
+var _charge_sound          : AudioStreamPlayer = null
+var _serpent_death_sound   : AudioStreamPlayer = null
+
 var _vuln_damage_in_window : int   = 0
 var _attack_timer          : float = 2.5
 var _shoot_count          : int   = 0
@@ -164,6 +168,21 @@ func _ready() -> void:
 
 	_hit_sound.stream  = load("res://assets/sounds/hit.mp3")
 	_fire_sound.stream = load("res://assets/sounds/fire.mp3")
+
+	_projectile_sound = AudioStreamPlayer.new()
+	_projectile_sound.stream    = load("res://assets/sounds/serpentprojectile.ogg")
+	_projectile_sound.volume_db = -10.0
+	add_child(_projectile_sound)
+
+	_charge_sound = AudioStreamPlayer.new()
+	_charge_sound.stream    = load("res://assets/sounds/serpentcharge.ogg")
+	_charge_sound.volume_db = -7.0
+	add_child(_charge_sound)
+
+	_serpent_death_sound = AudioStreamPlayer.new()
+	_serpent_death_sound.stream    = load("res://assets/sounds/serpentdeath.ogg")
+	_serpent_death_sound.volume_db = -10.0
+	add_child(_serpent_death_sound)
 
 	_setup_head_sprite()
 	_setup_body_segments()
@@ -517,6 +536,7 @@ func _enter_state(new_state: State) -> void:
 
 		State.MELEE_CHARGE:
 			_state_timer = CHARGE_DURATION
+			_charge_sound.play()
 
 		State.BACKING_OFF:
 			_state_timer = BACK_OFF_DURATION
@@ -719,6 +739,7 @@ func _die() -> void:
 
 
 func _play_death_sequence() -> void:
+	_serpent_death_sound.play()
 	# Phase 1 — rapid red-white flashing on the whole body
 	var flash := create_tween()
 	for i in 7:
@@ -755,11 +776,6 @@ func _play_death_sequence() -> void:
 		for seg in _segments:
 			fade.parallel().tween_property(seg, "modulate:a", 0.0, 0.6)
 		fade.tween_callback(func() -> void:
-			var snd := AudioStreamPlayer.new()
-			snd.stream = load("res://assets/sounds/mobdeath.mp3")
-			snd.finished.connect(snd.queue_free)
-			get_parent().add_child(snd)
-			snd.play()
 			emit_signal("died")
 			queue_free()
 		)
@@ -796,7 +812,7 @@ func _fire_bullet() -> void:
 	b.global_position = global_position
 	b.direction       = (_player_ref.global_position - global_position).normalized()
 	b.damage          = 1
-	_fire_sound.play()
+	_projectile_sound.play()
 	var orig := modulate
 	modulate = Color(1.5, 1.3, 0.5)
 	create_tween().tween_property(self, "modulate", orig, 0.12)
@@ -805,7 +821,7 @@ func _fire_bullet() -> void:
 func _spawn_homing_ring() -> void:
 	if _homing_scene == null:
 		return
-	_fire_sound.play()
+	_projectile_sound.play()
 	for i in HOMING_COUNT:
 		var angle  := (TAU / HOMING_COUNT) * i
 		var offset := Vector2(cos(angle), sin(angle)) * HOMING_SPAWN_RADIUS
