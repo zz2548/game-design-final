@@ -292,11 +292,11 @@ func _run_ending() -> void:
 		["Threat neutralised.", 1.4],
 		["Apex organism confirmed. Europa's subsurface biosphere is intact and inhabited.", 1.4],
 		["Cross-referencing station logs. A seismic survey team accessed the bore shaft six days before the blackout. There is no record of their return.", 1.4],
-		["Corporate filed no emergency response. No missing persons report...", 1.4],
+		["Corporate filed no emergency response. No missing persons report.", 1.4],
 		["They knew a team had gone in and not come back. They sent us anyway.", 1.4],
 		["We were sent to confirm how dangerous it was, not to assess a blackout... They view us as expendable.", 1.8],
 		["If we hadn't made it back... they would have had their answer.", 1.4],
-		["Once we make it back, we have some questioning to do.", 3.0]
+		["They sent one operative because one operative is an acceptable loss. We are expendable to them.", 3.5]
 	])
 
 	# Cut to black, then win screen.
