@@ -261,7 +261,7 @@ func _on_gate_reached() -> void:
 			var player := get_tree().get_first_node_in_group("player")
 			if player != null:
 				GameState.save_player_stats(player)
-			SceneManager.next_level(),
+			get_tree().change_scene_to_file("res://cutscene/bore_shaft_cinematic.tscn"),
 		CONNECT_ONE_SHOT
 	)
 
