@@ -703,36 +703,84 @@ func _take_damage(amount: int) -> void:
 
 
 func _die() -> void:
-	var bbi := get_node_or_null("BossBodyInteractable")
-	if is_instance_valid(bbi):
-		bbi.reparent(get_parent(), true)
+	ai_enabled = false
+	set_physics_process(false)
+	velocity   = Vector2.ZERO
 
-	_spawn_death_vfx()
+	# Disable all hit/detection zones immediately
+	for child in get_children():
+		if child is CollisionShape2D:
+			(child as CollisionShape2D).set_deferred("disabled", true)
+		elif child is Area2D:
+			(child as Area2D).monitoring  = false
+			(child as Area2D).monitorable = false
 
-	var snd := AudioStreamPlayer.new()
-	snd.stream = load("res://assets/sounds/mobdeath.mp3")
-	snd.finished.connect(snd.queue_free)
-	get_parent().add_child(snd)
-	snd.play()
-
-	emit_signal("died")
-	queue_free()
+	_play_death_sequence()
 
 
-func _spawn_death_vfx() -> void:
+func _play_death_sequence() -> void:
+	# Phase 1 — rapid red-white flashing on the whole body
+	var flash := create_tween()
+	for i in 7:
+		flash.tween_property(self, "modulate", Color(3.0, 0.4, 0.4), 0.05)
+		flash.tween_property(self, "modulate", Color(0.15, 0.05, 0.05), 0.08)
+
+	# Gather explosion origin points: head + all segments
+	var origins : Array[Vector2] = [global_position]
+	for seg in _segments:
+		origins.append((seg as Node2D).global_position)
+
+	# Phase 2 — staggered explosions across every segment
+	var delay  := 0.2
+	var bursts := origins.size() * 2
+	for i in bursts:
+		var pos : Vector2 = origins[i % origins.size()] \
+				+ Vector2(randf_range(-28.0, 28.0), randf_range(-28.0, 28.0))
+		get_tree().create_timer(delay).timeout.connect(func() -> void:
+			if not is_inside_tree():
+				return
+			_spawn_explosion_at(pos)
+			var player := get_tree().get_first_node_in_group("player")
+			if player and player.has_method("_shake_camera"):
+				player._shake_camera(randf_range(4.0, 7.0), 4)
+		, CONNECT_ONE_SHOT)
+		delay += 0.14
+
+	# Phase 3 — fade out the whole snake then emit died
+	get_tree().create_timer(delay + 0.15).timeout.connect(func() -> void:
+		if not is_inside_tree():
+			return
+		var fade := create_tween()
+		fade.tween_property(self, "modulate:a", 0.0, 0.6)
+		for seg in _segments:
+			fade.parallel().tween_property(seg, "modulate:a", 0.0, 0.6)
+		fade.tween_callback(func() -> void:
+			var snd := AudioStreamPlayer.new()
+			snd.stream = load("res://assets/sounds/mobdeath.mp3")
+			snd.finished.connect(snd.queue_free)
+			get_parent().add_child(snd)
+			snd.play()
+			emit_signal("died")
+			queue_free()
+		)
+	, CONNECT_ONE_SHOT)
+
+
+func _spawn_explosion_at(pos: Vector2) -> void:
 	var anim   := AnimatedSprite2D.new()
 	var tex    : Texture2D = load("res://assets/vfx/enemy-death.png")
 	var frames := SpriteFrames.new()
 	frames.add_animation("death")
 	frames.set_animation_loop("death", false)
-	frames.set_animation_speed("death", 12.0)
+	frames.set_animation_speed("death", 14.0)
 	for i in 6:
 		var atlas := AtlasTexture.new()
 		atlas.atlas  = tex
 		atlas.region = Rect2(i * 52, 0, 52, 53)
 		frames.add_frame("death", atlas)
-	anim.sprite_frames    = frames
-	anim.global_position  = global_position
+	anim.sprite_frames   = frames
+	anim.global_position = pos
+	anim.scale           = Vector2(randf_range(2.2, 3.2), randf_range(2.2, 3.2))
 	anim.animation_finished.connect(anim.queue_free)
 	get_parent().add_child(anim)
 	anim.play("death")

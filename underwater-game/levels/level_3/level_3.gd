@@ -39,7 +39,7 @@ extends Node2D
 @export var beam_left  : ArenaEnergyBeam  = null  ## Left-side energy beam interactable
 @export var beam_right : ArenaEnergyBeam  = null  ## Right-side energy beam interactable
 
-var boss_body : BossBodyInteractable = null  ## Auto-fetched from boss node in _ready()
+var boss_body : BossBodyInteractable = null
 var _boss_hud : CanvasLayer          = null  ## Instantiated at runtime
 
 # ── Objective indices ─────────────────────────────────────────────────────────
@@ -90,15 +90,6 @@ func _ready() -> void:
 			add_child(_boss_hud)
 			_boss_hud.connect_boss(boss)
 
-	# Auto-fetch boss_body from inside the boss scene
-	if boss_body == null and boss != null:
-		boss_body = boss.get_node_or_null("BossBodyInteractable") as BossBodyInteractable
-
-	# ── Boss body starts hidden until boss dies ───────────────────────────────
-	if boss_body != null:
-		boss_body.process_mode = Node.PROCESS_MODE_DISABLED
-		boss_body.visible      = false
-
 	# ── Wire up arena beams ───────────────────────────────────────────────────
 	if beam_left != null:
 		beam_left.beam_primed.connect(_on_beam_activated)
@@ -144,50 +135,15 @@ func _on_boss_defeated() -> void:
 		_obj_boss_hint = -1
 	ObjectiveManager.complete_objective(_obj_boss)
 
-	# Enable the body interactable so the player can trigger story content
-	if boss_body != null:
-		boss_body.process_mode = Node.PROCESS_MODE_INHERIT
-		boss_body.visible      = true
-		boss_body.examined.connect(_on_boss_examined, CONNECT_ONE_SHOT)
-
-	DialogueManager.start_dialogue({
-		"speaker": "ORCA",
-		"lines": [
-			## TODO: Add ORCA lines for boss death moment
-			"Threat neutralised.",
-			"Approach for further analysis.",
-		],
-	})
-
-
-# ── Boss body interaction — story cutscenes ───────────────────────────────────
-
-func _on_boss_examined() -> void:
-	if _level_ended:
-		return
 	_level_ended = true
 	GameState.save_objectives_from_level_3()
-
-	# ── TODO: Build your story cutscene sequence here ─────────────────────────
-	# Each dialogue block, cinematic, or scene transition goes in sequence.
-	# Example pattern:
-	#
-	#   DialogueManager.start_dialogue({ "speaker": "ORCA", "lines": [...] })
-	#   DialogueManager.dialogue_ended.connect(func(): _play_next_cutscene(), CONNECT_ONE_SHOT)
-	#
 	DialogueManager.start_dialogue({
 		"speaker": "ORCA",
-		"lines": [
-			## TODO: Replace with actual story dialogue
-			"...",
-		],
+		"lines": ["Threat neutralised."],
 	})
-	DialogueManager.dialogue_ended.connect(_finish_ending, CONNECT_ONE_SHOT)
-
-
-func _finish_ending() -> void:
-	## TODO: Replace with your actual ending scene (credits, epilogue, etc.)
-	get_tree().change_scene_to_file("res://cutscene/win_screen.tscn")
+	DialogueManager.dialogue_ended.connect(func() -> void:
+		get_tree().change_scene_to_file("res://cutscene/win_screen.tscn")
+	, CONNECT_ONE_SHOT)
 
 
 # ── Arena beam coordination ───────────────────────────────────────────────────
