@@ -619,12 +619,12 @@ energy = 0.5
 radius = 1.5
 
 [node name="PlaceableLight2" parent="Lights" unique_id=1718189822 instance=ExtResource("17_dj0pt")]
-position = Vector2(424, 872)
+position = Vector2(692, 732)
 energy = 0.5
 radius = 1.5
 
 [node name="PlaceableLight3" parent="Lights" unique_id=221628094 instance=ExtResource("17_dj0pt")]
-position = Vector2(1544, 872)
+position = Vector2(1192, 732)
 energy = 0.5
 radius = 1.5
 
