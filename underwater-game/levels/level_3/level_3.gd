@@ -52,6 +52,7 @@ var _remaining_enemies  : int  = 0
 var _boss_defeated      : bool = false
 var _level_ended        : bool = false
 var _boss_is_phase_2    : bool = false
+var _boss_intro_triggered : bool = false
 
 
 func _ready() -> void:
@@ -81,6 +82,9 @@ func _ready() -> void:
 
 	if boss != null and boss.has_signal("window_consumed"):
 		boss.window_consumed.connect(_on_boss_window_consumed)
+
+	if boss != null and boss.has_signal("became_visible"):
+		boss.became_visible.connect(_on_boss_became_visible, CONNECT_ONE_SHOT)
 
 	# ── Boss HUD ──────────────────────────────────────────────────────────────
 	if boss != null:
@@ -122,6 +126,128 @@ func _unhandled_input(event: InputEvent) -> void:
 		push_warning("Level3 [DEV]: F7 — making boss vulnerable (skipping beams).")
 		if boss != null and boss.has_method("make_vulnerable"):
 			boss.make_vulnerable()
+
+
+# ── Boss intro cinematic ─────────────────────────────────────────────────────
+
+func _on_boss_became_visible() -> void:
+	if _boss_intro_triggered:
+		return
+	_boss_intro_triggered = true
+	_run_boss_intro.call_deferred()
+
+
+func _run_boss_intro() -> void:
+	var player : Node2D = get_tree().get_first_node_in_group("player")
+	if player == null or boss == null:
+		return
+
+	var cam := player.get_node_or_null("Camera2D") as Camera2D
+	if cam == null:
+		return
+
+	# Freeze all enemies (including boss) so nothing attacks during the cinematic.
+	var all_enemies := get_tree().get_nodes_in_group("enemies")
+	for e in all_enemies:
+		if "ai_enabled" in e:
+			e.ai_enabled = false
+	if "ai_enabled" in boss:
+		boss.ai_enabled = false
+	player.movement_locked = true
+	player.shooting_locked = true
+	player.set_process_unhandled_input(false)
+	if player.has_node("InteractionPromptLayer"):
+		player.get_node("InteractionPromptLayer").hide()
+	if player.has_node("InteractionSystem"):
+		player.get_node("InteractionSystem").set_process_unhandled_input(false)
+
+	# Create a temporary cinematic camera.
+	var start_pos := cam.get_screen_center_position()
+	cam.enabled = false
+	var cine_cam := Camera2D.new()
+	cine_cam.zoom         = Vector2(1.5, 1.5)
+	cine_cam.limit_left   = -99999
+	cine_cam.limit_top    = -99999
+	cine_cam.limit_right  =  99999
+	cine_cam.limit_bottom =  99999
+	cine_cam.global_position = start_pos
+	add_child(cine_cam)
+
+	# Label shown at each point of interest.
+	var ui_layer := CanvasLayer.new()
+	ui_layer.layer = 30
+	add_child(ui_layer)
+	var lbl := Label.new()
+	lbl.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	lbl.offset_top = -120.0
+	lbl.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.modulate.a = 0.0
+	var font := SystemFont.new()
+	font.font_names = PackedStringArray(["Consolas", "Courier New", "monospace"])
+	lbl.add_theme_font_override("font", font)
+	lbl.add_theme_font_size_override("font_size", 17)
+	lbl.add_theme_color_override("font_color", Color(0.28, 0.82, 1.0))
+	lbl.add_theme_constant_override("outline_size", 3)
+	lbl.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 0.85))
+	ui_layer.add_child(lbl)
+
+	const TRAVEL : float = 1.1
+	const HOLD   : float = 1.0
+
+	var stops : Array = []
+	if beam_left  != null: stops.append([beam_left.global_position,  "Energy Emitter"])
+	if beam_right != null: stops.append([beam_right.global_position, "Energy Emitter"])
+	stops.append([boss.global_position, ""])
+
+	for stop in stops:
+		var dest : Vector2 = stop[0]
+		var tag  : String  = stop[1]
+		var move := create_tween()
+		move.tween_property(cine_cam, "global_position", dest, TRAVEL) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		await move.finished
+		if tag != "":
+			lbl.text = tag
+			create_tween().tween_property(lbl, "modulate:a", 1.0, 0.25)
+			await get_tree().create_timer(HOLD).timeout
+			create_tween().tween_property(lbl, "modulate:a", 0.0, 0.2)
+			await get_tree().create_timer(0.25).timeout
+		else:
+			await get_tree().create_timer(HOLD).timeout
+
+	var tw_back := create_tween()
+	tw_back.tween_property(cine_cam, "global_position", start_pos, TRAVEL) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await tw_back.finished
+
+	ui_layer.queue_free()
+	cam.enabled = true
+	cine_cam.enabled = false
+	cine_cam.queue_free()
+
+	# ORCA warns the player about the shield mechanic before combat begins.
+	DialogueManager.start_dialogue({
+		"speaker": "ORCA",
+		"lines": [
+			"That creature is shielded — direct fire won't penetrate it.",
+			"I'm detecting two energy emitters in this chamber.",
+			"Activate both to bring the shield down.",
+		],
+	})
+	await DialogueManager.dialogue_ended
+
+	# Restore full player control and re-enable all enemy AI.
+	player.movement_locked = false
+	player.shooting_locked = false
+	player.set_process_unhandled_input(true)
+	if player.has_node("InteractionSystem"):
+		player.get_node("InteractionSystem").set_process_unhandled_input(true)
+	for e in all_enemies:
+		if is_instance_valid(e) and "ai_enabled" in e:
+			e.ai_enabled = true
+	if "ai_enabled" in boss:
+		boss.ai_enabled = true
 
 
 # ── Boss defeated ─────────────────────────────────────────────────────────────

@@ -16,10 +16,19 @@ var melee_tutorial_shown   : bool   = false
 var saved_weapons         : Array[String] = []   # resource_path of each collected weapon
 var saved_current_weapon  : String        = ""   # resource_path of equipped weapon
 
+# Persisted player stats across level transitions (-1 = not saved, restore to max).
+var saved_health  : int   = -1
+var saved_oxygen  : float = -1.0
+
 # Persisted objective snapshots: Array of { "text": String, "completed": bool }
 var level_1_objectives  : Array  = []
 var level_2_objectives  : Array  = []
 var level_3_objectives  : Array  = []
+
+
+func save_player_stats(player: Node) -> void:
+	saved_health = player.health
+	saved_oxygen = player.oxygen
 
 
 # Call this before leaving Level 1 to snapshot the current objective list.

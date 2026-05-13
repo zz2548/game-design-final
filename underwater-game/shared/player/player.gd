@@ -139,6 +139,13 @@ func _ready() -> void:
 			equip_weapon(cw if cw != null else (_weapons[0] if _weapons.size() > 0 else DEFAULT_WEAPON))
 		else:
 			equip_weapon(DEFAULT_WEAPON)
+	if GameState.saved_health >= 0:
+		health = GameState.saved_health
+		GameState.saved_health = -1
+		_update_health_desat()
+	if GameState.saved_oxygen >= 0.0:
+		oxygen = GameState.saved_oxygen
+		GameState.saved_oxygen = -1.0
 	emit_signal("health_changed", health, MAX_HEALTH)
 	emit_signal("oxygen_changed", oxygen, MAX_OXYGEN)
 	emit_signal("battery_changed", battery, MAX_BATTERY)

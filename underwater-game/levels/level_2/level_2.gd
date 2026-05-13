@@ -79,6 +79,9 @@ func _on_gate_reached() -> void:
 	DialogueManager.dialogue_ended.connect(
 		func():
 			GameState.save_objectives_from_level_2()
+			var player := get_tree().get_first_node_in_group("player")
+			if player != null:
+				GameState.save_player_stats(player)
 			SceneManager.next_level(),
 		CONNECT_ONE_SHOT
 	)

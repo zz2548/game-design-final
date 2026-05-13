@@ -158,8 +158,9 @@ func _ready() -> void:
 	_bullet_scene  = load("res://shared/Enemies/enemy_bullet.tscn")
 	_homing_scene  = load("res://scripts/boss/homing_bullet.tscn")
 	_minion_scene  = load("res://shared/Enemies/enemy_ranged.tscn")
-	_prev_sampled  = global_position
-	_position_history.append(global_position)
+	_prev_sampled = global_position
+	for i in MAX_HISTORY:
+		_position_history.append(global_position + Vector2(0.0, SAMPLE_DIST * float(i)))
 
 	_hit_sound.stream  = load("res://assets/sounds/hit.mp3")
 	_fire_sound.stream = load("res://assets/sounds/fire.mp3")
@@ -181,6 +182,8 @@ func _ready() -> void:
 	add_child(notifier)
 	notifier.screen_entered.connect(func(): became_visible.emit())
 	notifier.screen_exited.connect(func(): became_hidden.emit())
+
+	_update_body_positions()
 
 	emit_signal("health_changed", _health, max_health)
 	emit_signal("vulnerability_changed", _is_invulnerable)
@@ -695,9 +698,6 @@ func _take_damage(amount: int) -> void:
 	modulate = Color(1.6, 1.6, 1.6)
 	create_tween().tween_property(self, "modulate", orig, 0.2)
 
-	if _state not in [State.STUNNED, State.MELEE_CHARGE, State.PHASE_TRANSITION, State.RESHIELD_MOVE]:
-		_enter_state(State.STUNNED)
-
 	if _player_ref == null:
 		_player_ref = get_tree().get_first_node_in_group("player") as Node2D
 
@@ -962,7 +962,16 @@ func _update_body_positions() -> void:
 		var ahead := world_pos[seg_i]
 		var here  := world_pos[seg_i + 1]
 		if here.distance_squared_to(ahead) > 0.01:
-			_segments[seg_i].rotation = (ahead - here).angle() - PI / 2.0
+			var dir_angle := (ahead - here).angle()
+			var spr := _segments[seg_i].get_child(0) as Sprite2D
+			if cos(dir_angle) >= 0.0:
+				if spr != null:
+					spr.flip_v = false
+				_segments[seg_i].rotation = dir_angle - PI / 2.0
+			else:
+				if spr != null:
+					spr.flip_v = true
+				_segments[seg_i].rotation = dir_angle + PI / 2.0
 
 
 func _update_head_rotation() -> void:
