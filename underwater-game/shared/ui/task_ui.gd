@@ -107,7 +107,7 @@ class DropSlot extends PanelContainer:
 			tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			add_child(tex)
 		_check_label = Label.new()
-		_check_label.text = "✓" if prefilled else ""
+		_check_label.text = "OK" if prefilled else ""
 		_check_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		_check_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		_check_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -133,7 +133,7 @@ class DropSlot extends PanelContainer:
 	func _drop_data(_pos: Vector2, data: Variant) -> void:
 		prefilled = true
 		_apply_style(true)
-		_check_label.text = "✓"
+		_check_label.text = "OK"
 		# Brighten the ghost icon
 		for child in get_children():
 			if child is TextureRect:
@@ -292,7 +292,7 @@ func _build_ui() -> void:
 		ac.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		arrow_col.add_child(ac)
 		var a := Label.new()
-		a.text = "→"
+		a.text = ">"
 		a.add_theme_color_override("font_color", Color(0.35, 0.55, 0.70))
 		a.add_theme_font_size_override("font_size", 22)
 		ac.add_child(a)
