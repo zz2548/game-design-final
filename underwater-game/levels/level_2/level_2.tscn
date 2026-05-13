@@ -7,7 +7,7 @@
 [ext_resource type="PackedScene" path="res://shared/ui/BatteryHUD.tscn" id="6_bathud"]
 [ext_resource type="PackedScene" uid="uid://mlhwapbkc1vs" path="res://scripts/interactables/OxygenRefillStation.tscn" id="7_oxyrs"]
 [ext_resource type="PackedScene" path="res://shared/ui/HealthHUD.tscn" id="8_healthhud"]
-[ext_resource type="PackedScene" path="res://scripts/interactables/WeaponPickup.tscn" id="9_wpickup"]
+[ext_resource type="PackedScene" uid="uid://chkt7q6g0mw0o" path="res://scripts/interactables/WeaponPickup.tscn" id="9_wpickup"]
 [ext_resource type="PackedScene" path="res://shared/ui/InventoryUI.tscn" id="10_kgdtm"]
 [ext_resource type="Resource" uid="uid://coahldrxo3um" path="res://shared/weapons/shotgun.tres" id="10_shotgun"]
 [ext_resource type="PackedScene" uid="uid://eb3vk6h130ot" path="res://shared/ui/dialogue_ui.tscn" id="11_12l1j"]
@@ -304,10 +304,10 @@ position = Vector2(126, 112)
 [node name="Melee" type="Node2D" parent="Enemies" unique_id=1017215380]
 
 [node name="Melee1" parent="Enemies/Melee" unique_id=700000001 instance=ExtResource("11_enemy")]
-position = Vector2(554, 86)
+position = Vector2(375.305, 86)
 
 [node name="Melee2" parent="Enemies/Melee" unique_id=700000003 instance=ExtResource("11_enemy")]
-position = Vector2(554, 256)
+position = Vector2(554, 86.17)
 
 [node name="Melee3" parent="Enemies/Melee" unique_id=700000006 instance=ExtResource("11_enemy")]
 position = Vector2(868, 371)
@@ -363,7 +363,7 @@ position = Vector2(1220, 525)
 [node name="Ranged" type="Node2D" parent="Enemies" unique_id=436390321]
 
 [node name="Ranged1" parent="Enemies/Ranged" unique_id=700000002 instance=ExtResource("12_ranged")]
-position = Vector2(605, 384)
+position = Vector2(661.01, 283.555)
 
 [node name="Ranged2" parent="Enemies/Ranged" unique_id=700000004 instance=ExtResource("12_ranged")]
 position = Vector2(1312, 528)

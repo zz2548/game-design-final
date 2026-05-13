@@ -32,6 +32,8 @@ var _obj_escape: int
 var _level_ended        : bool     = false
 var _cine_cam           : Camera2D = null
 var _tutorial_triggered : bool     = false
+var _initial_kills      : int      = 0
+var _wave_triggered     : bool     = false
 
 
 func _process(delta: float) -> void:
@@ -96,6 +98,10 @@ func _ready() -> void:
 			func(b: Node2D) -> void: _on_melee_detected(b, _enemy_1))
 		_enemy_2.detection_zone.body_entered.connect(
 			func(b: Node2D) -> void: _on_melee_detected(b, _enemy_2))
+
+	# ── Reinforcement wave hook ───────────────────────────────────────────────
+	_enemy_1.died.connect(_on_initial_enemy_died, CONNECT_ONE_SHOT)
+	_enemy_2.died.connect(_on_initial_enemy_died, CONNECT_ONE_SHOT)
 
 
 func _setup_sub_sprite() -> void:
@@ -242,8 +248,9 @@ func _run_melee_tutorial(enemy: Enemy) -> void:
 	DialogueManager.start_dialogue({
 		"speaker": "ORCA",
 		"lines": [
-			"Warning — hostile fauna detected.",
-			"This creature will close distance and attack on contact.",
+			"Biological contact confirmed. Lifeform detected.",
+			"Europa's subsurface was classified as non-viable for complex fauna.",
+			"This organism disagrees. It is closing on your position.",
 		],
 	})
 	await DialogueManager.dialogue_ended
@@ -387,6 +394,160 @@ void fragment() {
 	bw_layer.queue_free()
 	_player.movement_locked = false
 	_stop_cine_cam()
+
+
+# ── Reinforcement wave ────────────────────────────────────────────────────────
+
+func _on_initial_enemy_died() -> void:
+	_initial_kills += 1
+	if _initial_kills >= 2 and not _wave_triggered and not _level_ended:
+		_wave_triggered = true
+		_run_reinforcement_wave.call_deferred()
+
+
+func _run_reinforcement_wave() -> void:
+	_start_cine_cam()
+	_player.shooting_locked = false  # _start_cine_cam locks shooting; undo it
+
+	# Non-blocking ORCA announcement — player keeps full control while text plays.
+	await _hud_dialogue("ORCA", [
+		"Additional contacts. Four biological signatures.",
+		"They are converging on your position.",
+	])
+
+	# Two spawn positions the camera reveals with a poof; two spawn silently off-screen.
+	const SHOWN_SPAWNS  : Array = [Vector2(200, 105), Vector2(670, 100)]
+	const HIDDEN_SPAWNS : Array = [Vector2(170, 350), Vector2(750, 560)]
+
+	var melee_scene := load("res://shared/Enemies/enemy.tscn") as PackedScene
+
+	for pos in SHOWN_SPAWNS:
+		var pan := create_tween()
+		pan.tween_property(_cine_cam, "global_position", pos, 0.75) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		await pan.finished
+
+		_spawn_poof(pos)
+		await get_tree().create_timer(0.12).timeout
+
+		var e := melee_scene.instantiate() as Enemy
+		add_child(e)
+		e.global_position = pos
+		e.set("_player_ref", _player)
+		e.call("_enter_state", Enemy.State.CHASE)
+		await get_tree().create_timer(0.55).timeout
+
+	for pos in HIDDEN_SPAWNS:
+		var e := melee_scene.instantiate() as Enemy
+		add_child(e)
+		e.global_position = pos
+		e.set("_player_ref", _player)
+		e.call("_enter_state", Enemy.State.CHASE)
+
+	# Pan back to the clamped camera position so there is no snap when the
+	# normal bounded camera re-enables.
+	var vp_half := get_viewport().get_visible_rect().size * 0.5
+	var target  := _player.global_position
+	target.x = clampf(target.x, _camera.limit_left  + vp_half.x, _camera.limit_right  - vp_half.x)
+	target.y = clampf(target.y, _camera.limit_top   + vp_half.y, _camera.limit_bottom - vp_half.y)
+	var pan_back := create_tween()
+	pan_back.tween_property(_cine_cam, "global_position", target, 0.9) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	await pan_back.finished
+
+	_stop_cine_cam()
+
+
+func _spawn_poof(world_pos: Vector2) -> void:
+	var anim   := AnimatedSprite2D.new()
+	var tex    : Texture2D = load("res://assets/vfx/enemy-death.png")
+	var frames := SpriteFrames.new()
+	frames.add_animation("poof")
+	frames.set_animation_loop("poof", false)
+	frames.set_animation_speed("poof", 14.0)
+	for i in 6:
+		var atlas := AtlasTexture.new()
+		atlas.atlas  = tex
+		atlas.region = Rect2(i * 52, 0, 52, 53)
+		frames.add_frame("poof", atlas)
+	anim.sprite_frames = frames
+	anim.global_position = world_pos
+	anim.scale = Vector2(2.5, 2.5)
+	anim.animation_finished.connect(anim.queue_free)
+	add_child(anim)
+	anim.play("poof")
+
+
+# Shows a styled ORCA dialogue box without freezing the player.
+# Awaiting it only pauses the calling coroutine via timers; physics keeps running.
+func _hud_dialogue(speaker: String, lines: Array) -> void:
+	var font  := _make_ui_font()
+	var layer := CanvasLayer.new()
+	layer.layer = 40
+	add_child(layer)
+
+	var panel := PanelContainer.new()
+	panel.layout_mode     = 1
+	panel.anchor_left     = 0.0;   panel.anchor_top    = 1.0
+	panel.anchor_right    = 1.0;   panel.anchor_bottom = 1.0
+	panel.offset_left     = 72.0;  panel.offset_top    = -210.0
+	panel.offset_right    = -72.0; panel.offset_bottom = -24.0
+	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	panel.grow_vertical   = Control.GROW_DIRECTION_BEGIN
+	var sbox := StyleBoxFlat.new()
+	sbox.bg_color     = Color(0.04, 0.09, 0.14, 0.93)
+	sbox.border_color = Color(0.18, 0.52, 0.68, 0.75)
+	sbox.set_border_width_all(1)
+	sbox.set_corner_radius_all(6)
+	sbox.content_margin_left   = 22.0; sbox.content_margin_right  = 22.0
+	sbox.content_margin_top    = 14.0; sbox.content_margin_bottom = 12.0
+	panel.add_theme_stylebox_override("panel", sbox)
+	panel.modulate.a = 0.0
+	layer.add_child(panel)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	panel.add_child(vbox)
+
+	var spk_lbl := Label.new()
+	spk_lbl.text      = speaker
+	spk_lbl.uppercase = true
+	spk_lbl.add_theme_font_override("font", font)
+	spk_lbl.add_theme_font_size_override("font_size", 12)
+	spk_lbl.add_theme_color_override("font_color", Color(0.28, 0.82, 1.0))
+	vbox.add_child(spk_lbl)
+
+	var div  := HSeparator.new()
+	var dsep := StyleBoxFlat.new()
+	dsep.bg_color = Color(0.18, 0.52, 0.68, 0.4)
+	dsep.set_content_margin_all(0)
+	div.add_theme_stylebox_override("separator", dsep)
+	vbox.add_child(div)
+
+	var rtl := RichTextLabel.new()
+	rtl.custom_minimum_size = Vector2(20, 60)
+	rtl.bbcode_enabled  = true
+	rtl.fit_content     = false
+	rtl.scroll_active   = false
+	rtl.autowrap_mode   = TextServer.AUTOWRAP_WORD_SMART
+	rtl.visible_ratio   = 0.0
+	rtl.add_theme_font_override("normal_font", font)
+	rtl.add_theme_font_size_override("normal_font_size", 15)
+	rtl.add_theme_color_override("default_color", Color(0.80, 0.91, 0.97))
+	vbox.add_child(rtl)
+
+	create_tween().tween_property(panel, "modulate:a", 1.0, 0.3)
+
+	for line in lines:
+		rtl.text          = line
+		rtl.visible_ratio = 0.0
+		var type_dur : float = line.length() * 0.028
+		create_tween().tween_property(rtl, "visible_ratio", 1.0, type_dur)
+		await get_tree().create_timer(type_dur + 1.6).timeout
+
+	create_tween().tween_property(panel, "modulate:a", 0.0, 0.35)
+	await get_tree().create_timer(0.4).timeout
+	layer.queue_free()
 
 
 # ── Objective helpers ─────────────────────────────────────────────────────────
