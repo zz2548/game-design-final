@@ -294,9 +294,9 @@ func _run_ending() -> void:
 		["Cross-referencing station logs. A seismic survey team accessed the bore shaft six days before the blackout. There is no record of their return.", 1.4],
 		["Corporate filed no emergency response. No missing persons report.", 1.4],
 		["They knew a team had gone in and not come back. They sent us anyway.", 1.4],
-		["We were sent to confirm how dangerous it was, not to assess a blackout... They view us as expendable.", 1.8],
+		["We were sent to confirm how dangerous it was, not to assess a blackout...", 1.8],
 		["If we hadn't made it back... they would have had their answer.", 1.4],
-		["They sent one operative because one operative is an acceptable loss. We are expendable to them.", 3.5]
+		["To them, one operative is an acceptable loss. To them we are expendable...", 3.5]
 	])
 
 	# Cut to black, then win screen.
