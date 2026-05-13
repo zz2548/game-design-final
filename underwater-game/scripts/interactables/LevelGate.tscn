@@ -1,9 +1,11 @@
 [gd_scene format=3 uid="uid://level_gate_001"]
 
 [ext_resource type="Script" path="res://scripts/interactables/level_gate.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/items/door.png" id="2_tex"]
+[ext_resource type="Script" path="res://scripts/interactables/gate_bars.gd" id="3_bars"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_gate"]
-size = Vector2(36, 80)
+size = Vector2(128, 128)
 
 [node name="LevelGate" type="Area2D" groups=["interactables"]]
 collision_layer = 1
@@ -13,3 +15,9 @@ interaction_label = "Gate (Locked)"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_gate")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
+
+[node name="Bars" type="Node2D" parent="."]
+script = ExtResource("3_bars")

@@ -110,7 +110,9 @@ var _summon_triggered  : bool  = false  # guard against double-summon
 var _invuln_pulse_t    : float = 0.0
 
 # Phase transition sub-stage: 0 = moving to centre, 1 = glowing at centre
-var _trans_stage : int = 0
+var _trans_stage   : int   = 0
+var _trans_timer   : float = 0.0  # timeout guard so boss can't get stuck en route
+var _glow_tween    : Tween = null
 
 # ── Runtime state ─────────────────────────────────────────────────────────────
 var _player_ref   : Node2D     = null
@@ -416,17 +418,19 @@ func _tick_stunned(delta: float) -> void:
 
 func _tick_phase_transition(delta: float) -> void:
 	if _trans_stage == 0:
-		# Move toward arena centre
+		_trans_timer += delta
 		var to_centre := arena_center - global_position
-		if to_centre.length() > PHASE_TRANS_ARRIVE_DIST:
-			velocity = velocity.move_toward(
-					to_centre.normalized() * PHASE_TRANS_MOVE_SPEED, 1800.0 * delta)
-		else:
+		# Snap if close enough OR if stuck for more than 4 seconds
+		if to_centre.length() <= PHASE_TRANS_ARRIVE_DIST or _trans_timer >= 4.0:
 			velocity           = Vector2.ZERO
 			global_position    = arena_center
 			_trans_stage       = 1
+			_trans_timer       = 0.0
 			_state_timer       = PHASE_TRANS_GLOW_DUR
 			_start_glow_tween()
+		else:
+			velocity = velocity.move_toward(
+					to_centre.normalized() * PHASE_TRANS_MOVE_SPEED, 1800.0 * delta)
 	else:
 		# Glow at centre
 		velocity = Vector2.ZERO
@@ -464,12 +468,17 @@ func _tick_reshield_move(delta: float) -> void:
 # ── Phase transition helpers ──────────────────────────────────────────────────
 
 func _start_glow_tween() -> void:
-	var tw := create_tween().set_loops()
-	tw.tween_property(self, "modulate", Color(0.5, 0.85, 2.0), 0.4)
-	tw.tween_property(self, "modulate", Color(0.2, 0.55, 1.5), 0.4)
+	if _glow_tween:
+		_glow_tween.kill()
+	_glow_tween = create_tween().set_loops()
+	_glow_tween.tween_property(self, "modulate", Color(0.5, 0.85, 2.0), 0.4)
+	_glow_tween.tween_property(self, "modulate", Color(0.2, 0.55, 1.5), 0.4)
 
 
 func _finish_phase_transition() -> void:
+	if _glow_tween:
+		_glow_tween.kill()
+		_glow_tween = null
 	_apply_invuln_tint()
 	_is_phase_2    = true
 	_attack_timer  = randf_range(1.5, 3.0)
@@ -525,6 +534,7 @@ func _enter_state(new_state: State) -> void:
 
 		State.PHASE_TRANSITION:
 			_trans_stage     = 0
+			_trans_timer     = 0.0
 			_is_invulnerable = true
 			_apply_invuln_tint()
 			emit_signal("vulnerability_changed", true)
@@ -775,6 +785,58 @@ func _spawn_minions(count: int) -> void:
 		if is_instance_valid(player):
 			m.set("_player_ref", player)
 			m.call("_enter_state", Enemy.State.CHASE)
+		# 40% chance to drop a heal on death
+		if m.has_signal("died"):
+			var spawn_pos : Vector2 = (m as Node2D).global_position
+			m.died.connect(func() -> void: _maybe_drop_heal(spawn_pos), CONNECT_ONE_SHOT)
+
+
+func _maybe_drop_heal(pos: Vector2) -> void:
+	if randf() > 0.4:
+		return
+	var pickup := Area2D.new()
+	pickup.collision_layer = 0
+	pickup.collision_mask  = 8
+	pickup.global_position = pos
+
+	var cs     := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = 12.0
+	cs.shape = circle
+	pickup.add_child(cs)
+
+	var spr := Sprite2D.new()
+	spr.texture = _make_heal_texture()
+	pickup.add_child(spr)
+
+	var bob := pickup.create_tween().set_loops()
+	bob.tween_property(spr, "position:y", -4.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	bob.tween_property(spr, "position:y",  4.0, 0.7).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+	pickup.body_entered.connect(func(body: Node2D) -> void:
+		if not body.is_in_group("player"):
+			return
+		if body.has_method("heal"):
+			body.heal(1)
+		var snd := AudioStreamPlayer.new()
+		snd.stream = load("res://assets/sounds/item.mp3")
+		snd.finished.connect(snd.queue_free)
+		get_tree().current_scene.add_child(snd)
+		snd.play()
+		pickup.queue_free()
+	)
+
+	get_tree().current_scene.add_child(pickup)
+
+
+func _make_heal_texture() -> ImageTexture:
+	var img := Image.create(14, 14, false, Image.FORMAT_RGBA8)
+	var col := Color(0.25, 0.95, 0.45, 1.0)
+	for x in 14:
+		for y in 14:
+			if (x >= 5 and x < 9) or (y >= 5 and y < 9):
+				img.set_pixel(x, y, col)
+	return ImageTexture.create_from_image(img)
 
 
 # ── Wall navigation ───────────────────────────────────────────────────────────

@@ -454,7 +454,6 @@ func _die_oxygen() -> void:
 	get_tree().change_scene_to_file("res://cutscene/death_screen.tscn")
 
 
-## Called by an enemy hit. Reduces health and triggers hurt animation.
 func take_damage(amount: int) -> void:
 	if _hurt_timer > 0.0:
 		return   # already in hit-stun, iframes active

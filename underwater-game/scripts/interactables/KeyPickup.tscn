@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/interactables/key_pickup.gd" id="1_script"]
 [ext_resource type="Resource" path="res://shared/items/level2_key.tres" id="2_key"]
+[ext_resource type="Texture2D" path="res://assets/items/key.png" id="3_tex"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_key"]
 radius = 14.0
@@ -14,3 +15,6 @@ item = ExtResource("2_key")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_key")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("3_tex")

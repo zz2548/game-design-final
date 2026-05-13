@@ -12,7 +12,9 @@
       "Bash(git add *)",
       "Bash(Get-ChildItem -Path \"D:\\\\Downloads\\\\game-design-final\\\\underwater-game\" -Filter \"*.tres\" -Recurse)",
       "Bash(Select-Object FullName)",
-      "PowerShell(ffprobe *)"
+      "PowerShell(ffprobe *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Downloads\\\\game-design-final\\\\underwater-game\" -Recurse -Filter \"*.tscn\")",
+      "Bash(Sort-Object)"
     ]
   }
 }

@@ -578,11 +578,9 @@ position = Vector2(1000, 114)
 
 [node name="Melee1" parent="Enemies/Melee" unique_id=581764293 instance=ExtResource("11_enemy")]
 position = Vector2(48, 277)
-rotation = -1.3089969
 
 [node name="Melee2" parent="Enemies/Melee" unique_id=935242718 instance=ExtResource("11_enemy")]
 position = Vector2(1205, 333)
-rotation = -0.2617994
 
 [node name="Melee3" parent="Enemies/Melee" unique_id=1573543382 instance=ExtResource("11_enemy")]
 position = Vector2(225, 535)
