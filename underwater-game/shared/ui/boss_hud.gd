@@ -100,11 +100,11 @@ func _on_health_changed(current: int, maximum: int) -> void:
 func _on_vulnerability_changed(is_shielded: bool) -> void:
 	_shielded = is_shielded
 	if is_shielded:
-		_vuln_label.text = "[S]"
+		_vuln_label.text = "Shielded"
 		_vuln_label.add_theme_color_override("font_color", SHIELD_COLOR)
 		_vuln_label.tooltip_text = "SHIELDED"
 	else:
-		_vuln_label.text = "[!]"
+		_vuln_label.text = "Exposed"
 		_vuln_label.add_theme_color_override("font_color", VULN_COLOR)
 		_vuln_label.tooltip_text = "EXPOSED"
 
@@ -157,7 +157,7 @@ func _build_ui() -> void:
 	# Vulnerability indicator dot
 	_vuln_label = Label.new()
 	_vuln_label.name = "VulnLabel"
-	_vuln_label.text = "[S]"
+	_vuln_label.text = "Shielded"
 	_vuln_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_vuln_label.add_theme_font_size_override("font_size", 10)
 	title_row.add_child(_vuln_label)

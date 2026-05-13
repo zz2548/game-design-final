@@ -96,7 +96,7 @@ func _build_ui() -> void:
 		)
 
 	var hint := Label.new()
-	hint.text = "← → to select   ·   Enter / E to confirm"
+	hint.text = "A / D to select   ·   Enter / E to confirm"
 	hint.add_theme_font_size_override("font_size", 13)
 	hint.add_theme_color_override("font_color", Color(0.40, 0.55, 0.65))
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
